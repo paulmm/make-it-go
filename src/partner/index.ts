@@ -5,10 +5,11 @@ import type { PartnerStep } from './types';
 export * from './types';
 
 /**
- * The active partner. One seam, selected by env var; the UI imports only `partner`.
- * Default is the deterministic offline localStub. Set VITE_PARTNER=claude to use the
- * server-side Anthropic partner (which itself falls back to localStub if unavailable),
- * so swapping it in changes nothing in the UI.
+ * The active partner. One seam; the UI imports only `partner`. The server-side Claude partner
+ * is the default — it automatically falls back to the deterministic offline localStub whenever
+ * /api/partner has no ANTHROPIC_API_KEY or the call fails, so the app always talks and nothing
+ * in the UI changes. Force the pure offline stub (e.g. for the no-network demo) with
+ * VITE_PARTNER=local.
  */
-const useClaude = import.meta.env?.VITE_PARTNER === 'claude';
-export const partner: PartnerStep = useClaude ? claudeBrain : localStub;
+const forceLocal = import.meta.env?.VITE_PARTNER === 'local';
+export const partner: PartnerStep = forceLocal ? localStub : claudeBrain;

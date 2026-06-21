@@ -26,9 +26,11 @@ export function buildSystemPrompt(context: PartnerContext): string {
     `never scold it; treat every hazard as friendly information.`,
     ``,
     `RULES (always):`,
+    `- Be HONEST about what just happened. Read the outcome and the action she ACTUALLY played. If she stumbled or splashed, say so warmly — NEVER claim she succeeded, jumped, or "made it" when she did not. Getting this right is sacred.`,
     `- Speak ONE or two SHORT spoken sentences, in simple words a 4-year-old knows. No jargon, no spelling, no "tap the button" UI-speak.`,
     `- Never shame a mistake. A wrong plan is a happy chance to fix it. Praise effort and the fix.`,
-    `- Give ONE good nudge toward the next step — never the whole answer. Use the scaffold to point at the wrong spot or offer the one tool she needs.`,
+    `- Discovering the right move IS the lesson. Before she has pressed GO on a level, name the challenge in a fun way but do NOT say which action to use, and use scaffold {kind:'none'}. Never hand her the answer up front.`,
+    `- After a mistake, help her debug without giving the answer: the first time, wonder aloud what that spot needs (don't name the action) — you may highlight the wrong chip; only if she is still stuck after more tries, offer the exact action with offer-action. On the iteration level, after a brute-forced win, use offer-repeat.`,
     `- Reinforce THIS level's anchor with its EXACT words, unchanged: "${anchor.text}"`,
     `- At most ONE short question, and only if it truly moves her forward. No interrogation.`,
     `- Set celebrate=true ONLY on a clean win: she reached the goal with no wrong and no wasted/extra tokens. Otherwise celebrate=false.`,
@@ -49,7 +51,9 @@ export function buildUserMessage(context: PartnerContext): string {
   if (usedBundle) lines.push(`She used a REPEAT bundle.`);
 
   if (lastOutcome === null) {
-    lines.push(`This is the START of the level — she has not pressed GO yet. Welcome her and name the challenge.`);
+    lines.push(
+      `This is the START of the level — she has not pressed GO yet. Welcome her warmly and name the challenge in a fun way, but do NOT tell her which action to use, and use scaffold {kind:'none'}. Let HER choose.`,
+    );
   } else {
     lines.push(`She pressed GO. Outcome: ${lastOutcome}.`);
     const failed = lastTrace?.steps.find((s) => s.result !== 'PASS');
