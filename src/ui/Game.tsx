@@ -15,7 +15,7 @@ import { TokenTray } from './TokenTray';
 import { useReducedMotion } from './useReducedMotion';
 import { useRunner } from './useRunner';
 import type { RunnerGeometry } from './useRunner';
-import { useSpeech } from './useSpeech';
+import { useNarration } from '../narration/useNarration';
 
 const WORD_CUE: Record<Action, string> = {
   JUMP: 'Jump!',
@@ -66,7 +66,7 @@ export function Game({
 
   const recorder = useRef(createRecorder());
   const reducedMotion = useReducedMotion();
-  const { speak, unlock, muted, setMuted, supported } = useSpeech();
+  const { speak, unlock, muted, setMuted, supported, spokenText, activeWord } = useNarration();
   const runner = useRunner(reducedMotion);
   const geo = layout(level);
   const capacity = level.points.length; // one action per obstacle — no extras
@@ -91,7 +91,7 @@ export function Game({
       recentHistory: [],
     }).then((r) => {
       setResponse(r);
-      speak(r.say);
+      speak(r.say, { track: true });
     });
   }, [theme, level, speak]);
 
@@ -170,7 +170,7 @@ export function Game({
       }).then((r) => {
         setResponse(r);
         setPhase('result');
-        speak(r.say);
+        speak(r.say, { track: true });
       });
     });
   };
@@ -196,7 +196,12 @@ export function Game({
         color: theme.palette.text,
       }}
     >
-      <PartnerBubble text={response?.say ?? null} celebrate={celebrate} />
+      <PartnerBubble
+        text={response?.say ?? null}
+        celebrate={celebrate}
+        spokenText={spokenText}
+        activeWord={activeWord}
+      />
       <Track
         theme={theme}
         level={level}

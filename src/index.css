@@ -111,7 +111,17 @@ body {
   margin: 0;
   font-size: clamp(18px, 2.6vw, 26px);
   font-weight: 800;
-  line-height: 1.25;
+  line-height: 1.35;
+}
+/* Karaoke: the word being spoken grows so she connects the sound to the written word. */
+.partner-say .word {
+  display: inline-block;
+  transition: transform 0.14s ease, color 0.14s ease;
+  transform-origin: center 75%;
+}
+.partner-say .word.spoken {
+  transform: scale(1.34);
+  color: #e0398b;
 }
 .partner.celebrate {
   background: #fff7d6;
@@ -764,5 +774,9 @@ body {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+  }
+  /* Highlight the spoken word with colour only — no size jump. */
+  .partner-say .word.spoken {
+    transform: none;
   }
 }

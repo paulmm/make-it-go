@@ -1,6 +1,13 @@
+import type { ReactNode } from 'react';
+import { toWordTokens } from '../narration/alignment';
+
 interface PartnerBubbleProps {
   text: string | null;
   celebrate: boolean;
+  /** The line currently being read aloud (for word highlighting); may differ from text briefly. */
+  spokenText?: string | null;
+  /** The index of the word being spoken right now, or null. */
+  activeWord?: number | null;
 }
 
 function PartnerFace() {
@@ -16,17 +23,33 @@ function PartnerFace() {
   );
 }
 
+/** Render the line word by word so the one being spoken can grow — an early-reading cue. */
+function words(text: string, active: number | null): ReactNode[] {
+  let w = -1;
+  return toWordTokens(text).map((token, i) => {
+    if (!token.word) return token.value; // whitespace, as a plain text node
+    w += 1;
+    return (
+      <span key={i} className={`word${active === w ? ' spoken' : ''}`}>
+        {token.value}
+      </span>
+    );
+  });
+}
+
 /**
- * The partner's spoken line, shown as text too so the game is fully playable with
- * audio off. aria-live announces new lines for assistive tech.
+ * The partner's spoken line, shown as text too so the game is fully playable with audio off.
+ * As the voice reads it, the current word grows to connect the sound to the written word.
+ * aria-live announces new lines for assistive tech.
  */
-export function PartnerBubble({ text, celebrate }: PartnerBubbleProps) {
+export function PartnerBubble({ text, celebrate, spokenText, activeWord }: PartnerBubbleProps) {
+  const active = text != null && spokenText === text ? activeWord ?? null : null;
   return (
     <div className={`partner${celebrate ? ' celebrate' : ''}`} role="status" aria-live="polite">
       <div className="partner-face">
         <PartnerFace />
       </div>
-      <p className="partner-say">{text ?? ''}</p>
+      <p className="partner-say">{text == null ? '' : words(text, active)}</p>
     </div>
   );
 }
