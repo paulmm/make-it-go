@@ -34,9 +34,9 @@ const palette: ThemePalette = {
 };
 
 const POSE: Record<HeroPose, { src: string; facesRight: boolean }> = {
-  idle: { src: foxIdle, facesRight: false },
+  idle: { src: foxIdle, facesRight: true },
   walk: { src: foxWalk, facesRight: false },
-  jump: { src: foxJump, facesRight: false },
+  jump: { src: foxJump, facesRight: true },
   climb: { src: foxClimb, facesRight: true },
   duck: { src: foxDuck, facesRight: true },
   grab: { src: foxGrab, facesRight: true },
@@ -56,6 +56,7 @@ export const FOX: ThemePack = {
   name: 'Forest Fox',
   palette,
   nouns: { hero: 'fox', goal: 'acorn' },
+  hoverCry: 'Me me me!',
   backdrop: () => <Sprite src={backdropImg} className="backdrop-img" />,
   sun: () => <Sprite src={sunImg} />,
   hand: () => <Sprite src={handImg} />,
