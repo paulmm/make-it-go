@@ -34,6 +34,7 @@ export function App() {
       level={level}
       hasNext={hasNext}
       onNext={() => setLevelIndex((i) => Math.min(i + 1, LEVELS.length - 1))}
+      onHome={() => setTheme(null)}
     />
   );
 }

@@ -53,11 +53,13 @@ export function Game({
   level,
   hasNext,
   onNext,
+  onHome,
 }: {
   theme: ThemePack;
   level: Level;
   hasNext: boolean;
   onNext: () => void;
+  onHome: () => void;
 }) {
   const [plan, setPlan] = useState<PlanToken[]>([]);
   const [phase, setPhase] = useState<Phase>('building');
@@ -202,6 +204,13 @@ export function Game({
         color: theme.palette.text,
       }}
     >
+      <button type="button" className="home-btn" onClick={onHome} aria-label="Choose another character">
+        <svg viewBox="0 0 24 24" aria-hidden="true" width="100%" height="100%">
+          <path d="M3 11.5 12 4l9 7.5" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M5.5 10.5V20h13v-9.5" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M10 20v-5h4v5" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
       <PartnerBubble
         text={response?.say ?? null}
         celebrate={celebrate}
