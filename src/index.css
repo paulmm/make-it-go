@@ -245,13 +245,16 @@ body {
 .backdrop-img {
   object-fit: cover;
 }
-/* The hero faces right (travel direction). Left-facing sprites flip; right-facing don't. */
+/* The hero faces right (travel direction). Left-facing sprites flip; right-facing don't.
+   --flip carries the direction so pose animations (e.g. earTwitch) keep the correct facing
+   instead of overriding it. */
 .sprite.hero-art {
-  transform: scaleX(-1);
+  --flip: -1;
+  transform: scaleX(var(--flip));
   transform-origin: bottom center;
 }
 .sprite.hero-art.faces-right {
-  transform: scaleX(1);
+  --flip: 1;
 }
 
 /* ---- Partner ---- */
@@ -851,16 +854,16 @@ body {
   0%,
   84%,
   100% {
-    transform: scaleX(-1) rotate(0deg);
+    transform: scaleX(var(--flip)) rotate(0deg);
   }
   88% {
-    transform: scaleX(-1) rotate(-5deg);
+    transform: scaleX(var(--flip)) rotate(-5deg);
   }
   92% {
-    transform: scaleX(-1) rotate(4deg);
+    transform: scaleX(var(--flip)) rotate(4deg);
   }
   96% {
-    transform: scaleX(-1) rotate(-1deg);
+    transform: scaleX(var(--flip)) rotate(-1deg);
   }
 }
 @keyframes heartFloat {
