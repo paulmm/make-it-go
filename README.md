@@ -24,7 +24,17 @@ Tap picture‑tokens to build a plan, press **go**, and the character does *exac
 
 Success is measured by **capability gained, never time on app**. The win condition is that she *outgrows it* and graduates to ScratchJr and beyond. The name says the loop: she builds a plan, taps **go**, and the character does exactly what she said.
 
-## Why it's different
+## Why I'm building this
+
+I have two kids — **Zoe** (2½) and **Autumn** (5). When I went looking for games to build the *foundation* under coding — sequence, cause and effect, "it does exactly what you say" — I found a surprisingly big gap: lots of flash, very little that genuinely builds capability at this age, before reading. So I started building the thing I actually wanted for Zoe and Autumn.
+
+Underneath the play there's a real question I want to answer:
+
+> **Can an AI partner make a pre‑literate child _more capable_ — by building on what she already knows, instead of marching her down a fixed path?**
+
+That's the experiment. The app is the instrument; **the finding is the point.**
+
+## What makes it different
 
 - 🚫 **No reading, no typing, no microphone.** Input is large picture‑tokens she taps. Voice is output only.
 - 🎯 **Literal execution is the lesson.** Her ordered plan runs exactly as written — a wrong action fails *visibly* (a stumble, a splash). The gap between what she meant and what she said *is* the debugging lesson. No autocorrect, ever.
