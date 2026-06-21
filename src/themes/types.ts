@@ -2,7 +2,17 @@ import type { ReactNode } from 'react';
 import type { Action, EventKind } from '../engine/types';
 
 /** The hero's poses. `walk` is the auto-walk gait; `splash`/`stumble` are fail looks. */
-export type HeroPose = 'idle' | 'walk' | 'jump' | 'duck' | 'climb' | 'stumble' | 'splash' | 'cheer';
+export type HeroPose =
+  | 'idle'
+  | 'walk'
+  | 'jump'
+  | 'duck'
+  | 'climb'
+  | 'grab'
+  | 'open'
+  | 'stumble'
+  | 'splash'
+  | 'cheer';
 
 export interface ThemePalette {
   sky: string;

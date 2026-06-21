@@ -20,7 +20,13 @@ interface TokenTrayProps {
   onAddRepeat: () => void;
 }
 
-const ACTION_LABEL: Record<Action, string> = { JUMP: 'Jump', DUCK: 'Duck', CLIMB: 'Climb' };
+const ACTION_LABEL: Record<Action, string> = {
+  JUMP: 'Jump',
+  DUCK: 'Duck',
+  CLIMB: 'Climb',
+  GRAB: 'Grab',
+  OPEN: 'Open',
+};
 
 /** Two chasing arrows — the "do it again" mark layered over the action the bundle repeats. */
 function LoopArrow() {

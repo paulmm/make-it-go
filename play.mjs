@@ -109,6 +109,31 @@ await page.waitForTimeout(500);
 await page.screenshot({ path: `${OUT}/L3-3-win.png` });
 console.log('L3 BUNDLED WIN:', JSON.stringify(await page.textContent('.partner-say')));
 
+// Advance to L4 (decomposition: get the key, then open the gate).
+await page.click('button[aria-label="Next level"]');
+await page.waitForTimeout(450);
+await assertHeroSized('meadow L4');
+console.log('L4 INTRO:', JSON.stringify(await page.textContent('.partner-say')));
+
+// Forget the key: open, open -> she walks past the key and meets a locked gate.
+await page.click('button[aria-label="Open"]');
+await page.click('button[aria-label="Open"]');
+await page.click('button[aria-label="Go"]');
+await waitForSay('locked');
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/L4-1-locked.png` });
+console.log('L4 LOCKED:', JSON.stringify(await page.textContent('.partner-say')));
+
+// Find and fix: grab the key first, then open the gate -> win.
+await page.click('button[aria-label="Clear all steps"]');
+await page.click('button[aria-label="Grab"]', { force: true });
+await page.click('button[aria-label="Open"]');
+await page.click('button[aria-label="Go"]');
+await waitForSay('Two parts');
+await page.waitForTimeout(500);
+await page.screenshot({ path: `${OUT}/L4-2-win.png` });
+console.log('L4 WIN:', JSON.stringify(await page.textContent('.partner-say')));
+
 // Fox theme: reload, pick Forest Fox, see its Level 1.
 await page.goto(URL, { waitUntil: 'networkidle' });
 await page.waitForSelector('.picker-tile');

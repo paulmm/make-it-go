@@ -31,7 +31,13 @@ export interface Runner extends RunnerState {
   reset: (startX: number) => void;
 }
 
-const POSE_FOR_ACTION: Record<Action, HeroPose> = { JUMP: 'jump', DUCK: 'duck', CLIMB: 'climb' };
+const POSE_FOR_ACTION: Record<Action, HeroPose> = {
+  JUMP: 'jump',
+  DUCK: 'duck',
+  CLIMB: 'climb',
+  GRAB: 'grab',
+  OPEN: 'open',
+};
 
 /**
  * Drives the visible, literal execution under the auto-walk model: the hero walks
@@ -87,13 +93,17 @@ export function useRunner(reducedMotion: boolean): Runner {
         const px = geo.pointX[step.pointIndex];
         beats.push({ x: px, pose: 'walk', ms: walkMs, point: null, moves: true });
 
-        if (step.result === 'PASS') {
+        if (step.result === 'MISSED') {
+          // Walked past the key without grabbing — no action, she just keeps going.
+          continue;
+        } else if (step.result === 'PASS') {
           if (step.played === 'JUMP') {
             beats.push({ x: Math.min(px + 0.1, geo.goalX), pose: 'jump', ms: actMs, point: step.pointIndex, moves: true });
           } else {
             beats.push({ x: px, pose: POSE_FOR_ACTION[step.played as Action], ms: actMs, point: step.pointIndex, moves: false });
           }
-        } else if (step.result === 'WRONG') {
+        } else if (step.result === 'WRONG' || step.result === 'LOCKED') {
+          // She does the action, then recoils — a wrong action trips; a locked gate won't budge.
           beats.push({ x: px, pose: POSE_FOR_ACTION[step.played as Action], ms: Math.round(actMs * 0.55), point: step.pointIndex, moves: false });
           beats.push({ x: px, pose: failPose[step.kind], ms: actMs, point: step.pointIndex, moves: false });
           break;

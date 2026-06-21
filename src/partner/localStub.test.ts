@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { localStub } from './localStub';
 import type { PartnerContext } from './types';
-import { LEVEL_1, LEVEL_3 } from '../engine/levels';
+import { LEVEL_1, LEVEL_3, LEVEL_4 } from '../engine/levels';
 import { run } from '../engine/interpreter';
 import type { Action, Outcome } from '../engine/types';
 
@@ -96,5 +96,31 @@ describe('localStub partner — L3 (iteration)', () => {
     const r = await localStub(afterL3(['JUMP', 'JUMP'], true));
     expect(r.scaffold).toEqual({ kind: 'offer-repeat' });
     expect(r.say.toLowerCase()).toContain('bigger');
+  });
+});
+
+describe('localStub partner — L4 (decomposition)', () => {
+  function afterL4(plan: Action[]): PartnerContext {
+    const trace = run(LEVEL_4, plan);
+    return ctx({ level: LEVEL_4, currentPlan: plan, lastOutcome: trace.outcome, lastTrace: trace });
+  }
+
+  it('frames the two subgoals at the start of the level', async () => {
+    const r = await localStub(ctx({ level: LEVEL_4 }));
+    expect(r.say.toLowerCase()).toContain('key');
+    expect(r.say.toLowerCase()).toContain('gate');
+  });
+
+  it('explains the locked gate and offers the key when she forgets it', async () => {
+    const r = await localStub(afterL4(['OPEN', 'OPEN']));
+    expect(r.celebrate).toBe(false);
+    expect(r.scaffold).toEqual({ kind: 'offer-action', action: 'GRAB' });
+    expect(r.say.toLowerCase()).toContain('locked');
+  });
+
+  it('celebrates getting the key then the gate, and plants find-and-fix', async () => {
+    const r = await localStub(afterL4(['GRAB', 'OPEN']));
+    expect(r.celebrate).toBe(true);
+    expect(r.introduceConcept).toBe('find-and-fix');
   });
 });

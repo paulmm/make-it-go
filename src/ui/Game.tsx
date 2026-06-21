@@ -17,7 +17,13 @@ import { useRunner } from './useRunner';
 import type { RunnerGeometry } from './useRunner';
 import { useSpeech } from './useSpeech';
 
-const WORD_CUE: Record<Action, string> = { JUMP: 'Jump!', DUCK: 'Duck!', CLIMB: 'Climb!' };
+const WORD_CUE: Record<Action, string> = {
+  JUMP: 'Jump!',
+  DUCK: 'Duck!',
+  CLIMB: 'Climb!',
+  GRAB: 'Grab the key!',
+  OPEN: 'Open the gate!',
+};
 const REPEAT_CUE = 'Again and again!';
 
 type Phase = 'building' | 'running' | 'result';

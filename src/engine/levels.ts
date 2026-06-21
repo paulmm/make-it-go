@@ -59,4 +59,24 @@ export const LEVEL_3: Level = {
   mastery: { kind: 'bundle-to-goal' },
 };
 
-export const LEVELS: Level[] = [LEVEL_1, LEVEL_2, LEVEL_3];
+/**
+ * Level 4 — decomposition (key, then gate).
+ *
+ * The goal breaks into two subgoals: first get the key, then open the gate. The key is a
+ * pickup, not a hazard — walk past it with the wrong action and she simply doesn't have it,
+ * and the gate won't open (it's locked). That visible cause and effect is the lesson: when
+ * the gate won't open, find the missing step — the key — and fix it.
+ *
+ *   path:  >> [KEY] >> [GATE] >> goal
+ *
+ * Clean solve: [GRAB, OPEN]. Forgetting the key: [OPEN, OPEN] -> she reaches a locked gate.
+ */
+export const LEVEL_4: Level = {
+  id: 'L4',
+  points: ['KEY', 'GATE'],
+  allowedActions: ['GRAB', 'OPEN'],
+  anchorId: 'find-and-fix',
+  mastery: { kind: 'reach-goal-within', maxRedundant: 0 },
+};
+
+export const LEVELS: Level[] = [LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4];

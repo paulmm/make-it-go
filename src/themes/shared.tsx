@@ -48,9 +48,26 @@ const ACTION_GLYPH: Record<Action, ReactNode> = {
       <path d="M12 14 Q 50 58 88 14" fill="none" stroke="#ffffff" strokeWidth="6" strokeDasharray="2 9" strokeLinecap="round" />
     </svg>
   ),
+  GRAB: (
+    <svg className="action-glyph" viewBox="0 0 100 60" aria-hidden="true">
+      <path d="M50 8 V44 M50 44 L36 30 M50 44 L64 30" fill="none" stroke="#ffffff" strokeWidth="6" strokeDasharray="2 9" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  OPEN: (
+    <svg className="action-glyph" viewBox="0 0 100 60" aria-hidden="true">
+      <path d="M30 50 Q 70 50 70 12" fill="none" stroke="#ffffff" strokeWidth="6" strokeDasharray="2 9" strokeLinecap="round" />
+      <path d="M70 12 L60 22 M70 12 L80 22" fill="none" stroke="#ffffff" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
 };
 
-const ACTION_POSE: Record<Action, HeroPose> = { JUMP: 'jump', DUCK: 'duck', CLIMB: 'climb' };
+const ACTION_POSE: Record<Action, HeroPose> = {
+  JUMP: 'jump',
+  DUCK: 'duck',
+  CLIMB: 'climb',
+  GRAB: 'grab',
+  OPEN: 'open',
+};
 
 /** Build the action-token icons for a theme from its heroPose renderer. */
 export function buildActionArt(heroPose: (p: HeroPose) => ReactNode): Record<Action, () => ReactNode> {
@@ -64,6 +81,8 @@ export function buildActionArt(heroPose: (p: HeroPose) => ReactNode): Record<Act
     JUMP: () => icon('JUMP'),
     DUCK: () => icon('DUCK'),
     CLIMB: () => icon('CLIMB'),
+    GRAB: () => icon('GRAB'),
+    OPEN: () => icon('OPEN'),
   };
 }
 

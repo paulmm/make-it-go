@@ -2,8 +2,20 @@ import { ANCHORS } from '../engine/anchors';
 import type { Action, EventKind, Trace } from '../engine/types';
 import type { PartnerContext, PartnerResponse, Scaffold } from './types';
 
-const OBSTACLE_WORD: Record<EventKind, string> = { GAP: 'gap', BRANCH: 'branch', STEP: 'step' };
-const ACTION_WORD: Record<Action, string> = { JUMP: 'jump', DUCK: 'duck', CLIMB: 'climb' };
+const OBSTACLE_WORD: Record<EventKind, string> = {
+  GAP: 'gap',
+  BRANCH: 'branch',
+  STEP: 'step',
+  KEY: 'key',
+  GATE: 'gate',
+};
+const ACTION_WORD: Record<Action, string> = {
+  JUMP: 'jump',
+  DUCK: 'duck',
+  CLIMB: 'climb',
+  GRAB: 'grab',
+  OPEN: 'open',
+};
 
 /** The point where the run ended (the wrong or missing one), if any. */
 function failedStep(trace: Trace | null) {
@@ -19,10 +31,13 @@ export async function localStub(context: PartnerContext): Promise<PartnerRespons
   const { nouns, level, lastOutcome, lastTrace, recentHistory, usedBundle } = context;
   const anchor = ANCHORS[level.anchorId];
   const bundleLevel = level.mastery.kind === 'bundle-to-goal';
+  const keyGateLevel = level.points.includes('GATE'); // decomposition: two subgoals
 
   if (lastOutcome === null) {
     return {
-      say: `Help the ${nouns.hero} get to the ${nouns.goal}! Pick what she should do, then press go.`,
+      say: keyGateLevel
+        ? `Two things to do! First get the key, then open the gate.`
+        : `Help the ${nouns.hero} get to the ${nouns.goal}! Pick what she should do, then press go.`,
       scaffold: { kind: 'none' },
       introduceConcept: level.anchorId,
       celebrate: false,
@@ -50,6 +65,14 @@ export async function localStub(context: PartnerContext): Promise<PartnerRespons
           scaffold: { kind: 'highlight-step', stepIndex: level.points.length },
           introduceConcept: 'exactly-what-you-say',
           celebrate: false,
+        };
+      }
+      if (keyGateLevel) {
+        return {
+          say: `You did it! First the key, then the gate. Two parts, both done — in order!`,
+          scaffold: { kind: 'none' },
+          introduceConcept: 'find-and-fix',
+          celebrate: true,
         };
       }
       return {
@@ -91,6 +114,16 @@ export async function localStub(context: PartnerContext): Promise<PartnerRespons
       return {
         say: `She reached the ${obstacle} with nothing to do! Add an action for it.`,
         scaffold: { kind: 'none' },
+        celebrate: false,
+      };
+    }
+
+    case 'LOCKED': {
+      // The find-and-fix moment: the gate won't open because the key step is missing.
+      return {
+        say: `The gate is locked! She walked right past the key. Get the key first, then open the gate.`,
+        scaffold: { kind: 'offer-action', action: 'GRAB' },
+        introduceConcept: 'find-and-fix',
         celebrate: false,
       };
     }

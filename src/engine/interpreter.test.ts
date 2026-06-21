@@ -81,3 +81,35 @@ describe('run — event-point execution', () => {
     expect(trace.clearedPoints).toBe(0);
   });
 });
+
+describe('run — key and gate (decomposition with carry state)', () => {
+  it('wins when she grabs the key, then opens the gate', () => {
+    const trace = run(makeLevel(['KEY', 'GATE']), ['GRAB', 'OPEN']);
+    expect(trace.outcome).toBe('WIN');
+    expect(trace.clearedPoints).toBe(2);
+  });
+
+  it('locks the gate when she opens it without the key', () => {
+    const trace = run(makeLevel(['KEY', 'GATE']), ['OPEN', 'OPEN']);
+    expect(trace.outcome).toBe('LOCKED');
+    expect(trace.steps[1].result).toBe('LOCKED');
+  });
+
+  it('treats a missed key as non-fatal — she walks on and meets the locked gate', () => {
+    const trace = run(makeLevel(['KEY', 'GATE']), ['OPEN', 'OPEN']);
+    expect(trace.steps[0].result).toBe('MISSED'); // walked past the key, no trip
+    expect(trace.steps).toHaveLength(2); // did not stop at the key
+  });
+
+  it('stumbles when she grabs at the gate (wrong action, even with the key)', () => {
+    const trace = run(makeLevel(['KEY', 'GATE']), ['GRAB', 'GRAB']);
+    expect(trace.outcome).toBe('STUMBLE');
+    expect(trace.steps[1].result).toBe('WRONG');
+  });
+
+  it('is INCOMPLETE when she grabs the key but has nothing for the gate', () => {
+    const trace = run(makeLevel(['KEY', 'GATE']), ['GRAB']);
+    expect(trace.outcome).toBe('INCOMPLETE');
+    expect(trace.steps[1].result).toBe('MISSING');
+  });
+});

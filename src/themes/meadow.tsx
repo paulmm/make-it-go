@@ -10,12 +10,16 @@ import bunnyStumble from './assets/meadow/bunny-stumble.png';
 import bunnyCheer from './assets/meadow/bunny-cheer.png';
 import bunnyClimb from './assets/meadow/bunny-climb.png';
 import bunnyDuck from './assets/meadow/bunny-duck.png';
+import bunnyGrab from './assets/meadow/bunny-grab.png';
+import bunnyOpen from './assets/meadow/bunny-open.png';
 import stoneImg from './assets/meadow/stone.png';
 import waterImg from './assets/meadow/water.png';
 import carrotImg from './assets/meadow/carrot.png';
 import sunImg from './assets/meadow/sun.png';
 import handImg from './assets/meadow/hand.png';
 import branchImg from './assets/meadow/branch.png';
+import keyImg from './assets/meadow/key.png';
+import gateImg from './assets/meadow/gate.png';
 
 const palette: ThemePalette = {
   sky: '#bfe7f5',
@@ -34,6 +38,8 @@ const POSE: Record<HeroPose, { src: string; facesRight: boolean }> = {
   jump: { src: bunnyLeap, facesRight: false },
   climb: { src: bunnyClimb, facesRight: true },
   duck: { src: bunnyDuck, facesRight: true },
+  grab: { src: bunnyGrab, facesRight: true },
+  open: { src: bunnyOpen, facesRight: true },
   stumble: { src: bunnyStumble, facesRight: false },
   splash: { src: bunnySplash, facesRight: false },
   cheer: { src: bunnyCheer, facesRight: false },
@@ -60,7 +66,9 @@ export const MEADOW: ThemePack = {
     GAP: () => <Sprite src={waterImg} className="obstacle gap" />,
     BRANCH: () => <Sprite src={branchImg} className="obstacle branch" />,
     STEP: () => <Sprite src={stoneImg} className="obstacle step" />,
+    KEY: () => <Sprite src={keyImg} className="obstacle key" />,
+    GATE: () => <Sprite src={gateImg} className="obstacle gate" />,
   },
-  failPose: { GAP: 'splash', BRANCH: 'stumble', STEP: 'stumble' },
+  failPose: { GAP: 'splash', BRANCH: 'stumble', STEP: 'stumble', KEY: 'stumble', GATE: 'stumble' },
   voice: { flavorWords: ['hop', 'yay'] },
 };

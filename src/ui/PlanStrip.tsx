@@ -15,7 +15,13 @@ interface PlanStripProps {
   onRemove: (index: number) => void;
 }
 
-const ACTION_WORD: Record<Action, string> = { JUMP: 'jump', DUCK: 'duck', CLIMB: 'climb' };
+const ACTION_WORD: Record<Action, string> = {
+  JUMP: 'jump',
+  DUCK: 'duck',
+  CLIMB: 'climb',
+  GRAB: 'grab',
+  OPEN: 'open',
+};
 
 function Footprint() {
   return (

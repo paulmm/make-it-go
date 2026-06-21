@@ -2,8 +2,8 @@
 // supplies one action token per event point. Themes reskin event points and actions;
 // they never change how a plan executes.
 
-/** Action tokens available at Level 1. Later levels add GRAB, OPEN. */
-export type Action = 'JUMP' | 'DUCK' | 'CLIMB';
+/** Action tokens. JUMP/DUCK/CLIMB clear hazards; GRAB takes a key; OPEN opens a gate. */
+export type Action = 'JUMP' | 'DUCK' | 'CLIMB' | 'GRAB' | 'OPEN';
 
 /**
  * A token the child places in her plan. Either a single action, or a REPEAT that bundles
@@ -15,14 +15,20 @@ export type PlanToken =
   | { type: 'action'; action: Action }
   | { type: 'repeat'; action: Action; count: number };
 
-/** Kinds of event point on the path. Later levels add KEY, GATE. */
-export type EventKind = 'GAP' | 'BRANCH' | 'STEP';
+/**
+ * Kinds of event point on the path. GAP/BRANCH/STEP are hazards (a wrong action trips her).
+ * KEY is a pickup (grab it to carry it; missing it is not a trip). GATE is the L4 subgoal:
+ * it needs OPEN and the carried key.
+ */
+export type EventKind = 'GAP' | 'BRANCH' | 'STEP' | 'KEY' | 'GATE';
 
 /** The one correct action for each event-point kind. Theme-agnostic, 1:1. */
 export const REQUIRED_ACTION: Record<EventKind, Action> = {
   GAP: 'JUMP',
   BRANCH: 'DUCK',
   STEP: 'CLIMB',
+  KEY: 'GRAB',
+  GATE: 'OPEN',
 };
 
 /** The fixed knowledge anchors. Each level plants or reinforces exactly one. */
@@ -57,8 +63,13 @@ export interface Level {
   mastery: MasteryRule;
 }
 
-/** What happened when the character reached one event point. */
-export type StepResult = 'PASS' | 'WRONG' | 'MISSING';
+/**
+ * What happened when the character reached one event point.
+ * PASS: right action. WRONG: wrong action at a hazard (she trips). MISSING: no token left.
+ * MISSED: walked past a key without grabbing it (non-fatal — she just has no key).
+ * LOCKED: opened a gate with no key (the cause-and-effect fail).
+ */
+export type StepResult = 'PASS' | 'WRONG' | 'MISSING' | 'MISSED' | 'LOCKED';
 
 /** One event point as it was met during the run — recorded literally for the UI. */
 export interface Step {
@@ -73,11 +84,11 @@ export interface Step {
 
 /**
  * The outcome of running a whole plan.
- * WIN: every point cleared. STUMBLE: a wrong action at a point. INCOMPLETE: ran out of
- * tokens at a point. STUMBLE and INCOMPLETE are both fails, kept distinct so the partner
- * can speak to each differently.
+ * WIN: every point cleared. STUMBLE: a wrong action at a hazard. INCOMPLETE: ran out of
+ * tokens. LOCKED: reached a gate with no key. All three fails are kept distinct so the
+ * partner can speak to each differently.
  */
-export type Outcome = 'WIN' | 'STUMBLE' | 'INCOMPLETE';
+export type Outcome = 'WIN' | 'STUMBLE' | 'INCOMPLETE' | 'LOCKED';
 
 /** The full result of executing a plan — everything the UI needs to animate. */
 export interface Trace {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { run } from './interpreter';
-import { LEVEL_1, LEVEL_2, LEVEL_3 } from './levels';
+import { LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4, LEVELS } from './levels';
 import { REQUIRED_ACTION } from './types';
 import type { Action } from './types';
 
@@ -67,5 +67,28 @@ describe('LEVEL_3 — iteration', () => {
   it('plants the bundle-and-repeat anchor and gates on bundling', () => {
     expect(LEVEL_3.anchorId).toBe('bundle-and-repeat');
     expect(LEVEL_3.mastery.kind).toBe('bundle-to-goal');
+  });
+});
+
+describe('LEVEL_4 — decomposition (key then gate)', () => {
+  it('is two subgoals: a key to grab and a gate to open', () => {
+    expect(LEVEL_4.points).toEqual(['KEY', 'GATE']);
+    expect(LEVEL_4.allowedActions).toEqual(['GRAB', 'OPEN']);
+  });
+
+  it('is solved by grabbing the key then opening the gate', () => {
+    expect(run(LEVEL_4, ['GRAB', 'OPEN']).outcome).toBe('WIN');
+  });
+
+  it('locks the gate when she forgets the key', () => {
+    expect(run(LEVEL_4, ['OPEN', 'OPEN']).outcome).toBe('LOCKED');
+  });
+
+  it('plants the find-and-fix anchor', () => {
+    expect(LEVEL_4.anchorId).toBe('find-and-fix');
+  });
+
+  it('is the fourth rung of the ladder', () => {
+    expect(LEVELS[3]).toBe(LEVEL_4);
   });
 });
