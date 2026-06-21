@@ -38,4 +38,25 @@ export const LEVEL_2: Level = {
   mastery: { kind: 'reach-goal-within', maxRedundant: 0 },
 };
 
-export const LEVELS: Level[] = [LEVEL_1, LEVEL_2];
+/**
+ * Level 3 — bundle and repeat (iteration).
+ *
+ * A run of identical obstacles — four gaps — so the same action over and over is the
+ * natural solve. The tray offers only that one action (no choosing to confound the new
+ * idea) plus the REPEAT tool. Placing JUMP four times reaches the goal but is the tedium
+ * that motivates the fold; tapping REPEAT bundles the run into a single chip.
+ *
+ *   path:  >> [GAP] [GAP] [GAP] [GAP] >> goal
+ *
+ * Clean solve: REPEAT(JUMP, 4). Mastery requires actually bundling — brute force reaches
+ * the goal but does not demonstrate iteration, so the partner offers the fold.
+ */
+export const LEVEL_3: Level = {
+  id: 'L3',
+  points: ['GAP', 'GAP', 'GAP', 'GAP'],
+  allowedActions: ['JUMP'],
+  anchorId: 'bundle-and-repeat',
+  mastery: { kind: 'bundle-to-goal' },
+};
+
+export const LEVELS: Level[] = [LEVEL_1, LEVEL_2, LEVEL_3];

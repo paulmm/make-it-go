@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { run } from '../engine/interpreter';
 import { evaluateMastery } from '../engine/mastery';
-import type { Action, Level } from '../engine/types';
+import { bundleTail, expandPlan, usedBundle } from '../engine/plan';
+import type { Action, Level, PlanToken } from '../engine/types';
 import { partner } from '../partner';
 import type { PartnerResponse } from '../partner/types';
 import { createRecorder } from '../telemetry/recorder';
@@ -17,8 +18,19 @@ import type { RunnerGeometry } from './useRunner';
 import { useSpeech } from './useSpeech';
 
 const WORD_CUE: Record<Action, string> = { JUMP: 'Jump!', DUCK: 'Duck!', CLIMB: 'Climb!' };
+const REPEAT_CUE = 'Again and again!';
 
 type Phase = 'building' | 'running' | 'result';
+
+/** Each expanded action's source token index, so the right chip glows as the run plays. */
+function pointToToken(plan: PlanToken[]): number[] {
+  const map: number[] = [];
+  plan.forEach((token, i) => {
+    const copies = token.type === 'repeat' ? token.count : 1;
+    for (let k = 0; k < copies; k++) map.push(i);
+  });
+  return map;
+}
 
 /** Place the start, the event points, and the goal along the path (fractions of width). */
 function layout(level: Level): RunnerGeometry {
@@ -41,7 +53,7 @@ export function Game({
   hasNext: boolean;
   onNext: () => void;
 }) {
-  const [plan, setPlan] = useState<Action[]>([]);
+  const [plan, setPlan] = useState<PlanToken[]>([]);
   const [phase, setPhase] = useState<Phase>('building');
   const [response, setResponse] = useState<PartnerResponse | null>(null);
   const [onboarded, setOnboarded] = useState(false);
@@ -52,6 +64,10 @@ export function Game({
   const runner = useRunner(reducedMotion);
   const geo = layout(level);
   const capacity = level.points.length; // one action per obstacle — no extras
+  const expanded = expandPlan(plan); // what the interpreter actually runs
+  const atCapacity = expanded.length >= capacity;
+  // This level teaches iteration, so it offers the REPEAT tool that folds a run into a chip.
+  const allowsRepeat = level.mastery.kind === 'bundle-to-goal';
 
 
 
@@ -62,6 +78,7 @@ export function Game({
       level,
       conceptsKnown: [],
       currentPlan: [],
+      usedBundle: false,
       lastOutcome: null,
       lastTrace: null,
       attemptsThisLevel: recorder.current.attemptsFor(level.id),
@@ -86,9 +103,19 @@ export function Game({
   const addToken = (action: Action) => {
     unlock();
     if (phase === 'running') return;
-    setPlan((p) => (p.length >= capacity ? p : [...p, action]));
+    setPlan((p) => (expandPlan(p).length >= capacity ? p : [...p, { type: 'action', action }]));
     setOnboarded(true);
     speak(WORD_CUE[action]);
+    backToBuilding();
+  };
+
+  // The REPEAT tool: fold the tail of the plan into one bundle chip, or grow the bundle.
+  const addRepeat = () => {
+    unlock();
+    if (phase === 'running') return;
+    setPlan((p) => bundleTail(p, level.allowedActions[0], capacity));
+    setOnboarded(true);
+    speak(REPEAT_CUE);
     backToBuilding();
   };
 
@@ -110,15 +137,16 @@ export function Game({
   const go = () => {
     unlock();
     if (phase === 'running' || plan.length === 0) return;
-    const trace = run(level, plan);
-    const mastery = evaluateMastery(level, plan, trace);
+    const trace = run(level, expanded);
+    const bundled = usedBundle(plan);
+    const mastery = evaluateMastery(level, expanded, trace, { usedBundle: bundled });
     const recentHistory = recorder.current.outcomesFor(level.id);
     setPhase('running');
     // A clean solve (no extra tokens) cheers; a redundant win just stands at the goal.
     runner.play(trace, geo, mastery.mastered, theme.failPose, () => {
       recorder.current.record({
         levelId: level.id,
-        plan,
+        plan: expanded,
         outcome: trace.outcome,
         redundantTokens: mastery.redundantTokens,
       });
@@ -127,7 +155,8 @@ export function Game({
         nouns: theme.nouns,
         level,
         conceptsKnown: mastery.mastered ? [level.anchorId] : [],
-        currentPlan: plan,
+        currentPlan: expanded,
+        usedBundle: bundled,
         lastOutcome: trace.outcome,
         lastTrace: trace,
         attemptsThisLevel: recorder.current.attemptsFor(level.id),
@@ -141,10 +170,17 @@ export function Game({
   };
 
   const scaffold = phase === 'result' ? response?.scaffold : undefined;
-  const highlightIndex = scaffold?.kind === 'highlight-step' ? scaffold.stepIndex : null;
   const offerAction = scaffold?.kind === 'offer-action' ? scaffold.action : null;
+  const offerRepeat = scaffold?.kind === 'offer-repeat';
   const celebrate = phase === 'result' && !!response?.celebrate;
-  const executingIndex = phase === 'running' ? runner.activePoint : null;
+
+  // The partner and runner speak in point indices; chips are tokens. Map across so a bundle
+  // chip glows for every point it covers.
+  const tokenMap = pointToToken(plan);
+  const highlightStep = scaffold?.kind === 'highlight-step' ? scaffold.stepIndex : null;
+  const highlightIndex = highlightStep == null ? null : tokenMap[highlightStep] ?? highlightStep;
+  const executingPoint = phase === 'running' ? runner.activePoint : null;
+  const executingIndex = executingPoint == null ? null : tokenMap[executingPoint] ?? null;
 
   return (
     <div
@@ -179,9 +215,13 @@ export function Game({
         theme={theme}
         actions={level.allowedActions}
         offerAction={offerAction}
-        disabled={phase === 'running' || plan.length >= capacity}
+        disabled={phase === 'running' || atCapacity}
+        allowsRepeat={allowsRepeat}
+        offerRepeat={offerRepeat}
+        repeatDisabled={phase === 'running'}
         hint={!onboarded}
         onAdd={addToken}
+        onAddRepeat={addRepeat}
       />
       <Controls
         canGo={phase !== 'running' && plan.length > 0}

@@ -84,6 +84,31 @@ await page.waitForTimeout(500);
 await page.screenshot({ path: `${OUT}/L2-3-win.png` });
 console.log('L2 WIN:', JSON.stringify(await page.textContent('.partner-say')));
 
+// Advance to L3 (iteration): four gaps in a row.
+await page.click('button[aria-label="Next level"]');
+await page.waitForTimeout(450);
+await assertHeroSized('meadow L3');
+console.log('L3 INTRO:', JSON.stringify(await page.textContent('.partner-say')));
+
+// Brute force: a jump for every gap. Reaches the goal, but the partner offers the fold.
+for (let i = 0; i < 4; i++) await page.click('button[aria-label="Jump"]');
+await page.click('button[aria-label="Go"]');
+await waitForSay('bundle');
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/L3-1-brute.png` });
+console.log('L3 BRUTE WIN:', JSON.stringify(await page.textContent('.partner-say')));
+
+// Tap REPEAT to fold the four jumps into one bundle chip, then win cleanly.
+// force: the tool is pulsing (offer animation), which Playwright reads as "not stable".
+await page.click('button[aria-label="Repeat"]', { force: true });
+await page.waitForTimeout(250);
+await page.screenshot({ path: `${OUT}/L3-2-folded.png` });
+await page.click('button[aria-label="Go"]');
+await waitForSay('do them again');
+await page.waitForTimeout(500);
+await page.screenshot({ path: `${OUT}/L3-3-win.png` });
+console.log('L3 BUNDLED WIN:', JSON.stringify(await page.textContent('.partner-say')));
+
 // Fox theme: reload, pick Forest Fox, see its Level 1.
 await page.goto(URL, { waitUntil: 'networkidle' });
 await page.waitForSelector('.picker-tile');

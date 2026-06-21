@@ -394,6 +394,30 @@ body {
   transform: scale(1.12);
   z-index: 1;
 }
+/* A bundle chip: one action plus a row of dots saying how many times. */
+.chip.repeat {
+  position: relative;
+  width: 80px;
+  background: #fff7e6;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12), 0 0 0 3px #f4b740;
+}
+.repeat-badge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 3px;
+  display: flex;
+  justify-content: center;
+  gap: 3px;
+  pointer-events: none;
+}
+.repeat-badge .pip {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ef8a17;
+  box-shadow: 0 0 0 1.5px #fff;
+}
 
 /* ---- Token tray ---- */
 .token-tray {
@@ -420,6 +444,24 @@ body {
 }
 .token.offer {
   animation: pulse 0.9s ease infinite;
+}
+/* The REPEAT tool: the action, dimmed, under a round "do it again" loop badge. */
+.repeat-tool .action-art {
+  filter: brightness(0.82) saturate(0.92);
+}
+.repeat-tool .repeat-loop {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 58%;
+  height: 58%;
+  transform: translate(-50%, -50%);
+  padding: 9%;
+  color: #fff;
+  background: rgba(239, 138, 23, 0.92);
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
 }
 .action-art {
   position: relative;

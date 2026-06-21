@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { run } from './interpreter';
-import { LEVEL_1, LEVEL_2 } from './levels';
+import { LEVEL_1, LEVEL_2, LEVEL_3 } from './levels';
 import { REQUIRED_ACTION } from './types';
 import type { Action } from './types';
 
@@ -41,5 +41,31 @@ describe('LEVEL_2 — order matters', () => {
 
   it('plants the steps-in-order anchor', () => {
     expect(LEVEL_2.anchorId).toBe('steps-in-order');
+  });
+});
+
+describe('LEVEL_3 — iteration', () => {
+  it('is several identical points, so doing the same step again and again is the natural solve', () => {
+    expect(LEVEL_3.points.length).toBeGreaterThanOrEqual(3);
+    expect(new Set(LEVEL_3.points).size).toBe(1);
+  });
+
+  it('offers a single action, so bundling — not choosing — is the new idea', () => {
+    expect(LEVEL_3.allowedActions).toHaveLength(1);
+    expect(LEVEL_3.allowedActions[0]).toBe(REQUIRED_ACTION[LEVEL_3.points[0]]);
+  });
+
+  it('is reached when every point gets its action', () => {
+    const plan: Action[] = LEVEL_3.points.map((p) => REQUIRED_ACTION[p]);
+    expect(run(LEVEL_3, plan).outcome).toBe('WIN');
+  });
+
+  it('is incomplete when too few actions are queued for the run of points', () => {
+    expect(run(LEVEL_3, [REQUIRED_ACTION[LEVEL_3.points[0]]]).outcome).toBe('INCOMPLETE');
+  });
+
+  it('plants the bundle-and-repeat anchor and gates on bundling', () => {
+    expect(LEVEL_3.anchorId).toBe('bundle-and-repeat');
+    expect(LEVEL_3.mastery.kind).toBe('bundle-to-goal');
   });
 });

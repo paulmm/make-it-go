@@ -5,6 +5,16 @@
 /** Action tokens available at Level 1. Later levels add GRAB, OPEN. */
 export type Action = 'JUMP' | 'DUCK' | 'CLIMB';
 
+/**
+ * A token the child places in her plan. Either a single action, or a REPEAT that bundles
+ * one action to run `count` times — iteration made concrete (one chip, many steps). The
+ * interpreter never sees these: `expandPlan` flattens them to a literal Action[] first, so
+ * a repeat is exactly its expansion. No magic, no autocorrect.
+ */
+export type PlanToken =
+  | { type: 'action'; action: Action }
+  | { type: 'repeat'; action: Action; count: number };
+
 /** Kinds of event point on the path. Later levels add KEY, GATE. */
 export type EventKind = 'GAP' | 'BRANCH' | 'STEP';
 
@@ -29,7 +39,11 @@ export type AnchorId =
  */
 export type MasteryRule =
   | { kind: 'reach-goal' }
-  | { kind: 'reach-goal-within'; maxRedundant: number };
+  | { kind: 'reach-goal-within'; maxRedundant: number }
+  // L3 iteration: reach the goal AND actually bundle (a repeat of 2+). Brute-forcing every
+  // step one-by-one reaches the goal but does not demonstrate the new idea, so it does not
+  // master — the partner then offers the fold.
+  | { kind: 'bundle-to-goal' };
 
 /** A theme-agnostic level: an ordered list of event points plus rules. */
 export interface Level {

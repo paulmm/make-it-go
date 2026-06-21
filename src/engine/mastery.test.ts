@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { run } from './interpreter';
 import { evaluateMastery } from './mastery';
-import { LEVEL_1 } from './levels';
+import { LEVEL_1, LEVEL_3 } from './levels';
 import { REQUIRED_ACTION } from './types';
 import type { Action } from './types';
 
@@ -42,5 +42,29 @@ describe('evaluateMastery — L1 (reach-goal)', () => {
   it('reports zero redundancy for non-wins', () => {
     const r = evalPlan([WRONG]);
     expect(r.redundantTokens).toBe(0);
+  });
+});
+
+describe('evaluateMastery — L3 (bundle-to-goal)', () => {
+  const ACT = REQUIRED_ACTION[LEVEL_3.points[0]];
+  const full: Action[] = LEVEL_3.points.map(() => ACT);
+
+  it('masters a clean win only when she actually bundled (used a repeat)', () => {
+    const r = evaluateMastery(LEVEL_3, full, run(LEVEL_3, full), { usedBundle: true });
+    expect(r.outcome).toBe('WIN');
+    expect(r.mastered).toBe(true);
+  });
+
+  it('does not master a brute-forced win (reached the goal, but never bundled)', () => {
+    const r = evaluateMastery(LEVEL_3, full, run(LEVEL_3, full), { usedBundle: false });
+    expect(r.outcome).toBe('WIN');
+    expect(r.mastered).toBe(false);
+  });
+
+  it('does not master a bundle that is too small to reach the goal', () => {
+    const short = [ACT, ACT];
+    const r = evaluateMastery(LEVEL_3, short, run(LEVEL_3, short), { usedBundle: true });
+    expect(r.outcome).toBe('INCOMPLETE');
+    expect(r.mastered).toBe(false);
   });
 });

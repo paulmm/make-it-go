@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { localStub } from './localStub';
 import type { PartnerContext } from './types';
-import { LEVEL_1 } from '../engine/levels';
+import { LEVEL_1, LEVEL_3 } from '../engine/levels';
 import { run } from '../engine/interpreter';
 import type { Action, Outcome } from '../engine/types';
 
@@ -12,6 +12,7 @@ function ctx(partial: Partial<PartnerContext> = {}): PartnerContext {
     level: LEVEL_1,
     conceptsKnown: [],
     currentPlan: [],
+    usedBundle: false,
     lastOutcome: null,
     lastTrace: null,
     attemptsThisLevel: 0,
@@ -67,5 +68,33 @@ describe('localStub partner — L1', () => {
     const r = await localStub(afterPlan([]));
     expect(r.celebrate).toBe(false);
     expect(r.say.toLowerCase()).toContain('add');
+  });
+});
+
+describe('localStub partner — L3 (iteration)', () => {
+  const full: Action[] = LEVEL_3.points.map(() => 'JUMP');
+
+  function afterL3(plan: Action[], usedBundle: boolean): PartnerContext {
+    const trace = run(LEVEL_3, plan);
+    return ctx({ level: LEVEL_3, currentPlan: plan, usedBundle, lastOutcome: trace.outcome, lastTrace: trace });
+  }
+
+  it('offers the REPEAT fold after a brute-forced win (reached the goal one-by-one)', async () => {
+    const r = await localStub(afterL3(full, false));
+    expect(r.celebrate).toBe(false);
+    expect(r.scaffold).toEqual({ kind: 'offer-repeat' });
+    expect(r.say.toLowerCase()).toContain('bundle');
+  });
+
+  it('celebrates and plants the bundle anchor when she actually bundled', async () => {
+    const r = await localStub(afterL3(full, true));
+    expect(r.celebrate).toBe(true);
+    expect(r.introduceConcept).toBe('bundle-and-repeat');
+  });
+
+  it('asks to grow the bundle when it was too small to reach the goal', async () => {
+    const r = await localStub(afterL3(['JUMP', 'JUMP'], true));
+    expect(r.scaffold).toEqual({ kind: 'offer-repeat' });
+    expect(r.say.toLowerCase()).toContain('bigger');
   });
 });

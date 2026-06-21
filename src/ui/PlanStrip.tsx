@@ -1,14 +1,15 @@
-import type { Action } from '../engine/types';
+import { expandPlan } from '../engine/plan';
+import type { Action, PlanToken } from '../engine/types';
 import type { ThemePack } from '../themes/types';
 
 interface PlanStripProps {
   theme: ThemePack;
-  plan: Action[];
+  plan: PlanToken[];
   /** How many actions the level needs — one slot per obstacle. */
   slotCount: number;
-  /** Step the partner is pointing at (the wrong one), or null. */
+  /** Token the partner is pointing at (the wrong one), or null. */
   highlightIndex: number | null;
-  /** Step currently executing during a run (glows in sync), or null. */
+  /** Token currently executing during a run (glows in sync), or null. */
   activeIndex: number | null;
   disabled: boolean;
   onRemove: (index: number) => void;
@@ -27,13 +28,33 @@ function Footprint() {
   );
 }
 
+/** A bundle chip shows the action once with a row of count dots — "do this, this many times." */
+function RepeatBadge({ count }: { count: number }) {
+  return (
+    <span className="repeat-badge" aria-hidden="true">
+      {Array.from({ length: count }).map((_, i) => (
+        <span key={i} className="pip" />
+      ))}
+    </span>
+  );
+}
+
+function chipLabel(token: PlanToken, index: number): string {
+  if (token.type === 'repeat') {
+    return `Step ${index + 1}, ${ACTION_WORD[token.action]} ${token.count} times. Tap to remove.`;
+  }
+  return `Step ${index + 1}, ${ACTION_WORD[token.action]}. Tap to remove.`;
+}
+
 /**
- * The plan, read as the bunny's journey: bunny at the start, one slot per obstacle, the
- * carrot at the end. Empty slots are dashed paw outlines that show how many actions to
- * place; tap a filled step to remove it.
+ * The plan, read as the hero's journey: hero at the start, one slot per obstacle, the goal
+ * at the end. A single action fills one slot; a REPEAT bundle is one chip that covers many,
+ * so the empty paw-slots that remain count from the *expanded* plan — they show how many
+ * steps are still unaccounted for. Tap a filled chip to remove it.
  */
 export function PlanStrip({ theme, plan, slotCount, highlightIndex, activeIndex, disabled, onRemove }: PlanStripProps) {
-  const total = Math.max(slotCount, plan.length);
+  const covered = expandPlan(plan).length;
+  const emptySlots = Math.max(0, slotCount - covered);
 
   return (
     <div className="plan" aria-label="Your plan">
@@ -42,24 +63,24 @@ export function PlanStrip({ theme, plan, slotCount, highlightIndex, activeIndex,
       </div>
 
       <div className="plan-lane">
-        {Array.from({ length: total }).map((_, i) =>
-          i < plan.length ? (
-            <button
-              key={i}
-              type="button"
-              className={`chip${highlightIndex === i ? ' highlight' : ''}${activeIndex === i ? ' active' : ''}`}
-              onClick={() => onRemove(i)}
-              disabled={disabled}
-              aria-label={`Step ${i + 1}, ${ACTION_WORD[plan[i]]}. Tap to remove.`}
-            >
-              {theme.actionArt[plan[i]]()}
-            </button>
-          ) : (
-            <div key={i} className="slot empty" aria-hidden="true">
-              <Footprint />
-            </div>
-          ),
-        )}
+        {plan.map((token, i) => (
+          <button
+            key={i}
+            type="button"
+            className={`chip${token.type === 'repeat' ? ' repeat' : ''}${highlightIndex === i ? ' highlight' : ''}${activeIndex === i ? ' active' : ''}`}
+            onClick={() => onRemove(i)}
+            disabled={disabled}
+            aria-label={chipLabel(token, i)}
+          >
+            {theme.actionArt[token.action]()}
+            {token.type === 'repeat' && <RepeatBadge count={token.count} />}
+          </button>
+        ))}
+        {Array.from({ length: emptySlots }).map((_, i) => (
+          <div key={`empty-${i}`} className="slot empty" aria-hidden="true">
+            <Footprint />
+          </div>
+        ))}
       </div>
 
       <div className="plan-cap" aria-hidden="true">

@@ -8,6 +8,12 @@ export interface MasteryResult {
   reason: string;
 }
 
+/** Extra signals a level's rule may read that the flat action list cannot carry. */
+export interface MasteryContext {
+  /** Did the plan use a real bundle (a REPEAT of 2+)? Gates the L3 iteration rule. */
+  usedBundle?: boolean;
+}
+
 /**
  * Decide whether an attempt demonstrates mastery of the level. Pure.
  *
@@ -16,7 +22,12 @@ export interface MasteryResult {
  * becomes the gate at L3, where folding a brute-forced run into REPEAT is the point.
  * Attempts are never a gate.
  */
-export function evaluateMastery(level: Level, plan: Action[], trace: Trace): MasteryResult {
+export function evaluateMastery(
+  level: Level,
+  plan: Action[],
+  trace: Trace,
+  context: MasteryContext = {},
+): MasteryResult {
   const won = trace.outcome === 'WIN';
   const redundantTokens = won ? Math.max(0, plan.length - level.points.length) : 0;
 
@@ -27,6 +38,10 @@ export function evaluateMastery(level: Level, plan: Action[], trace: Trace): Mas
       break;
     case 'reach-goal-within':
       mastered = won && redundantTokens <= level.mastery.maxRedundant;
+      break;
+    case 'bundle-to-goal':
+      // The fold is the lesson: reach the goal cleanly AND actually bundle.
+      mastered = won && redundantTokens === 0 && context.usedBundle === true;
       break;
   }
 
