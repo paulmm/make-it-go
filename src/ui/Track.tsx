@@ -36,6 +36,7 @@ export function Track({ theme, level, geo, heroX, heroPose, heroMs, tick, celebr
   return (
     <div className={`track${reducedMotion ? ' reduced' : ''}${celebrate ? ' won' : ''}`}>
       <div className="scene-backdrop">{theme.backdrop()}</div>
+      <div className="path" aria-hidden="true" />
 
       <button
         type="button"

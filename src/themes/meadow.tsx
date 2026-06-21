@@ -69,8 +69,32 @@ function heroPose(pose: HeroPose): ReactNode {
 
 const ACTION_POSE: Record<Action, HeroPose> = { JUMP: 'jump', DUCK: 'duck', CLIMB: 'climb' };
 
+// A faint motion glyph behind the hero so the action reads at a glance.
+const ACTION_GLYPH: Record<Action, ReactNode> = {
+  JUMP: (
+    <svg className="action-glyph" viewBox="0 0 100 60" aria-hidden="true">
+      <path d="M12 50 Q 50 2 88 50" fill="none" stroke="#ffffff" strokeWidth="6" strokeDasharray="2 9" strokeLinecap="round" />
+    </svg>
+  ),
+  CLIMB: (
+    <svg className="action-glyph" viewBox="0 0 100 60" aria-hidden="true">
+      <path d="M12 52 H40 V34 H66 V16 H90" fill="none" stroke="#ffffff" strokeWidth="6" strokeDasharray="2 9" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  DUCK: (
+    <svg className="action-glyph" viewBox="0 0 100 60" aria-hidden="true">
+      <path d="M12 14 Q 50 58 88 14" fill="none" stroke="#ffffff" strokeWidth="6" strokeDasharray="2 9" strokeLinecap="round" />
+    </svg>
+  ),
+};
+
 function actionIcon(action: Action): ReactNode {
-  return <span className={`action-art ${action.toLowerCase()}`}>{heroPose(ACTION_POSE[action])}</span>;
+  return (
+    <span className={`action-art ${action.toLowerCase()}`}>
+      {ACTION_GLYPH[action]}
+      {heroPose(ACTION_POSE[action])}
+    </span>
+  );
 }
 
 const svgProps = {

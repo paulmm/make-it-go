@@ -92,6 +92,16 @@ body {
   inset: 0;
   z-index: 0;
 }
+.path {
+  position: absolute;
+  z-index: 1;
+  left: 6%;
+  right: 6%;
+  bottom: 11%;
+  height: 6.5%;
+  border-radius: 999px;
+  background: rgba(214, 184, 134, 0.5);
+}
 .sun {
   position: absolute;
   z-index: 1;
@@ -372,12 +382,21 @@ body {
   animation: pulse 0.9s ease infinite;
 }
 .action-art {
+  position: relative;
   width: 100%;
   height: 100%;
   border-radius: 50%;
   display: grid;
   place-items: center;
   overflow: hidden;
+}
+.action-glyph {
+  position: absolute;
+  width: 72%;
+  left: 14%;
+  bottom: 12%;
+  opacity: 0.5;
+  pointer-events: none;
 }
 .action-art.jump {
   background: radial-gradient(circle at 50% 36%, #eafbe1, #a9e08f);
