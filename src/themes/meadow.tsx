@@ -55,6 +55,7 @@ export const MEADOW: ThemePack = {
   name: 'Bunny Meadow',
   palette,
   nouns: { hero: 'bunny', goal: 'carrot' },
+  hoverCry: 'Pick me!',
   backdrop: () => <Sprite src={backdropImg} className="backdrop-img" />,
   sun: () => <Sprite src={sunImg} />,
   hand: () => <Sprite src={handImg} />,

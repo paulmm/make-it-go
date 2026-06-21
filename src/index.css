@@ -96,6 +96,56 @@ body {
     transform: translateY(-7px);
   }
 }
+.logo-wrap {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+}
+/* A hand-drawn swoosh underlining the wordmark. */
+.logo-swoosh {
+  width: 76%;
+  height: clamp(12px, 2.4vw, 22px);
+}
+/* Twinkling sparkles tucked around the title. */
+.logo-spark {
+  position: absolute;
+  color: #ffd23d;
+  font-size: clamp(20px, 4vw, 40px);
+  line-height: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.12));
+  animation: twinkle 2.2s ease-in-out infinite;
+}
+.spark-a {
+  top: -10%;
+  left: -3%;
+}
+.spark-b {
+  top: 2%;
+  right: -4%;
+  color: #ff7aa8;
+  font-size: clamp(14px, 2.8vw, 28px);
+  animation-delay: 0.5s;
+}
+.spark-c {
+  bottom: 28%;
+  left: 5%;
+  color: #6bd0ff;
+  font-size: clamp(13px, 2.6vw, 24px);
+  animation-delay: 1.1s;
+}
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.8) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15) rotate(18deg);
+  }
+}
 .picker-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -126,6 +176,62 @@ body {
 .picker-hero .sprite {
   object-fit: contain;
   object-position: center bottom;
+}
+/* Hover/focus flavor: the tile lifts, the character wiggles, and a "pick me" pops up. */
+.picker-tile:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 14px 0 rgba(0, 0, 0, 0.1);
+}
+.picker-tile:hover .picker-hero,
+.picker-tile:focus-visible .picker-hero {
+  animation: heroWiggle 0.7s ease;
+}
+@keyframes heroWiggle {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  30% {
+    transform: translateY(-7px) rotate(-4deg);
+  }
+  65% {
+    transform: translateY(-2px) rotate(4deg);
+  }
+}
+.picker-cry {
+  position: absolute;
+  z-index: 2;
+  top: 5%;
+  left: 50%;
+  transform: translate(-50%, 8px) scale(0.7);
+  padding: 0.18em 0.7em;
+  border-radius: 999px;
+  background: #fff;
+  color: #444;
+  font-family: 'Baloo 2', 'Trebuchet MS', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: clamp(13px, 2.4vw, 21px);
+  white-space: nowrap;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
+}
+.picker-cry::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #fff;
+}
+.picker-tile:hover .picker-cry,
+.picker-tile:focus-visible .picker-cry {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
 }
 
 /* Sprites */

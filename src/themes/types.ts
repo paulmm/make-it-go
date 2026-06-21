@@ -35,6 +35,8 @@ export interface ThemePack {
   name: string;
   palette: ThemePalette;
   nouns: { hero: string; goal: string };
+  /** A short, playful line the character calls out when hovered on the picker. */
+  hoverCry: string;
   /** The scene behind the path (sky, hills, ground). */
   backdrop: () => ReactNode;
   /** A pokeable sun. */
