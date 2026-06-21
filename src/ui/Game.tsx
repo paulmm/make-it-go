@@ -39,7 +39,7 @@ export function Game({ theme, level }: GameProps) {
   const previewTimer = useRef<number | null>(null);
   const reducedMotion = useReducedMotion();
   const { speak, unlock, muted, setMuted, supported } = useSpeech();
-  const runner = useRunner(level.startIndex, reducedMotion ? 420 : 640);
+  const runner = useRunner(level.startIndex, reducedMotion ? 520 : 800);
 
   // Plant the anchor at the start of the level (and again on replay).
   const requestIntro = useCallback(() => {
@@ -148,6 +148,8 @@ export function Game({ theme, level }: GameProps) {
   const highlightIndex = scaffold?.kind === 'highlight-step' ? scaffold.stepIndex : null;
   const offerToken = scaffold?.kind === 'offer-token' ? scaffold.token : null;
   const celebrate = phase === 'result' && !!response?.celebrate;
+  // The step currently executing — its chip glows in time with the hop.
+  const executingIndex = phase === 'running' ? runner.activeStep?.index ?? null : null;
 
   return (
     <div
@@ -171,6 +173,7 @@ export function Game({ theme, level }: GameProps) {
         theme={theme}
         plan={plan}
         highlightIndex={highlightIndex}
+        activeIndex={executingIndex}
         disabled={phase === 'running'}
         onRemove={removeAt}
       />

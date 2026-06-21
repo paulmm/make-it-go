@@ -38,6 +38,8 @@ await page.waitForTimeout(250);
 await page.screenshot({ path: `${OUT}/2-built.png` });
 
 await page.click('button[aria-label="Go"]');
+await page.waitForTimeout(950); // mid-run: a chip should be glowing in sync with the hop
+await page.screenshot({ path: `${OUT}/2c-running.png` });
 await waitForSay('You did it');
 await page.waitForTimeout(550);
 await page.screenshot({ path: `${OUT}/3-win.png` });

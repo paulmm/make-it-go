@@ -2,6 +2,18 @@ import { useRef, useState } from 'react';
 import type { Level, Step, Token } from '../engine/types';
 import type { HeroPose, ThemePack } from '../themes/types';
 
+/** A faint paw print on a stepping stone — signals "you land on stones," not water. */
+function LandMark() {
+  return (
+    <svg viewBox="0 0 40 44" width="100%" height="100%" aria-hidden="true">
+      <ellipse cx="20" cy="30" rx="11" ry="9" fill="#4f3825" />
+      <circle cx="10" cy="15" r="3.6" fill="#4f3825" />
+      <circle cx="20" cy="11" r="3.6" fill="#4f3825" />
+      <circle cx="30" cy="15" r="3.6" fill="#4f3825" />
+    </svg>
+  );
+}
+
 interface TrackProps {
   theme: ThemePack;
   level: Level;
@@ -78,6 +90,11 @@ export function Track({ theme, level, heroIndex, activeStep, celebrate, reducedM
           ) : (
             <div className="tile" key={i}>
               {theme.tileArt[kind]()}
+              {(kind === 'START' || kind === 'PATH') && (
+                <span className="land-mark" aria-hidden="true">
+                  <LandMark />
+                </span>
+              )}
             </div>
           ),
         )}

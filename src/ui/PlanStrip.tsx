@@ -6,6 +6,8 @@ interface PlanStripProps {
   plan: Token[];
   /** Step the partner is pointing at (the wrong one), or null. */
   highlightIndex: number | null;
+  /** Step currently executing during a run (glows in sync with the hop), or null. */
+  activeIndex: number | null;
   disabled: boolean;
   onRemove: (index: number) => void;
 }
@@ -28,7 +30,7 @@ function Footprint() {
  * the carrot at the end. The same left-to-right axis the hero travels. Tap a step
  * to remove it. Empty footprints invite the first step.
  */
-export function PlanStrip({ theme, plan, highlightIndex, disabled, onRemove }: PlanStripProps) {
+export function PlanStrip({ theme, plan, highlightIndex, activeIndex, disabled, onRemove }: PlanStripProps) {
   return (
     <div className="plan" aria-label="Your plan">
       <div className="plan-cap" aria-hidden="true">
@@ -47,7 +49,7 @@ export function PlanStrip({ theme, plan, highlightIndex, disabled, onRemove }: P
             <button
               key={i}
               type="button"
-              className={`chip${highlightIndex === i ? ' highlight' : ''}`}
+              className={`chip${highlightIndex === i ? ' highlight' : ''}${activeIndex === i ? ' active' : ''}`}
               onClick={() => onRemove(i)}
               disabled={disabled}
               aria-label={`Step ${i + 1}, ${TOKEN_WORD[token]}. Tap to remove.`}

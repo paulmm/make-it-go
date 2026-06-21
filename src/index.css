@@ -147,6 +147,15 @@ body {
   opacity: 0;
   transform: translateX(-50%) scale(0.4);
 }
+.land-mark {
+  position: absolute;
+  left: 50%;
+  bottom: 30%;
+  width: 26%;
+  transform: translateX(-50%);
+  opacity: 0.22;
+  pointer-events: none;
+}
 
 /* Tappable water tile + ripple */
 .tile-interactive {
@@ -418,6 +427,13 @@ body {
 .chip.highlight {
   outline: 4px solid #ff5d5d;
   animation: wobble 0.7s ease infinite;
+}
+/* The step currently executing glows in time with the hop. */
+.chip.active {
+  outline: 4px solid #ffcf3a;
+  box-shadow: 0 0 14px rgba(255, 200, 50, 0.95);
+  transform: scale(1.12);
+  z-index: 1;
 }
 
 /* ---- Token tray: the two big "pick a step" buttons ---- */
