@@ -1,4 +1,4 @@
-// Temporary driver: plays Level 1 headlessly and screenshots the key states.
+// Temporary driver: plays Level 1 (event-point model) and screenshots the key states.
 import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
 
@@ -16,44 +16,43 @@ const waitForSay = (needle) =>
   page.waitForFunction(
     (s) => document.querySelector('.partner-say')?.textContent?.includes(s) ?? false,
     needle,
-    { timeout: 8000 },
+    { timeout: 9000 },
   );
 
 await page.goto(URL, { waitUntil: 'networkidle' });
 await page.waitForSelector('.token');
 await page.screenshot({ path: `${OUT}/1-initial.png` });
 
-// Exercise scene interactions (catch runtime errors; capture a mid-effect frame).
-for (const sel of ['.sun', '.hero.clickable', '.tile-interactive']) {
-  await page.click(sel, { timeout: 2000 }).catch((e) => console.log('click skip', sel, e.message.split('\n')[0]));
-}
-await page.waitForTimeout(180);
-await page.screenshot({ path: `${OUT}/1b-interact.png` });
-
-// Winning plan: hop, big jump, hop
-await page.click('button[aria-label="Add a hop"]');
-await page.click('button[aria-label="Add a big jump"]');
-await page.click('button[aria-label="Add a hop"]');
-await page.waitForTimeout(250);
+// Win: pick Jump for the gap.
+await page.click('button[aria-label="Jump"]');
+await page.waitForTimeout(200);
 await page.screenshot({ path: `${OUT}/2-built.png` });
-
 await page.click('button[aria-label="Go"]');
-await page.waitForTimeout(950); // mid-run: a chip should be glowing in sync with the hop
+await page.waitForTimeout(900); // mid-run: walking / jumping
 await page.screenshot({ path: `${OUT}/2c-running.png` });
 await waitForSay('You did it');
-await page.waitForTimeout(550);
+await page.waitForTimeout(500);
 await page.screenshot({ path: `${OUT}/3-win.png` });
 console.log('WIN:', JSON.stringify(await page.textContent('.partner-say')));
 
-// Wrong plan: hop, hop -> splash
+// Redundant: Jump then an extra Climb -> reaches the goal but is not a clean win.
 await page.click('button[aria-label="Clear all steps"]');
-await page.click('button[aria-label="Add a hop"]');
-await page.click('button[aria-label="Add a hop"]');
+await page.click('button[aria-label="Jump"]');
+await page.click('button[aria-label="Climb"]');
 await page.click('button[aria-label="Go"]');
-await waitForSay('Splash');
-await page.waitForTimeout(200);
-await page.screenshot({ path: `${OUT}/4-splash.png` });
-console.log('SPLASH:', JSON.stringify(await page.textContent('.partner-say')));
+await waitForSay('extra');
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/3b-redundant.png` });
+console.log('REDUNDANT:', JSON.stringify(await page.textContent('.partner-say')));
+
+// Stumble: pick Climb (wrong action for a gap).
+await page.click('button[aria-label="Clear all steps"]');
+await page.click('button[aria-label="Climb"]');
+await page.click('button[aria-label="Go"]');
+await waitForSay('stumbled');
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/4-stumble.png` });
+console.log('STUMBLE:', JSON.stringify(await page.textContent('.partner-say')));
 
 console.log('CONSOLE_ERRORS:', JSON.stringify(errors));
 await browser.close();

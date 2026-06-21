@@ -1,44 +1,45 @@
 import type { ReactNode } from 'react';
-import type { TileKind, Token } from '../engine/types';
+import type { Action, EventKind } from '../engine/types';
 
-export type HeroPose = 'idle' | 'hop' | 'leap' | 'splash' | 'cheer';
+/** The hero's poses. `walk` is the auto-walk gait between event points. */
+export type HeroPose = 'idle' | 'walk' | 'jump' | 'duck' | 'climb' | 'stumble' | 'cheer';
 
 export interface ThemePalette {
-  sky: string; // scene background, top
-  ground: string; // scene background, bottom band
-  tile: string; // plain safe tile
+  sky: string;
+  ground: string;
+  tile: string;
   tileEdge: string;
-  hazard: string; // water
-  goal: string; // goal accent
-  accent: string; // buttons / highlights
+  hazard: string;
+  goal: string;
+  accent: string;
   text: string;
 }
 
 /**
- * A theme is data over the shared engine: art for each tile kind, the hero sprite,
- * the two verb tokens, a celebration, and the nouns the partner speaks. Adding a
- * theme is adding one of these — never forking engine logic.
+ * A theme is data over the shared engine: the scene, the hero's poses, an action icon
+ * per token, and an obstacle visual per event-point kind. Adding a theme is adding one
+ * of these — never forking engine logic.
  */
 export interface ThemePack {
   id: string;
   name: string;
   palette: ThemePalette;
-  nouns: { hero: string; goal: string; hazard: string };
-  /** The scene behind the tiles (sky, hills, ground) — gives depth. */
+  nouns: { hero: string; goal: string };
+  /** The scene behind the path (sky, hills, ground). */
   backdrop: () => ReactNode;
-  /** A pokeable sun, overlaid on the (sun-less) backdrop. */
+  /** A pokeable sun. */
   sun: () => ReactNode;
-  /** An illustrated "tap here" pointing hand for the first-step hint. */
+  /** The "tap here" pointing hand for the first-step hint. */
   hand: () => ReactNode;
-  /** Art filling one tile of each kind. */
-  tileArt: Record<TileKind, () => ReactNode>;
-  /** The hero rendered in a given pose. */
-  heroPose: (pose: HeroPose) => ReactNode;
+  /** The goal symbol (e.g. the carrot), for the plan's end cap. */
+  goalIcon: () => ReactNode;
   /** Shown on a win. */
   celebration: () => ReactNode;
-  /** A standalone goal symbol (e.g. the carrot), for the plan's end cap. */
-  goalIcon: () => ReactNode;
-  /** Picture-token icons for the verbs — no words needed. */
-  tokenArt: Record<Token, () => ReactNode>;
+  /** The hero rendered in a given pose. */
+  heroPose: (pose: HeroPose) => ReactNode;
+  /** The token icon for each action — the hero doing it. */
+  actionArt: Record<Action, () => ReactNode>;
+  /** The obstacle visual at each event-point kind. */
+  obstacleArt: Record<EventKind, () => ReactNode>;
   voice?: { flavorWords?: string[] };
 }

@@ -1,11 +1,19 @@
-// Core engine types — theme-agnostic and pure. Themes reskin a Level's geometry;
-// they never change how it executes.
+// Core engine types — theme-agnostic and pure. The character auto-walks; the child
+// supplies one action token per event point. Themes reskin event points and actions;
+// they never change how a plan executes.
 
-/** The picture-tokens available in Level 1. */
-export type Token = 'ADVANCE' | 'LEAP';
+/** Action tokens available at Level 1. Later levels add GRAB, OPEN. */
+export type Action = 'JUMP' | 'DUCK' | 'CLIMB';
 
-/** What occupies a tile on the 1-D track. */
-export type TileKind = 'START' | 'PATH' | 'HAZARD' | 'GOAL';
+/** Kinds of event point on the path. Later levels add KEY, GATE. */
+export type EventKind = 'GAP' | 'BRANCH' | 'STEP';
+
+/** The one correct action for each event-point kind. Theme-agnostic, 1:1. */
+export const REQUIRED_ACTION: Record<EventKind, Action> = {
+  GAP: 'JUMP',
+  BRANCH: 'DUCK',
+  STEP: 'CLIMB',
+};
 
 /** The fixed knowledge anchors. Each level plants or reinforces exactly one. */
 export type AnchorId =
@@ -15,58 +23,54 @@ export type AnchorId =
   | 'find-and-fix';
 
 /**
- * Per-level mastery rule. Milestone 1 implements only 'reach-goal' (L1's gate is
- * simply reaching the goal). The union documents the seam: L3 will add an
- * efficiency-based rule where folding a brute-forced run into REPEAT is the lesson.
+ * Per-level mastery rule. L1/L2 use 'reach-goal' (clear every point). The union
+ * documents the seam: L3 adds an efficiency rule where folding a brute-forced run
+ * into REPEAT is the lesson.
  */
 export type MasteryRule =
   | { kind: 'reach-goal' }
   | { kind: 'reach-goal-within'; maxRedundant: number };
 
-/** A theme-agnostic level: pure geometry plus rules. */
+/** A theme-agnostic level: an ordered list of event points plus rules. */
 export interface Level {
   id: string;
-  /** The track, left to right. Index 0 is the leftmost tile. */
-  tiles: TileKind[];
-  /** Where the hero starts (usually 0). */
-  startIndex: number;
-  /** Index of the GOAL tile. */
-  goalIndex: number;
-  /** Minimum tokens needed to win. Telemetry now; a gate at later levels. */
-  optimalSteps: number;
+  /** Event points along the path, in the order the character meets them. */
+  points: EventKind[];
+  /** Action tokens offered on the tray (>= 2 so the choice is real). */
+  allowedActions: Action[];
   /** The knowledge anchor this level plants. */
   anchorId: AnchorId;
-  /** Tokens offered to the child on this level. */
-  allowedTokens: Token[];
   mastery: MasteryRule;
 }
 
-/** What happened when one token executed and the hero landed. */
-export type StepEvent = 'SAFE' | 'WIN' | 'SPLASH' | 'FELL_OFF';
+/** What happened when the character reached one event point. */
+export type StepResult = 'PASS' | 'WRONG' | 'MISSING';
 
-/** One executed token, recorded literally so the UI can replay it. */
+/** One event point as it was met during the run — recorded literally for the UI. */
 export interface Step {
-  /** Position of this token within the plan (0-based). */
-  index: number;
-  token: Token;
-  fromIndex: number;
-  toIndex: number;
-  /** For LEAP, the tile flown over; null for ADVANCE. */
-  passedOverIndex: number | null;
-  event: StepEvent;
-  /** True if this step ended the run. */
-  terminal: boolean;
+  pointIndex: number;
+  kind: EventKind;
+  /** The action this point needed. */
+  required: Action;
+  /** The action she had queued for it; null if she ran out of tokens. */
+  played: Action | null;
+  result: StepResult;
 }
 
-/** The outcome of running a whole plan. */
-export type Outcome = 'WIN' | 'SPLASH' | 'FELL_OFF' | 'INCOMPLETE';
+/**
+ * The outcome of running a whole plan.
+ * WIN: every point cleared. STUMBLE: a wrong action at a point. INCOMPLETE: ran out of
+ * tokens at a point. STUMBLE and INCOMPLETE are both fails, kept distinct so the partner
+ * can speak to each differently.
+ */
+export type Outcome = 'WIN' | 'STUMBLE' | 'INCOMPLETE';
 
 /** The full result of executing a plan — everything the UI needs to animate. */
 export interface Trace {
   outcome: Outcome;
   steps: Step[];
-  /** The hero's final tile index. */
-  finalIndex: number;
-  /** How many tokens actually executed before stopping. */
-  executedTokens: number;
+  /** How many points she cleared before the run ended. */
+  clearedPoints: number;
+  /** Tokens beyond the number of points (trailing/unused) — telemetry only. */
+  redundantTokens: number;
 }

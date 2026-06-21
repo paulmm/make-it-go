@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { run } from '../engine/interpreter';
 import { evaluateMastery } from '../engine/mastery';
-import type { Level, Token } from '../engine/types';
+import type { Action, Level } from '../engine/types';
 import { partner } from '../partner';
 import type { PartnerResponse } from '../partner/types';
 import { createRecorder } from '../telemetry/recorder';
@@ -13,35 +13,36 @@ import { Track } from './Track';
 import { TokenTray } from './TokenTray';
 import { useReducedMotion } from './useReducedMotion';
 import { useRunner } from './useRunner';
+import type { RunnerGeometry } from './useRunner';
 import { useSpeech } from './useSpeech';
 
 const MAX_PLAN = 8;
-const PREVIEW_MS = 760;
-const WORD_CUE: Record<Token, string> = { ADVANCE: 'Hop!', LEAP: 'Big jump!' };
+const WORD_CUE: Record<Action, string> = { JUMP: 'Jump!', DUCK: 'Duck!', CLIMB: 'Climb!' };
 
 type Phase = 'building' | 'running' | 'result';
 
-interface GameProps {
-  theme: ThemePack;
-  level: Level;
+/** Place the start, the event points, and the goal along the path (fractions of width). */
+function layout(level: Level): RunnerGeometry {
+  const n = level.points.length;
+  const first = 0.32;
+  const last = 0.68;
+  const pointX = n <= 1 ? [0.5] : level.points.map((_, i) => first + ((last - first) * i) / (n - 1));
+  return { startX: 0.09, goalX: 0.92, pointX };
 }
 
 /** The whole play surface for one level. State machine: building -> running -> result. */
-export function Game({ theme, level }: GameProps) {
-  const [plan, setPlan] = useState<Token[]>([]);
+export function Game({ theme, level }: { theme: ThemePack; level: Level }) {
+  const [plan, setPlan] = useState<Action[]>([]);
   const [phase, setPhase] = useState<Phase>('building');
   const [response, setResponse] = useState<PartnerResponse | null>(null);
-  const [preview, setPreview] = useState<{ token: Token; id: number } | null>(null);
   const [onboarded, setOnboarded] = useState(false);
 
   const recorder = useRef(createRecorder());
-  const previewId = useRef(0);
-  const previewTimer = useRef<number | null>(null);
   const reducedMotion = useReducedMotion();
   const { speak, unlock, muted, setMuted, supported } = useSpeech();
-  const runner = useRunner(level.startIndex, reducedMotion ? 520 : 800);
+  const runner = useRunner(reducedMotion);
+  const geo = layout(level);
 
-  // Plant the anchor at the start of the level (and again on replay).
   const requestIntro = useCallback(() => {
     partner({
       themeId: theme.id,
@@ -61,37 +62,21 @@ export function Game({ theme, level }: GameProps) {
 
   useEffect(() => {
     requestIntro();
+    runner.reset(geo.startX);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requestIntro]);
-
-  useEffect(
-    () => () => {
-      if (previewTimer.current) window.clearTimeout(previewTimer.current);
-    },
-    [],
-  );
 
   const backToBuilding = () => {
     setPhase('building');
-    runner.reset(level.startIndex);
+    runner.reset(geo.startX);
   };
 
-  // Show what a step does on the bunny itself, without committing it (the splash
-  // stays a surprise until GO).
-  const showPreview = (token: Token) => {
-    if (reducedMotion) return;
-    previewId.current += 1;
-    setPreview({ token, id: previewId.current });
-    if (previewTimer.current) window.clearTimeout(previewTimer.current);
-    previewTimer.current = window.setTimeout(() => setPreview(null), PREVIEW_MS);
-  };
-
-  const addToken = (token: Token) => {
+  const addToken = (action: Action) => {
     unlock();
     if (phase === 'running') return;
-    setPlan((p) => (p.length >= MAX_PLAN ? p : [...p, token]));
+    setPlan((p) => (p.length >= MAX_PLAN ? p : [...p, action]));
     setOnboarded(true);
-    speak(WORD_CUE[token]);
-    showPreview(token);
+    speak(WORD_CUE[action]);
     backToBuilding();
   };
 
@@ -106,7 +91,6 @@ export function Game({ theme, level }: GameProps) {
     unlock();
     if (phase === 'running') return;
     setPlan([]);
-    setPreview(null);
     backToBuilding();
     requestIntro();
   };
@@ -114,17 +98,17 @@ export function Game({ theme, level }: GameProps) {
   const go = () => {
     unlock();
     if (phase === 'running' || plan.length === 0) return;
-    setPreview(null);
     const trace = run(level, plan);
-    const recentHistory = recorder.current.outcomesFor(level.id); // before this attempt
+    const mastery = evaluateMastery(level, plan, trace);
+    const recentHistory = recorder.current.outcomesFor(level.id);
     setPhase('running');
-    runner.play(trace, () => {
-      const mastery = evaluateMastery(level, plan, trace);
+    // A clean solve (no extra tokens) cheers; a redundant win just stands at the goal.
+    runner.play(trace, geo, mastery.mastered, () => {
       recorder.current.record({
         levelId: level.id,
         plan,
         outcome: trace.outcome,
-        redundantSteps: mastery.redundantSteps,
+        redundantTokens: mastery.redundantTokens,
       });
       partner({
         themeId: theme.id,
@@ -146,10 +130,9 @@ export function Game({ theme, level }: GameProps) {
 
   const scaffold = phase === 'result' ? response?.scaffold : undefined;
   const highlightIndex = scaffold?.kind === 'highlight-step' ? scaffold.stepIndex : null;
-  const offerToken = scaffold?.kind === 'offer-token' ? scaffold.token : null;
+  const offerAction = scaffold?.kind === 'offer-action' ? scaffold.action : null;
   const celebrate = phase === 'result' && !!response?.celebrate;
-  // The step currently executing — its chip glows in time with the hop.
-  const executingIndex = phase === 'running' ? runner.activeStep?.index ?? null : null;
+  const executingIndex = phase === 'running' ? runner.activePoint : null;
 
   return (
     <div
@@ -163,11 +146,13 @@ export function Game({ theme, level }: GameProps) {
       <Track
         theme={theme}
         level={level}
-        heroIndex={runner.heroIndex}
-        activeStep={runner.activeStep}
+        geo={geo}
+        heroX={runner.heroX}
+        heroPose={runner.heroPose}
+        heroMs={runner.heroMs}
+        tick={runner.tick}
         celebrate={celebrate}
         reducedMotion={reducedMotion}
-        preview={preview}
       />
       <PlanStrip
         theme={theme}
@@ -179,8 +164,8 @@ export function Game({ theme, level }: GameProps) {
       />
       <TokenTray
         theme={theme}
-        tokens={level.allowedTokens}
-        offerToken={offerToken}
+        actions={level.allowedActions}
+        offerAction={offerAction}
         disabled={phase === 'running'}
         hint={!onboarded}
         onAdd={addToken}

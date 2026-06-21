@@ -31,7 +31,7 @@ body {
   touch-action: manipulation;
 }
 
-/* Sprites (generated PNGs) */
+/* Sprites */
 .sprite {
   width: 100%;
   height: 100%;
@@ -42,10 +42,13 @@ body {
 .backdrop-img {
   object-fit: cover;
 }
-/* The generated bunny faces left; flip it to face the direction of travel (right). */
+/* The hero faces right (travel direction). Left-facing sprites flip; right-facing don't. */
 .sprite.bunny {
   transform: scaleX(-1);
   transform-origin: bottom center;
+}
+.sprite.bunny.faces-right {
+  transform: scaleX(1);
 }
 
 /* ---- Partner ---- */
@@ -80,8 +83,6 @@ body {
   position: relative;
   flex: 1 1 auto;
   min-height: 230px;
-  display: flex;
-  align-items: flex-end;
   border-radius: 24px;
   overflow: hidden;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1), inset 0 0 0 3px rgba(255, 255, 255, 0.3);
@@ -91,110 +92,79 @@ body {
   inset: 0;
   z-index: 0;
 }
-
-/* Pokeable sun */
 .sun {
   position: absolute;
   z-index: 1;
   top: 5%;
   right: 6%;
-  width: 17%;
+  width: 14%;
   aspect-ratio: 1 / 1;
   border: none;
   background: transparent;
   padding: 0;
   cursor: pointer;
-  pointer-events: auto;
 }
 .sun.poke {
   animation: sunPoke 0.55s ease;
 }
 
-.tiles {
-  position: relative;
+.obstacle-slot {
+  position: absolute;
   z-index: 1;
+  bottom: 11%;
+  width: 15%;
+  aspect-ratio: 1 / 1;
+  transform: translateX(-50%);
   display: flex;
-  width: 100%;
-  height: 64%;
   align-items: flex-end;
-  padding: 0 4px 4px;
+  justify-content: center;
 }
-.tile {
-  position: relative;
-  flex: 1 1 0;
-  height: 100%;
-  padding: 0 2px;
-}
-.tile .sprite {
+.obstacle {
   object-position: center bottom;
-}
-.hero .sprite,
-.ghost .sprite {
-  object-position: center bottom;
-}
-.goal-carrot {
-  position: absolute;
-  left: 50%;
-  bottom: 52%;
-  width: 64%;
-  height: 64%;
-  transform: translateX(-50%);
-  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.18));
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-/* The bunny "takes" the carrot on the win — the one on the stump disappears. */
-.track.won .goal-carrot {
-  opacity: 0;
-  transform: translateX(-50%) scale(0.4);
-}
-.land-mark {
-  position: absolute;
-  left: 50%;
-  bottom: 30%;
-  width: 26%;
-  transform: translateX(-50%);
-  opacity: 0.22;
-  pointer-events: none;
 }
 
-/* Tappable water tile + ripple */
-.tile-interactive {
-  display: block;
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  position: relative;
-}
-.ripple {
+.goal-slot {
   position: absolute;
-  z-index: 2;
-  left: 50%;
-  bottom: 10%;
-  width: 52%;
+  z-index: 1;
+  bottom: 15%;
+  width: 11%;
   aspect-ratio: 1 / 1;
-  border: 3px solid rgba(255, 255, 255, 0.85);
-  border-radius: 50%;
   transform: translateX(-50%);
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.18));
+  transition: opacity 0.3s ease;
+}
+/* The bunny "takes" the carrot on the win — the one at the goal disappears. */
+.track.won .goal-slot {
   opacity: 0;
+}
+
+.win-burst {
+  position: absolute;
+  z-index: 1;
+  bottom: 16%;
+  width: 20%;
+  aspect-ratio: 1 / 1;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 238, 160, 0.65), rgba(255, 238, 160, 0) 70%);
   pointer-events: none;
-  animation: rippleExpand 0.7s ease-out;
+  animation: winBurst 0.7s ease-out;
 }
 
 .hero-shadow {
   position: absolute;
   z-index: 1;
-  bottom: 18%;
+  bottom: 13%;
+  width: 16%;
+  aspect-ratio: 1 / 1;
+  transform: translateX(-50%);
   display: flex;
   align-items: flex-end;
   justify-content: center;
   pointer-events: none;
-  transition: left 0.5s cubic-bezier(0.34, 0.02, 0.2, 1), opacity 0.15s ease;
 }
 .shadow-ellipse {
-  width: 38%;
+  width: 42%;
   height: 8px;
   border-radius: 50%;
   background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0) 72%);
@@ -203,67 +173,67 @@ body {
 .hero {
   position: absolute;
   z-index: 2;
-  bottom: 18%;
+  bottom: 14%;
+  width: 16%;
   aspect-ratio: 1 / 1;
-  height: auto;
+  transform: translateX(-50%);
   display: flex;
   align-items: flex-end;
   justify-content: center;
   pointer-events: none;
-  transform-origin: bottom center;
-  transition: left 0.5s cubic-bezier(0.34, 0.02, 0.2, 1), opacity 0.15s ease;
-}
-.hero.petting {
-  animation: petSquish 0.5s ease;
 }
 .hero.clickable {
   pointer-events: auto;
   cursor: pointer;
 }
 .hero-inner {
-  width: 92%;
-  height: 92%;
-  transform-origin: bottom center;
-}
-.hero-inner.idle {
-  animation: idleBob 2.6s ease-in-out infinite;
-}
-.hero-inner.adv {
-  animation: hopAdvance 0.5s ease;
-}
-.hero-inner.leap {
-  animation: hopLeap 0.5s ease;
-}
-.hero-inner.cheer {
-  animation: cheerBounce 0.85s ease 2;
-}
-.hero-inner.idle .sprite.bunny {
-  animation: earTwitch 4.5s ease-in-out infinite;
-}
-.pet-wrap {
   width: 100%;
   height: 100%;
   transform-origin: bottom center;
 }
-.pet-wrap.petting {
+.hero .sprite {
+  object-position: center bottom;
+}
+.hero-inner.idle {
+  animation: idleBob 2.6s ease-in-out infinite;
+}
+.hero-inner.idle .sprite.bunny {
+  animation: earTwitch 4.5s ease-in-out infinite;
+}
+.hero-inner.walk {
+  animation: walkBob 0.42s ease-in-out infinite;
+}
+.hero-inner.jump {
+  animation: jumpArc 0.56s ease;
+}
+.hero-inner.climb {
+  animation: climbMove 0.56s ease;
+}
+.hero-inner.duck {
+  animation: duckSquash 0.56s ease;
+}
+.hero-inner.stumble {
+  animation: stumbleWobble 0.56s ease;
+}
+.hero-inner.cheer {
+  animation: cheerBounce 0.85s ease 2;
+}
+.hero-inner.petting {
   animation: petSquish 0.5s ease;
 }
-.track.reduced .hero {
-  transition: opacity 0.15s ease;
+.track.reduced .hero-inner {
+  animation: none !important;
 }
-.track.reduced .hero-inner.idle,
-.track.reduced .hero-inner.adv,
-.track.reduced .hero-inner.leap,
-.track.reduced .hero-inner.cheer,
-.track.reduced .hero-inner.idle .sprite.bunny,
-.track.reduced .hero.petting {
-  animation: none;
+.track.reduced .hero-inner .sprite.bunny {
+  animation: none !important;
 }
 
 .hearts {
   position: absolute;
   z-index: 3;
-  bottom: 42%;
+  bottom: 34%;
+  width: 16%;
+  transform: translateX(-50%);
   display: flex;
   justify-content: center;
   gap: 8px;
@@ -282,87 +252,19 @@ body {
   animation-delay: 0.16s;
 }
 
-/* Translucent "let me show you" preview of a single step. */
-.ghost {
-  position: absolute;
-  z-index: 2;
-  bottom: 18%;
-  aspect-ratio: 1 / 1;
-  height: auto;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  pointer-events: none;
-  opacity: 0.5;
-}
-.ghost-inner {
-  width: 92%;
-  height: 92%;
-  transform-origin: bottom center;
-}
-.ghost-inner.hop {
-  animation: previewHop 0.74s ease;
-}
-.ghost-inner.jump {
-  animation: previewLeap 0.74s ease;
-}
-
-/* Dust puff on landing */
-.dust {
-  position: absolute;
-  z-index: 2;
-  bottom: 16%;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  pointer-events: none;
-}
-.dust span {
-  position: absolute;
-  bottom: 0;
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
-  opacity: 0;
-  animation: dustPuff 0.5s ease-out 0.3s;
-}
-.dust span:nth-child(1) {
-  --dx: -16px;
-}
-.dust span:nth-child(2) {
-  width: 14px;
-  height: 14px;
-}
-.dust span:nth-child(3) {
-  --dx: 16px;
-}
-
-/* Win burst ring behind the bunny */
-.win-burst {
-  position: absolute;
-  z-index: 1;
-  bottom: 18%;
-  aspect-ratio: 1 / 1;
-  height: auto;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 238, 160, 0.65), rgba(255, 238, 160, 0) 70%);
-  pointer-events: none;
-  animation: winBurst 0.7s ease-out;
-}
-
 .overlay {
   position: absolute;
   z-index: 3;
-  bottom: 24%;
-  aspect-ratio: 1 / 1;
-  height: auto;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
   pointer-events: none;
 }
 .overlay.celebrate {
+  bottom: 20%;
+  width: 22%;
+  aspect-ratio: 1 / 1;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
   animation: pop 0.5s ease;
 }
 .overlay.celebrate svg rect {
@@ -374,7 +276,7 @@ body {
   animation-duration: 1.25s;
 }
 
-/* ---- Plan: the bunny's journey (bunny -> steps -> carrot) ---- */
+/* ---- Plan: bunny -> actions -> carrot ---- */
 .plan {
   display: flex;
   align-items: center;
@@ -421,14 +323,13 @@ body {
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
   cursor: pointer;
 }
-.chip .token-art {
+.chip .action-art {
   border-radius: 13px;
 }
 .chip.highlight {
   outline: 4px solid #ff5d5d;
   animation: wobble 0.7s ease infinite;
 }
-/* The step currently executing glows in time with the hop. */
 .chip.active {
   outline: 4px solid #ffcf3a;
   box-shadow: 0 0 14px rgba(255, 200, 50, 0.95);
@@ -436,7 +337,7 @@ body {
   z-index: 1;
 }
 
-/* ---- Token tray: the two big "pick a step" buttons ---- */
+/* ---- Token tray ---- */
 .token-tray {
   display: flex;
   gap: clamp(14px, 4vw, 36px);
@@ -462,7 +363,7 @@ body {
 .token.offer {
   animation: pulse 0.9s ease infinite;
 }
-.token-art {
+.action-art {
   width: 100%;
   height: 100%;
   border-radius: 50%;
@@ -470,13 +371,16 @@ body {
   place-items: center;
   overflow: hidden;
 }
-.token-art.hop {
+.action-art.jump {
   background: radial-gradient(circle at 50% 36%, #eafbe1, #a9e08f);
 }
-.token-art.jump {
+.action-art.climb {
   background: radial-gradient(circle at 50% 36%, #efe7ff, #bfa9ff);
 }
-.token-art .sprite {
+.action-art.duck {
+  background: radial-gradient(circle at 50% 36%, #ffe9d6, #ffc08a);
+}
+.action-art .sprite {
   width: 86%;
   height: 86%;
 }
@@ -551,20 +455,55 @@ body {
     transform: translateY(-4%);
   }
 }
-@keyframes earTwitch {
+@keyframes walkBob {
   0%,
-  84%,
   100% {
-    transform: scaleX(-1) rotate(0deg);
+    transform: translateY(0);
   }
-  88% {
-    transform: scaleX(-1) rotate(-5deg);
+  50% {
+    transform: translateY(-10%);
   }
-  92% {
-    transform: scaleX(-1) rotate(4deg);
+}
+@keyframes jumpArc {
+  0% {
+    transform: translateY(0);
   }
-  96% {
-    transform: scaleX(-1) rotate(-1deg);
+  45% {
+    transform: translateY(-46%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+@keyframes climbMove {
+  0% {
+    transform: translateY(8%) rotate(-4deg);
+  }
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+}
+@keyframes duckSquash {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(0.72);
+  }
+}
+@keyframes stumbleWobble {
+  0% {
+    transform: rotate(0);
+  }
+  25% {
+    transform: rotate(-13deg) translateY(4%);
+  }
+  60% {
+    transform: rotate(9deg);
+  }
+  100% {
+    transform: rotate(0);
   }
 }
 @keyframes cheerBounce {
@@ -599,6 +538,22 @@ body {
     transform: scale(1, 1);
   }
 }
+@keyframes earTwitch {
+  0%,
+  84%,
+  100% {
+    transform: scaleX(-1) rotate(0deg);
+  }
+  88% {
+    transform: scaleX(-1) rotate(-5deg);
+  }
+  92% {
+    transform: scaleX(-1) rotate(4deg);
+  }
+  96% {
+    transform: scaleX(-1) rotate(-1deg);
+  }
+}
 @keyframes heartFloat {
   0% {
     opacity: 0;
@@ -612,92 +567,13 @@ body {
     transform: translateY(-42px) scale(1.1);
   }
 }
-@keyframes hopAdvance {
-  0% {
-    transform: translateY(0) scaleY(1);
-  }
-  18% {
-    transform: translateY(0) scaleY(0.95);
-  }
-  50% {
-    transform: translateY(-24%) scaleY(1.02);
-  }
-  82% {
-    transform: translateY(0) scaleY(0.97);
-  }
-  100% {
-    transform: translateY(0) scaleY(1);
-  }
-}
-@keyframes hopLeap {
-  0% {
-    transform: translateY(0) scaleY(1);
-  }
-  14% {
-    transform: translateY(0) scaleY(0.92);
-  }
-  50% {
-    transform: translateY(-58%) scaleY(1.04);
-  }
-  82% {
-    transform: translateY(0) scaleY(0.95);
-  }
-  100% {
-    transform: translateY(0) scaleY(1);
-  }
-}
-@keyframes previewHop {
-  0% {
-    transform: translate(0, 0);
-  }
-  50% {
-    transform: translate(60%, -26%);
-  }
-  100% {
-    transform: translate(0, 0);
-  }
-}
-@keyframes previewLeap {
-  0% {
-    transform: translate(0, 0);
-  }
-  50% {
-    transform: translate(115%, -56%);
-  }
-  100% {
-    transform: translate(0, 0);
-  }
-}
-@keyframes dustPuff {
-  0% {
-    opacity: 0;
-    transform: translate(0, 0) scale(0.4);
-  }
-  35% {
-    opacity: 0.85;
-  }
-  100% {
-    opacity: 0;
-    transform: translate(var(--dx, 0), -7px) scale(1.4);
-  }
-}
 @keyframes winBurst {
   0% {
-    transform: scale(0.3);
+    transform: translateX(-50%) scale(0.3);
     opacity: 0.9;
   }
   100% {
-    transform: scale(1.7);
-    opacity: 0;
-  }
-}
-@keyframes rippleExpand {
-  0% {
-    transform: translateX(-50%) scale(0.2);
-    opacity: 0.8;
-  }
-  100% {
-    transform: translateX(-50%) scale(1.35);
+    transform: translateX(-50%) scale(1.7);
     opacity: 0;
   }
 }

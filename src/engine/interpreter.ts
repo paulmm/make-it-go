@@ -1,58 +1,35 @@
-import type { Level, Outcome, Step, StepEvent, Token, Trace } from './types';
-
-/** How far each token moves the hero. LEAP is always +2 — never context-sensitive. */
-const DELTA: Record<Token, number> = {
-  ADVANCE: 1,
-  LEAP: 2,
-};
-
-/** Evaluate the tile the hero lands on. Only the landing tile matters. */
-function landingEvent(level: Level, to: number): StepEvent {
-  const lastIndex = level.tiles.length - 1;
-  if (to < 0 || to > lastIndex) return 'FELL_OFF';
-  switch (level.tiles[to]) {
-    case 'GOAL':
-      return 'WIN';
-    case 'HAZARD':
-      return 'SPLASH';
-    default:
-      return 'SAFE';
-  }
-}
+import type { Action, Level, Outcome, Step, Trace } from './types';
+import { REQUIRED_ACTION } from './types';
 
 /**
- * Execute a plan literally: each token runs in order, the hero does exactly what
- * it says, and execution stops the instant something terminal happens (a win, a
- * splash, or falling off the end). No autocorrect, ever — the gap between what she
- * meant and what she said is the lesson.
+ * Execute a plan literally. The character auto-walks and, at each event point in order,
+ * consumes the next queued action. Match -> pass; wrong action -> stumble and stop; no
+ * token left -> she runs out and stops. Clearing every point reaches the goal and wins.
+ * No autocorrect, ever — the gap between what she meant and what she said is the lesson.
  */
-export function run(level: Level, plan: Token[]): Trace {
-  let position = level.startIndex;
+export function run(level: Level, plan: Action[]): Trace {
   const steps: Step[] = [];
-  let outcome: Outcome | null = null;
+  let outcome: Outcome = 'WIN';
+  let clearedPoints = 0;
 
-  for (let i = 0; i < plan.length; i++) {
-    const token = plan[i];
-    const fromIndex = position;
-    const toIndex = fromIndex + DELTA[token];
-    const passedOverIndex = token === 'LEAP' ? fromIndex + 1 : null;
-    const event = landingEvent(level, toIndex);
-    const terminal = event !== 'SAFE';
+  for (let i = 0; i < level.points.length; i++) {
+    const kind = level.points[i];
+    const required = REQUIRED_ACTION[kind];
+    const played = i < plan.length ? plan[i] : null;
+    const result: Step['result'] =
+      played === null ? 'MISSING' : played === required ? 'PASS' : 'WRONG';
 
-    steps.push({ index: i, token, fromIndex, toIndex, passedOverIndex, event, terminal });
-    position = toIndex;
+    steps.push({ pointIndex: i, kind, required, played, result });
 
-    if (terminal) {
-      // event is WIN | SPLASH | FELL_OFF here — all valid whole-run outcomes.
-      outcome = event as Outcome;
-      break;
+    if (result === 'PASS') {
+      clearedPoints += 1;
+    } else {
+      outcome = result === 'MISSING' ? 'INCOMPLETE' : 'STUMBLE';
+      break; // the character stops at the point it failed
     }
   }
 
-  return {
-    outcome: outcome ?? 'INCOMPLETE',
-    steps,
-    finalIndex: position,
-    executedTokens: steps.length,
-  };
+  const redundantTokens = outcome === 'WIN' ? Math.max(0, plan.length - level.points.length) : 0;
+
+  return { outcome, steps, clearedPoints, redundantTokens };
 }

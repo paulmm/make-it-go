@@ -1,63 +1,37 @@
 import { useRef, useState } from 'react';
-import type { Level, Step, Token } from '../engine/types';
+import type { Level } from '../engine/types';
 import type { HeroPose, ThemePack } from '../themes/types';
-
-/** A faint paw print on a stepping stone — signals "you land on stones," not water. */
-function LandMark() {
-  return (
-    <svg viewBox="0 0 40 44" width="100%" height="100%" aria-hidden="true">
-      <ellipse cx="20" cy="30" rx="11" ry="9" fill="#4f3825" />
-      <circle cx="10" cy="15" r="3.6" fill="#4f3825" />
-      <circle cx="20" cy="11" r="3.6" fill="#4f3825" />
-      <circle cx="30" cy="15" r="3.6" fill="#4f3825" />
-    </svg>
-  );
-}
+import type { RunnerGeometry } from './useRunner';
 
 interface TrackProps {
   theme: ThemePack;
   level: Level;
-  heroIndex: number;
-  activeStep: Step | null;
+  geo: RunnerGeometry;
+  heroX: number;
+  heroPose: HeroPose;
+  heroMs: number;
+  tick: number;
   celebrate: boolean;
   reducedMotion: boolean;
-  /** A queued "show what this step does" demo, keyed so it replays on every tap. */
-  preview: { token: Token; id: number } | null;
 }
 
-/** The scene: a backdrop, a left-to-right row of tiles, and the hero moving across it. */
-export function Track({ theme, level, heroIndex, activeStep, celebrate, reducedMotion, preview }: TrackProps) {
-  const n = level.tiles.length;
-  const cell = 100 / n; // each tile is an equal share of the width
-  const heroLeft = Math.min(heroIndex, n - 0.6) * cell;
-
-  // Pose follows the state; motion class drives the hop/leap/idle/cheer animation.
-  const pose: HeroPose = celebrate
-    ? 'cheer'
-    : activeStep?.event === 'SPLASH'
-      ? 'splash'
-      : activeStep
-        ? activeStep.token === 'LEAP'
-          ? 'leap'
-          : 'hop'
-        : 'idle';
-  const motion = celebrate ? 'cheer' : activeStep ? (activeStep.token === 'LEAP' ? 'leap' : 'adv') : 'idle';
-  const heroKey = celebrate ? 'cheer' : activeStep ? `s${activeStep.index}` : 'idle';
-  const idle = !activeStep && !celebrate && !preview;
-
-  // Transient scene-interaction effects (re-keyed counters replay one-shot animations).
+/** The scene: a backdrop, the obstacles at their event points, and the hero auto-walking. */
+export function Track({ theme, level, geo, heroX, heroPose, heroMs, tick, celebrate, reducedMotion }: TrackProps) {
   const [petKey, setPetKey] = useState(0);
   const [petting, setPetting] = useState(false);
-  const [rippleKey, setRippleKey] = useState(0);
   const [pokeKey, setPokeKey] = useState(0);
   const petTimer = useRef<number | null>(null);
 
+  const idle = heroPose === 'idle' && !celebrate;
   const pet = () => {
     setPetKey((k) => k + 1);
     setPetting(true);
     if (petTimer.current) window.clearTimeout(petTimer.current);
     petTimer.current = window.setTimeout(() => setPetting(false), 520);
   };
+
+  const at = (x: number) => ({ left: `${x * 100}%` });
+  const move = { left: `${heroX * 100}%`, transition: `left ${heroMs}ms linear, opacity 0.18s ease` };
 
   return (
     <div className={`track${reducedMotion ? ' reduced' : ''}${celebrate ? ' won' : ''}`}>
@@ -73,84 +47,44 @@ export function Track({ theme, level, heroIndex, activeStep, celebrate, reducedM
         {theme.sun()}
       </button>
 
-      <div className="tiles">
-        {level.tiles.map((kind, i) =>
-          kind === 'HAZARD' ? (
-            <div className="tile" key={i}>
-              <button
-                type="button"
-                className="tile-interactive"
-                onClick={() => setRippleKey((k) => k + 1)}
-                aria-label="Splash the water"
-              >
-                {theme.tileArt[kind]()}
-                {rippleKey > 0 && <span className="ripple" key={rippleKey} />}
-              </button>
-            </div>
-          ) : (
-            <div className="tile" key={i}>
-              {theme.tileArt[kind]()}
-              {(kind === 'START' || kind === 'PATH') && (
-                <span className="land-mark" aria-hidden="true">
-                  <LandMark />
-                </span>
-              )}
-            </div>
-          ),
-        )}
+      {level.points.map((kind, i) => (
+        <div className="obstacle-slot" key={i} style={at(geo.pointX[i])}>
+          {theme.obstacleArt[kind]()}
+        </div>
+      ))}
+
+      <div className="goal-slot" style={at(geo.goalX)} aria-hidden="true">
+        {theme.goalIcon()}
       </div>
 
-      {celebrate && !reducedMotion && (
-        <div className="win-burst" style={{ left: `${level.goalIndex * cell}%`, width: `${cell}%` }} aria-hidden="true" />
-      )}
+      {celebrate && !reducedMotion && <div className="win-burst" style={at(geo.goalX)} aria-hidden="true" />}
 
-      <div className="hero-shadow" style={{ left: `${heroLeft}%`, width: `${cell}%`, opacity: preview ? 0 : 1 }}>
+      <div className="hero-shadow" style={move}>
         <span className="shadow-ellipse" />
       </div>
 
-      {/* The real hero hides during a preview so the translucent ghost reads as "the bunny showing you." */}
       <div
-        className={`hero${idle ? ' clickable' : ''}${petting ? ' petting' : ''}`}
-        style={{ left: `${heroLeft}%`, width: `${cell}%`, opacity: preview ? 0 : 1 }}
+        className={`hero${idle ? ' clickable' : ''}`}
+        style={move}
         onClick={idle ? pet : undefined}
         role={idle ? 'button' : undefined}
         aria-label={idle ? 'Pet the bunny' : undefined}
       >
-        <div className={`hero-inner ${motion}`} key={heroKey}>
-          {theme.heroPose(pose)}
+        <div className={`hero-inner ${heroPose}${petting ? ' petting' : ''}`} key={`${heroPose}-${tick}`}>
+          {theme.heroPose(heroPose)}
         </div>
       </div>
 
       {petKey > 0 && (
-        <div className="hearts" key={`hearts-${petKey}`} style={{ left: `${heroLeft}%`, width: `${cell}%` }} aria-hidden="true">
+        <div className="hearts" key={`hearts-${petKey}`} style={{ left: `${heroX * 100}%` }} aria-hidden="true">
           <span>♥</span>
           <span>♥</span>
           <span>♥</span>
-        </div>
-      )}
-
-      {/* A puff of dust at the feet when a hop/leap lands on a stone. */}
-      {activeStep && activeStep.event !== 'SPLASH' && !reducedMotion && (
-        <div className="dust" key={`dust-${activeStep.index}`} style={{ left: `${heroLeft}%`, width: `${cell}%` }} aria-hidden="true">
-          <span />
-          <span />
-          <span />
-        </div>
-      )}
-
-      {preview && (
-        <div className="ghost" key={preview.id} style={{ left: `${level.startIndex * cell}%`, width: `${cell}%` }}>
-          <div className={`ghost-inner ${preview.token === 'LEAP' ? 'jump' : 'hop'}`}>
-            {theme.heroPose(preview.token === 'LEAP' ? 'leap' : 'hop')}
-          </div>
         </div>
       )}
 
       {celebrate && (
-        <div
-          className="overlay celebrate"
-          style={{ left: `${level.goalIndex * cell}%`, width: `${cell}%` }}
-        >
+        <div className="overlay celebrate" style={at(geo.goalX)}>
           {theme.celebration()}
         </div>
       )}

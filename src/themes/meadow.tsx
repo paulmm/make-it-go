@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { Action } from '../engine/types';
 import type { HeroPose, ThemePack, ThemePalette } from './types';
 import backdropImg from './assets/meadow/backdrop.jpg';
 import bunnyIdle from './assets/meadow/bunny-idle.png';
@@ -6,11 +7,14 @@ import bunnyHop from './assets/meadow/bunny-hop.png';
 import bunnyLeap from './assets/meadow/bunny-leap.png';
 import bunnySplash from './assets/meadow/bunny-splash.png';
 import bunnyCheer from './assets/meadow/bunny-cheer.png';
+import bunnyClimb from './assets/meadow/bunny-climb.png';
+import bunnyDuck from './assets/meadow/bunny-duck.png';
 import stoneImg from './assets/meadow/stone.png';
 import waterImg from './assets/meadow/water.png';
 import carrotImg from './assets/meadow/carrot.png';
 import sunImg from './assets/meadow/sun.png';
 import handImg from './assets/meadow/hand.png';
+import branchImg from './assets/meadow/branch.png';
 
 const palette: ThemePalette = {
   sky: '#bfe7f5',
@@ -23,6 +27,7 @@ const palette: ThemePalette = {
   text: '#3a3340',
 };
 
+/** Generic art (obstacles, scene, props). */
 function Sprite({ src, className }: { src: string; className?: string }): ReactNode {
   return (
     <img
@@ -35,50 +40,37 @@ function Sprite({ src, className }: { src: string; className?: string }): ReactN
   );
 }
 
-const POSE: Record<HeroPose, string> = {
-  idle: bunnyIdle,
-  hop: bunnyHop,
-  leap: bunnyLeap,
-  splash: bunnySplash,
-  cheer: bunnyCheer,
+// The hero faces right (the travel direction). Some generated poses already face
+// right; the rest face left and are flipped in CSS. `facesRight` skips the flip.
+const POSE: Record<HeroPose, { src: string; facesRight: boolean }> = {
+  idle: { src: bunnyIdle, facesRight: false },
+  walk: { src: bunnyHop, facesRight: false },
+  jump: { src: bunnyLeap, facesRight: false },
+  climb: { src: bunnyClimb, facesRight: true },
+  duck: { src: bunnyDuck, facesRight: true },
+  stumble: { src: bunnySplash, facesRight: false },
+  cheer: { src: bunnyCheer, facesRight: false },
 };
 
 function heroPose(pose: HeroPose): ReactNode {
-  return <Sprite src={POSE[pose]} className="bunny" />;
-}
-
-function StoneTile(): ReactNode {
-  return <Sprite src={stoneImg} />;
-}
-function WaterTile(): ReactNode {
-  return <Sprite src={waterImg} />;
-}
-function GoalTile(): ReactNode {
-  // Stone stays in-flow so the tile keeps its height; the carrot sits on top.
+  const { src, facesRight } = POSE[pose];
   return (
-    <>
-      <Sprite src={stoneImg} />
-      <Sprite src={carrotImg} className="goal-carrot" />
-    </>
+    <img
+      className={`sprite bunny${facesRight ? ' faces-right' : ''}`}
+      src={src}
+      alt=""
+      aria-hidden="true"
+      draggable={false}
+    />
   );
 }
 
-function HopToken(): ReactNode {
-  return (
-    <span className="token-art hop">
-      <Sprite src={bunnyHop} className="bunny" />
-    </span>
-  );
-}
-function JumpToken(): ReactNode {
-  return (
-    <span className="token-art jump">
-      <Sprite src={bunnyLeap} className="bunny" />
-    </span>
-  );
+const ACTION_POSE: Record<Action, HeroPose> = { JUMP: 'jump', DUCK: 'duck', CLIMB: 'climb' };
+
+function actionIcon(action: Action): ReactNode {
+  return <span className={`action-art ${action.toLowerCase()}`}>{heroPose(ACTION_POSE[action])}</span>;
 }
 
-// Celebration sparkle + confetti, kept as light vector on top of the cheering bunny.
 const svgProps = {
   viewBox: '0 0 100 100',
   width: '100%',
@@ -112,8 +104,8 @@ function Sparkles(): ReactNode {
   return (
     <svg {...svgProps}>
       <polygon points={star(50, 40, 19)} fill="#ffd83d" />
-      <polygon points={star(26, 30, 10)} fill="#fff0a8" />
-      <polygon points={star(76, 32, 10)} fill="#fff0a8" />
+      <polygon points={star(28, 32, 10)} fill="#fff0a8" />
+      <polygon points={star(76, 34, 10)} fill="#fff0a8" />
       {CONFETTI.map((c, i) => (
         <rect key={i} x={c.x - 3} y={c.y - 3} width="6" height="9" rx="1.5" fill={c.c} transform={`rotate(${c.r} ${c.x} ${c.y})`} />
       ))}
@@ -125,14 +117,22 @@ export const MEADOW: ThemePack = {
   id: 'meadow',
   name: 'Bunny Meadow',
   palette,
-  nouns: { hero: 'bunny', goal: 'carrot', hazard: 'water' },
+  nouns: { hero: 'bunny', goal: 'carrot' },
   backdrop: () => <Sprite src={backdropImg} className="backdrop-img" />,
   sun: () => <Sprite src={sunImg} />,
   hand: () => <Sprite src={handImg} />,
-  tileArt: { START: StoneTile, PATH: StoneTile, HAZARD: WaterTile, GOAL: GoalTile },
-  heroPose,
-  celebration: Sparkles,
   goalIcon: () => <Sprite src={carrotImg} />,
-  tokenArt: { ADVANCE: HopToken, LEAP: JumpToken },
+  celebration: Sparkles,
+  heroPose,
+  actionArt: {
+    JUMP: () => actionIcon('JUMP'),
+    DUCK: () => actionIcon('DUCK'),
+    CLIMB: () => actionIcon('CLIMB'),
+  },
+  obstacleArt: {
+    GAP: () => <Sprite src={waterImg} className="obstacle gap" />,
+    BRANCH: () => <Sprite src={branchImg} className="obstacle branch" />,
+    STEP: () => <Sprite src={stoneImg} className="obstacle step" />,
+  },
   voice: { flavorWords: ['hop', 'yay'] },
 };

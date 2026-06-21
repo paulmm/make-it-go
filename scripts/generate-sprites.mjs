@@ -99,6 +99,24 @@ const assets = [
     transparent: true,
     prompt: `A cute cartoon hand pointing straight up with one index finger, soft rounded fingers, gentle peachy skin, simple and friendly, a little "tap here" gesture. ${SPRITE}. ${STYLE}.`,
   },
+  {
+    name: 'bunny-climb',
+    size: '1024x1024',
+    transparent: true,
+    prompt: `A cute baby bunny climbing up and over a small ledge, front paws gripping the top and pulling itself up, determined happy face, side profile. ${CHAR}. ${SPRITE}. ${STYLE}.`,
+  },
+  {
+    name: 'bunny-duck',
+    size: '1024x1024',
+    transparent: true,
+    prompt: `A cute baby bunny crouched down low to duck under something, body flattened close to the ground, ears laid back, peeking forward, side profile. ${CHAR}. ${SPRITE}. ${STYLE}.`,
+  },
+  {
+    name: 'branch',
+    size: '1024x1024',
+    transparent: true,
+    prompt: `A single low tree branch with a few soft round green leaves, arching horizontally. ONLY the branch and leaves — absolutely NO people, NO child, NO animals, NO characters. isolated on a fully transparent background, no ground, no text, no frame. ${STYLE}.`,
+  },
 ];
 
 async function gen(a) {

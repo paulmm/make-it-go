@@ -1,95 +1,83 @@
 import { describe, it, expect } from 'vitest';
 import { run } from './interpreter';
-import type { Level, Token } from './types';
+import type { EventKind, Level } from './types';
 
-// A focused test level mirroring L1's geometry:
-// index:  0      1     2        3     4
-// tile:   START  PATH  HAZARD   PATH  GOAL
-function makeLevel(overrides: Partial<Level> = {}): Level {
+function makeLevel(points: EventKind[], overrides: Partial<Level> = {}): Level {
   return {
     id: 'test',
-    tiles: ['START', 'PATH', 'HAZARD', 'PATH', 'GOAL'],
-    startIndex: 0,
-    goalIndex: 4,
-    optimalSteps: 3,
-    anchorId: 'steps-in-order',
-    allowedTokens: ['ADVANCE', 'LEAP'],
+    points,
+    allowedActions: ['JUMP', 'DUCK', 'CLIMB'],
+    anchorId: 'exactly-what-you-say',
     mastery: { kind: 'reach-goal' },
     ...overrides,
   };
 }
 
-describe('run — literal execution', () => {
-  it('wins when the plan lands exactly on the goal', () => {
-    const plan: Token[] = ['ADVANCE', 'LEAP', 'ADVANCE']; // 0->1->3->4
-    const trace = run(makeLevel(), plan);
+describe('run — event-point execution', () => {
+  it('wins when each point gets its required action, in order', () => {
+    const trace = run(makeLevel(['GAP', 'STEP']), ['JUMP', 'CLIMB']);
     expect(trace.outcome).toBe('WIN');
-    expect(trace.finalIndex).toBe(4);
-    expect(trace.executedTokens).toBe(3);
+    expect(trace.clearedPoints).toBe(2);
   });
 
-  it('splashes when ADVANCE lands on the hazard tile', () => {
-    const plan: Token[] = ['ADVANCE', 'ADVANCE']; // 0->1->2 (water)
-    const trace = run(makeLevel(), plan);
-    expect(trace.outcome).toBe('SPLASH');
-    expect(trace.finalIndex).toBe(2);
+  it('wins a single-point level with the right action', () => {
+    const trace = run(makeLevel(['GAP']), ['JUMP']);
+    expect(trace.outcome).toBe('WIN');
+    expect(trace.clearedPoints).toBe(1);
   });
 
-  it('treats passing over the hazard with LEAP as safe (only the landing tile matters)', () => {
-    const plan: Token[] = ['ADVANCE', 'LEAP']; // 0->1->3, flies over hazard at 2
-    const trace = run(makeLevel(), plan);
-    expect(trace.steps[1].passedOverIndex).toBe(2);
-    expect(trace.steps[1].event).toBe('SAFE');
-    expect(trace.outcome).toBe('INCOMPLETE'); // safe at 3, not yet at the goal
-    expect(trace.finalIndex).toBe(3);
+  it('stumbles on the wrong action at a point', () => {
+    const trace = run(makeLevel(['GAP']), ['CLIMB']);
+    expect(trace.outcome).toBe('STUMBLE');
+    expect(trace.clearedPoints).toBe(0);
+    expect(trace.steps[0].result).toBe('WRONG');
   });
 
-  it('falls off when a LEAP overshoots past the goal', () => {
-    const plan: Token[] = ['ADVANCE', 'LEAP', 'LEAP']; // 0->1->3->5 (off the end)
-    const trace = run(makeLevel(), plan);
-    expect(trace.outcome).toBe('FELL_OFF');
-    expect(trace.steps[2].passedOverIndex).toBe(4); // leapt over the goal itself
+  it('stumbles on right actions in the wrong order, at the first mismatch', () => {
+    const trace = run(makeLevel(['GAP', 'STEP']), ['CLIMB', 'JUMP']);
+    expect(trace.outcome).toBe('STUMBLE');
+    expect(trace.clearedPoints).toBe(0);
+    expect(trace.steps).toHaveLength(1); // stops at the first failed point
+    expect(trace.steps[0].pointIndex).toBe(0);
   });
 
-  it('is INCOMPLETE when the plan ends before the goal with the hero safe', () => {
-    const plan: Token[] = ['ADVANCE']; // 0->1
-    const trace = run(makeLevel(), plan);
+  it('is INCOMPLETE when she runs out of tokens at a point', () => {
+    const trace = run(makeLevel(['GAP', 'STEP']), ['JUMP']);
     expect(trace.outcome).toBe('INCOMPLETE');
-    expect(trace.finalIndex).toBe(1);
+    expect(trace.clearedPoints).toBe(1);
+    expect(trace.steps[1].result).toBe('MISSING');
   });
 
-  it('stops after a terminal step — no autocorrect, no continuing past a splash', () => {
-    const plan: Token[] = ['ADVANCE', 'ADVANCE', 'ADVANCE', 'ADVANCE']; // splash at step index 1
-    const trace = run(makeLevel(), plan);
-    expect(trace.outcome).toBe('SPLASH');
-    expect(trace.executedTokens).toBe(2);
+  it('stops at the first failure — no execution past the stumble', () => {
+    // point 1 (STEP) needs CLIMB; she played DUCK -> wrong there.
+    const trace = run(makeLevel(['GAP', 'STEP', 'BRANCH']), ['JUMP', 'DUCK', 'DUCK']);
+    expect(trace.outcome).toBe('STUMBLE');
     expect(trace.steps).toHaveLength(2);
-    expect(trace.steps[1].terminal).toBe(true);
+    expect(trace.clearedPoints).toBe(1);
   });
 
-  it('records each step literally with from/to indices, in order', () => {
-    const plan: Token[] = ['ADVANCE', 'LEAP', 'ADVANCE'];
-    const trace = run(makeLevel(), plan);
-    expect(trace.steps.map((s) => [s.fromIndex, s.toIndex])).toEqual([
-      [0, 1],
-      [1, 3],
-      [3, 4],
+  it('records required vs played for each step', () => {
+    const trace = run(makeLevel(['GAP', 'BRANCH']), ['JUMP', 'DUCK']);
+    expect(trace.steps.map((s) => [s.required, s.played])).toEqual([
+      ['JUMP', 'JUMP'],
+      ['DUCK', 'DUCK'],
     ]);
   });
 
-  it('returns an empty, INCOMPLETE trace for an empty plan', () => {
-    const trace = run(makeLevel(), []);
-    expect(trace.outcome).toBe('INCOMPLETE');
-    expect(trace.steps).toHaveLength(0);
-    expect(trace.finalIndex).toBe(0);
-    expect(trace.executedTokens).toBe(0);
+  it('counts trailing extra tokens as redundancy on a win', () => {
+    const trace = run(makeLevel(['GAP']), ['JUMP', 'JUMP']);
+    expect(trace.outcome).toBe('WIN');
+    expect(trace.redundantTokens).toBe(1);
   });
 
-  it('wins mid-plan and ignores trailing tokens', () => {
-    // reaches the goal on the 3rd token; the trailing ADVANCE must not execute
-    const plan: Token[] = ['ADVANCE', 'LEAP', 'ADVANCE', 'ADVANCE'];
-    const trace = run(makeLevel(), plan);
-    expect(trace.outcome).toBe('WIN');
-    expect(trace.executedTokens).toBe(3);
+  it('reports zero redundancy for non-wins', () => {
+    const trace = run(makeLevel(['GAP']), ['CLIMB']);
+    expect(trace.redundantTokens).toBe(0);
+  });
+
+  it('is INCOMPLETE for an empty plan against a level with points', () => {
+    const trace = run(makeLevel(['GAP']), []);
+    expect(trace.outcome).toBe('INCOMPLETE');
+    expect(trace.clearedPoints).toBe(0);
   });
 });

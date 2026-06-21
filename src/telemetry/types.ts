@@ -1,4 +1,4 @@
-import type { Outcome, Token } from '../engine/types';
+import type { Action, Outcome } from '../engine/types';
 
 /**
  * One attempt at a level. Deliberately carries NO timestamp or duration —
@@ -6,10 +6,10 @@ import type { Outcome, Token } from '../engine/types';
  */
 export interface AttemptRecord {
   levelId: string;
-  plan: Token[];
+  plan: Action[];
   outcome: Outcome;
-  /** Tokens beyond optimal on a win (telemetry for prompt-fade / later gates). */
-  redundantSteps: number;
+  /** Tokens beyond the number of points on a win (telemetry for later gates). */
+  redundantTokens: number;
   /** 1-based attempt number for this level. */
   attemptNumber: number;
 }

@@ -1,18 +1,18 @@
-import type { Token } from '../engine/types';
+import type { Action } from '../engine/types';
 import type { ThemePack } from '../themes/types';
 
 interface PlanStripProps {
   theme: ThemePack;
-  plan: Token[];
+  plan: Action[];
   /** Step the partner is pointing at (the wrong one), or null. */
   highlightIndex: number | null;
-  /** Step currently executing during a run (glows in sync with the hop), or null. */
+  /** Step currently executing during a run (glows in sync), or null. */
   activeIndex: number | null;
   disabled: boolean;
   onRemove: (index: number) => void;
 }
 
-const TOKEN_WORD: Record<Token, string> = { ADVANCE: 'hop', LEAP: 'big jump' };
+const ACTION_WORD: Record<Action, string> = { JUMP: 'jump', DUCK: 'duck', CLIMB: 'climb' };
 
 function Footprint() {
   return (
@@ -26,9 +26,8 @@ function Footprint() {
 }
 
 /**
- * The plan, read as the bunny's journey: bunny at the start, the steps in order,
- * the carrot at the end. The same left-to-right axis the hero travels. Tap a step
- * to remove it. Empty footprints invite the first step.
+ * The plan, read as the bunny's journey: bunny at the start, the actions in order, the
+ * carrot at the end. Tap a step to remove it. Empty footprints invite the first step.
  */
 export function PlanStrip({ theme, plan, highlightIndex, activeIndex, disabled, onRemove }: PlanStripProps) {
   return (
@@ -45,16 +44,16 @@ export function PlanStrip({ theme, plan, highlightIndex, activeIndex, disabled, 
             <Footprint />
           </div>
         ) : (
-          plan.map((token, i) => (
+          plan.map((action, i) => (
             <button
               key={i}
               type="button"
               className={`chip${highlightIndex === i ? ' highlight' : ''}${activeIndex === i ? ' active' : ''}`}
               onClick={() => onRemove(i)}
               disabled={disabled}
-              aria-label={`Step ${i + 1}, ${TOKEN_WORD[token]}. Tap to remove.`}
+              aria-label={`Step ${i + 1}, ${ACTION_WORD[action]}. Tap to remove.`}
             >
-              {theme.tokenArt[token]()}
+              {theme.actionArt[action]()}
             </button>
           ))
         )}

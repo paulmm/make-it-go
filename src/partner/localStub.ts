@@ -1,27 +1,27 @@
 import { ANCHORS } from '../engine/anchors';
-import type { Trace } from '../engine/types';
+import type { Action, EventKind, Trace } from '../engine/types';
 import type { PartnerContext, PartnerResponse, Scaffold } from './types';
 
-/** The index of the token that ended the run (the one to point at), if any. */
-function terminalStepIndex(trace: Trace | null): number | null {
-  const term = trace?.steps.find((s) => s.terminal);
-  return term ? term.index : null;
+const OBSTACLE_WORD: Record<EventKind, string> = { GAP: 'gap', BRANCH: 'branch', STEP: 'step' };
+const ACTION_WORD: Record<Action, string> = { JUMP: 'jump', DUCK: 'duck', CLIMB: 'climb' };
+
+/** The point where the run ended (the wrong or missing one), if any. */
+function failedStep(trace: Trace | null) {
+  return trace?.steps.find((s) => s.result !== 'PASS') ?? null;
 }
 
 /**
- * Deterministic, offline partner for Level 1. It lives inside the play: it reacts
- * to the last outcome, never shames a mistake, treats the splash as information,
- * and offers one good nudge (never the answer). The claudeBrain implementation
- * (milestone 4) sits behind the same PartnerStep seam.
+ * Deterministic, offline partner. It reacts to the last outcome, never shames a
+ * mistake, treats the stumble as information, and offers one good nudge (never the
+ * answer). claudeBrain (milestone 4) sits behind the same PartnerStep seam.
  */
 export async function localStub(context: PartnerContext): Promise<PartnerResponse> {
   const { nouns, level, lastOutcome, lastTrace, recentHistory } = context;
   const anchor = ANCHORS[level.anchorId];
 
-  // Level start, before the first run: plant the anchor and set her going.
   if (lastOutcome === null) {
     return {
-      say: `Let's help the ${nouns.hero} hop to the ${nouns.goal}! Tap a step, then press go.`,
+      say: `Help the ${nouns.hero} get to the ${nouns.goal}! Pick what she should do, then press go.`,
       scaffold: { kind: 'none' },
       introduceConcept: level.anchorId,
       celebrate: false,
@@ -29,45 +29,50 @@ export async function localStub(context: PartnerContext): Promise<PartnerRespons
   }
 
   switch (lastOutcome) {
-    case 'WIN':
+    case 'WIN': {
+      // She reached the goal, but extra/unused tokens are not a clean solve.
+      const redundant = (lastTrace?.redundantTokens ?? 0) > 0;
+      if (redundant) {
+        return {
+          say: `You got there! But the ${nouns.hero} didn't need all those steps. Take off the extra ones and try again.`,
+          scaffold: { kind: 'highlight-step', stepIndex: level.points.length },
+          introduceConcept: 'exactly-what-you-say',
+          celebrate: false,
+        };
+      }
       return {
         say: `You did it! The ${nouns.hero} reached the ${nouns.goal}. ${anchor.text} Exactly like you said.`,
         scaffold: { kind: 'none' },
         introduceConcept: level.anchorId,
         celebrate: true,
       };
+    }
 
-    case 'SPLASH': {
-      const splashedBefore = recentHistory.includes('SPLASH');
-      const stepIndex = terminalStepIndex(lastTrace);
-      // First splash: point at the wrong step. Splashed before: offer the tool.
-      const scaffold: Scaffold = splashedBefore
-        ? { kind: 'offer-token', token: 'LEAP' }
-        : stepIndex !== null
-          ? { kind: 'highlight-step', stepIndex }
-          : { kind: 'none' };
-      const say = splashedBefore
-        ? `Still splashing! To get over the ${nouns.hazard} she needs a big jump. Try the leap.`
-        : `Splash! The ${nouns.hero} did exactly what you said and stepped in the ${nouns.hazard}. Which step was wrong? Fix that one.`;
+    case 'STUMBLE': {
+      const step = failedStep(lastTrace);
+      const obstacle = step ? OBSTACLE_WORD[step.kind] : 'spot';
+      const stumbledBefore = recentHistory.includes('STUMBLE');
+      const scaffold: Scaffold =
+        stumbledBefore && step
+          ? { kind: 'offer-action', action: step.required }
+          : step
+            ? { kind: 'highlight-step', stepIndex: step.pointIndex }
+            : { kind: 'none' };
+      const say =
+        stumbledBefore && step
+          ? `Still stumbling! At the ${obstacle}, she needs to ${ACTION_WORD[step.required]}. Try that one.`
+          : `Oops, she stumbled! The ${nouns.hero} did exactly what you said. What does the ${obstacle} need? Pick that one.`;
       return { say, scaffold, introduceConcept: 'exactly-what-you-say', celebrate: false };
     }
 
-    case 'FELL_OFF': {
-      const stepIndex = terminalStepIndex(lastTrace);
+    case 'INCOMPLETE': {
+      const step = failedStep(lastTrace);
+      const obstacle = step ? OBSTACLE_WORD[step.kind] : 'goal';
       return {
-        say: `Whoa, too far! The ${nouns.hero} jumped past the ${nouns.goal}. Take a smaller step.`,
-        scaffold:
-          stepIndex !== null ? { kind: 'highlight-step', stepIndex } : { kind: 'none' },
-        introduceConcept: 'exactly-what-you-say',
-        celebrate: false,
-      };
-    }
-
-    case 'INCOMPLETE':
-      return {
-        say: `So close! The ${nouns.hero} stopped before the ${nouns.goal}. Add another step.`,
+        say: `She reached the ${obstacle} with nothing to do! Add an action for it.`,
         scaffold: { kind: 'none' },
         celebrate: false,
       };
+    }
   }
 }
