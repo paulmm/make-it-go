@@ -1,0 +1,767 @@
+:root {
+  font-family: ui-rounded, 'Nunito', 'Segoe UI Rounded', system-ui, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overscroll-behavior: none;
+}
+
+.game {
+  min-height: 100dvh;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 2vh, 18px);
+  padding: clamp(10px, 2.5vw, 28px);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+/* Sprites (generated PNGs) */
+.sprite {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  -webkit-user-drag: none;
+}
+.backdrop-img {
+  object-fit: cover;
+}
+/* The generated bunny faces left; flip it to face the direction of travel (right). */
+.sprite.bunny {
+  transform: scaleX(-1);
+  transform-origin: bottom center;
+}
+
+/* ---- Partner ---- */
+.partner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 78px;
+  padding: 12px 18px;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 22px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+.partner-face {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+}
+.partner-say {
+  margin: 0;
+  font-size: clamp(18px, 2.6vw, 26px);
+  font-weight: 800;
+  line-height: 1.25;
+}
+.partner.celebrate {
+  background: #fff7d6;
+  animation: pop 0.5s ease;
+}
+
+/* ---- Track / scene ---- */
+.track {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 230px;
+  display: flex;
+  align-items: flex-end;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1), inset 0 0 0 3px rgba(255, 255, 255, 0.3);
+}
+.scene-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+/* Pokeable sun */
+.sun {
+  position: absolute;
+  z-index: 1;
+  top: 5%;
+  right: 6%;
+  width: 17%;
+  aspect-ratio: 1 / 1;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.sun.poke {
+  animation: sunPoke 0.55s ease;
+}
+
+.tiles {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  height: 64%;
+  align-items: flex-end;
+  padding: 0 4px 4px;
+}
+.tile {
+  position: relative;
+  flex: 1 1 0;
+  height: 100%;
+  padding: 0 2px;
+}
+.tile .sprite {
+  object-position: center bottom;
+}
+.hero .sprite,
+.ghost .sprite {
+  object-position: center bottom;
+}
+.goal-carrot {
+  position: absolute;
+  left: 50%;
+  bottom: 52%;
+  width: 64%;
+  height: 64%;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.18));
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+/* The bunny "takes" the carrot on the win — the one on the stump disappears. */
+.track.won .goal-carrot {
+  opacity: 0;
+  transform: translateX(-50%) scale(0.4);
+}
+
+/* Tappable water tile + ripple */
+.tile-interactive {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+}
+.ripple {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: 10%;
+  width: 52%;
+  aspect-ratio: 1 / 1;
+  border: 3px solid rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  pointer-events: none;
+  animation: rippleExpand 0.7s ease-out;
+}
+
+.hero-shadow {
+  position: absolute;
+  z-index: 1;
+  bottom: 18%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+  transition: left 0.5s cubic-bezier(0.34, 0.02, 0.2, 1), opacity 0.15s ease;
+}
+.shadow-ellipse {
+  width: 38%;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0) 72%);
+}
+
+.hero {
+  position: absolute;
+  z-index: 2;
+  bottom: 18%;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+  transform-origin: bottom center;
+  transition: left 0.5s cubic-bezier(0.34, 0.02, 0.2, 1), opacity 0.15s ease;
+}
+.hero.petting {
+  animation: petSquish 0.5s ease;
+}
+.hero.clickable {
+  pointer-events: auto;
+  cursor: pointer;
+}
+.hero-inner {
+  width: 92%;
+  height: 92%;
+  transform-origin: bottom center;
+}
+.hero-inner.idle {
+  animation: idleBob 2.6s ease-in-out infinite;
+}
+.hero-inner.adv {
+  animation: hopAdvance 0.5s ease;
+}
+.hero-inner.leap {
+  animation: hopLeap 0.5s ease;
+}
+.hero-inner.cheer {
+  animation: cheerBounce 0.85s ease 2;
+}
+.hero-inner.idle .sprite.bunny {
+  animation: earTwitch 4.5s ease-in-out infinite;
+}
+.pet-wrap {
+  width: 100%;
+  height: 100%;
+  transform-origin: bottom center;
+}
+.pet-wrap.petting {
+  animation: petSquish 0.5s ease;
+}
+.track.reduced .hero {
+  transition: opacity 0.15s ease;
+}
+.track.reduced .hero-inner.idle,
+.track.reduced .hero-inner.adv,
+.track.reduced .hero-inner.leap,
+.track.reduced .hero-inner.cheer,
+.track.reduced .hero-inner.idle .sprite.bunny,
+.track.reduced .hero.petting {
+  animation: none;
+}
+
+.hearts {
+  position: absolute;
+  z-index: 3;
+  bottom: 42%;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  pointer-events: none;
+}
+.hearts span {
+  font-size: 22px;
+  color: #ff6f9c;
+  opacity: 0;
+  animation: heartFloat 0.9s ease-out;
+}
+.hearts span:nth-child(2) {
+  animation-delay: 0.08s;
+}
+.hearts span:nth-child(3) {
+  animation-delay: 0.16s;
+}
+
+/* Translucent "let me show you" preview of a single step. */
+.ghost {
+  position: absolute;
+  z-index: 2;
+  bottom: 18%;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0.5;
+}
+.ghost-inner {
+  width: 92%;
+  height: 92%;
+  transform-origin: bottom center;
+}
+.ghost-inner.hop {
+  animation: previewHop 0.74s ease;
+}
+.ghost-inner.jump {
+  animation: previewLeap 0.74s ease;
+}
+
+/* Dust puff on landing */
+.dust {
+  position: absolute;
+  z-index: 2;
+  bottom: 16%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+}
+.dust span {
+  position: absolute;
+  bottom: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  opacity: 0;
+  animation: dustPuff 0.5s ease-out 0.3s;
+}
+.dust span:nth-child(1) {
+  --dx: -16px;
+}
+.dust span:nth-child(2) {
+  width: 14px;
+  height: 14px;
+}
+.dust span:nth-child(3) {
+  --dx: 16px;
+}
+
+/* Win burst ring behind the bunny */
+.win-burst {
+  position: absolute;
+  z-index: 1;
+  bottom: 18%;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 238, 160, 0.65), rgba(255, 238, 160, 0) 70%);
+  pointer-events: none;
+  animation: winBurst 0.7s ease-out;
+}
+
+.overlay {
+  position: absolute;
+  z-index: 3;
+  bottom: 24%;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+}
+.overlay.celebrate {
+  animation: pop 0.5s ease;
+}
+.overlay.celebrate svg rect {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: confettiFall 1s ease-in forwards;
+}
+.overlay.celebrate svg rect:nth-of-type(2n) {
+  animation-duration: 1.25s;
+}
+
+/* ---- Plan: the bunny's journey (bunny -> steps -> carrot) ---- */
+.plan {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 96px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-radius: 22px;
+}
+.plan-cap {
+  flex: 0 0 auto;
+  width: 50px;
+  height: 50px;
+}
+.plan-lane {
+  flex: 1 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 74px;
+  padding: 6px 10px;
+  border-radius: 14px;
+  background: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.04) 0 18px, transparent 18px 30px);
+}
+.plan-hint {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.plan-hint svg {
+  width: 32px;
+  height: 40px;
+}
+.chip {
+  width: 64px;
+  height: 64px;
+  padding: 4px;
+  border: none;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+}
+.chip .token-art {
+  border-radius: 13px;
+}
+.chip.highlight {
+  outline: 4px solid #ff5d5d;
+  animation: wobble 0.7s ease infinite;
+}
+
+/* ---- Token tray: the two big "pick a step" buttons ---- */
+.token-tray {
+  display: flex;
+  gap: clamp(14px, 4vw, 36px);
+  align-items: center;
+  justify-content: center;
+  padding-top: 2px;
+}
+.token {
+  position: relative;
+  width: clamp(84px, 16vw, 116px);
+  height: clamp(84px, 16vw, 116px);
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+.token:active {
+  transform: translateY(3px);
+}
+.token.offer {
+  animation: pulse 0.9s ease infinite;
+}
+.token-art {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+.token-art.hop {
+  background: radial-gradient(circle at 50% 36%, #eafbe1, #a9e08f);
+}
+.token-art.jump {
+  background: radial-gradient(circle at 50% 36%, #efe7ff, #bfa9ff);
+}
+.token-art .sprite {
+  width: 86%;
+  height: 86%;
+}
+.tap-hint {
+  position: absolute;
+  bottom: -38px;
+  left: 50%;
+  width: 52px;
+  height: 64px;
+  transform: translateX(-50%);
+  animation: tapBounce 0.9s ease infinite;
+  pointer-events: none;
+}
+
+.token:disabled,
+.chip:disabled,
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* ---- Controls ---- */
+.controls {
+  display: flex;
+  gap: clamp(16px, 5vw, 40px);
+  align-items: center;
+  justify-content: center;
+  padding-top: 4px;
+}
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.btn.go {
+  width: clamp(84px, 17vw, 120px);
+  height: clamp(84px, 17vw, 120px);
+  background: #36c46a;
+  box-shadow: 0 6px 0 #239a4f;
+}
+.btn.go:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 #239a4f;
+}
+.btn.secondary {
+  width: 72px;
+  height: 72px;
+  background: #ffffff;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.12);
+}
+.mute-icon {
+  font-size: 30px;
+  line-height: 1;
+}
+
+/* ---- Focus ---- */
+:focus-visible {
+  outline: 4px solid #2b6cff;
+  outline-offset: 3px;
+}
+
+/* ---- Animations ---- */
+@keyframes idleBob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4%);
+  }
+}
+@keyframes earTwitch {
+  0%,
+  84%,
+  100% {
+    transform: scaleX(-1) rotate(0deg);
+  }
+  88% {
+    transform: scaleX(-1) rotate(-5deg);
+  }
+  92% {
+    transform: scaleX(-1) rotate(4deg);
+  }
+  96% {
+    transform: scaleX(-1) rotate(-1deg);
+  }
+}
+@keyframes cheerBounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-24%);
+  }
+  55% {
+    transform: translateY(0);
+  }
+  72% {
+    transform: translateY(-12%);
+  }
+  90% {
+    transform: translateY(0);
+  }
+}
+@keyframes petSquish {
+  0% {
+    transform: scale(1, 1);
+  }
+  30% {
+    transform: scale(1.12, 0.9);
+  }
+  55% {
+    transform: scale(0.94, 1.08);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+@keyframes heartFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.6);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-42px) scale(1.1);
+  }
+}
+@keyframes hopAdvance {
+  0% {
+    transform: translateY(0) scaleY(1);
+  }
+  18% {
+    transform: translateY(0) scaleY(0.95);
+  }
+  50% {
+    transform: translateY(-24%) scaleY(1.02);
+  }
+  82% {
+    transform: translateY(0) scaleY(0.97);
+  }
+  100% {
+    transform: translateY(0) scaleY(1);
+  }
+}
+@keyframes hopLeap {
+  0% {
+    transform: translateY(0) scaleY(1);
+  }
+  14% {
+    transform: translateY(0) scaleY(0.92);
+  }
+  50% {
+    transform: translateY(-58%) scaleY(1.04);
+  }
+  82% {
+    transform: translateY(0) scaleY(0.95);
+  }
+  100% {
+    transform: translateY(0) scaleY(1);
+  }
+}
+@keyframes previewHop {
+  0% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(60%, -26%);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+@keyframes previewLeap {
+  0% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(115%, -56%);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+@keyframes dustPuff {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.4);
+  }
+  35% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx, 0), -7px) scale(1.4);
+  }
+}
+@keyframes winBurst {
+  0% {
+    transform: scale(0.3);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+@keyframes rippleExpand {
+  0% {
+    transform: translateX(-50%) scale(0.2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(-50%) scale(1.35);
+    opacity: 0;
+  }
+}
+@keyframes confettiFall {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) rotate(0deg);
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(58px) rotate(240deg);
+  }
+}
+@keyframes sunPoke {
+  0% {
+    transform: scale(1, 1);
+  }
+  25% {
+    transform: scale(0.82, 1.12);
+  }
+  50% {
+    transform: scale(1.1, 0.9);
+  }
+  72% {
+    transform: scale(0.96, 1.04);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+@keyframes pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  70% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.12);
+  }
+}
+@keyframes wobble {
+  0%,
+  100% {
+    transform: rotate(-5deg);
+  }
+  50% {
+    transform: rotate(5deg);
+  }
+}
+@keyframes tapBounce {
+  0%,
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-10px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
