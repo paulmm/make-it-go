@@ -34,16 +34,16 @@ const palette: ThemePalette = {
 };
 
 const POSE: Record<HeroPose, { src: string; facesRight: boolean }> = {
-  idle: { src: dinoIdle, facesRight: false },
-  walk: { src: dinoWalk, facesRight: false },
+  idle: { src: dinoIdle, facesRight: true },
+  walk: { src: dinoWalk, facesRight: true },
   jump: { src: dinoJump, facesRight: true },
   climb: { src: dinoClimb, facesRight: true },
-  duck: { src: dinoDuck, facesRight: false },
+  duck: { src: dinoDuck, facesRight: true },
   grab: { src: dinoGrab, facesRight: true },
   open: { src: dinoOpen, facesRight: true },
-  stumble: { src: dinoStumble, facesRight: false },
-  splash: { src: dinoSplash, facesRight: false },
-  cheer: { src: dinoCheer, facesRight: false },
+  stumble: { src: dinoStumble, facesRight: true },
+  splash: { src: dinoSplash, facesRight: true },
+  cheer: { src: dinoCheer, facesRight: true },
 };
 
 function heroPose(pose: HeroPose): ReactNode {

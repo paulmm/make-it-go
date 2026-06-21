@@ -35,12 +35,12 @@ const palette: ThemePalette = {
 
 const POSE: Record<HeroPose, { src: string; facesRight: boolean }> = {
   idle: { src: princessIdle, facesRight: false },
-  walk: { src: princessWalk, facesRight: false },
-  jump: { src: princessJump, facesRight: false },
-  climb: { src: princessClimb, facesRight: false },
-  duck: { src: princessDuck, facesRight: false },
-  grab: { src: princessGrab, facesRight: false },
-  open: { src: princessOpen, facesRight: false },
+  walk: { src: princessWalk, facesRight: true },
+  jump: { src: princessJump, facesRight: true },
+  climb: { src: princessClimb, facesRight: true },
+  duck: { src: princessDuck, facesRight: true },
+  grab: { src: princessGrab, facesRight: true },
+  open: { src: princessOpen, facesRight: true },
   stumble: { src: princessStumble, facesRight: false },
   splash: { src: princessSplash, facesRight: false },
   cheer: { src: princessCheer, facesRight: false },
