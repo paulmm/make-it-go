@@ -31,6 +31,46 @@ body {
   touch-action: manipulation;
 }
 
+/* ---- Theme picker (the only front door) ---- */
+.picker {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: clamp(16px, 5vw, 48px);
+  background: linear-gradient(180deg, #eaf6ff, #e9f7e0);
+}
+.picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: clamp(18px, 4vw, 36px);
+  width: 100%;
+  max-width: 780px;
+}
+.picker-tile {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border: none;
+  border-radius: 28px;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.12);
+  transition: transform 0.12s ease;
+}
+.picker-tile:active {
+  transform: translateY(4px);
+}
+.picker-hero {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 20%;
+  bottom: 8%;
+}
+.picker-hero .sprite {
+  object-fit: contain;
+  object-position: center bottom;
+}
+
 /* Sprites */
 .sprite {
   width: 100%;
@@ -43,11 +83,11 @@ body {
   object-fit: cover;
 }
 /* The hero faces right (travel direction). Left-facing sprites flip; right-facing don't. */
-.sprite.bunny {
+.sprite.hero-art {
   transform: scaleX(-1);
   transform-origin: bottom center;
 }
-.sprite.bunny.faces-right {
+.sprite.hero-art.faces-right {
   transform: scaleX(1);
 }
 
@@ -207,7 +247,7 @@ body {
 .hero-inner.idle {
   animation: idleBob 2.6s ease-in-out infinite;
 }
-.hero-inner.idle .sprite.bunny {
+.hero-inner.idle .sprite.hero-art {
   animation: earTwitch 4.5s ease-in-out infinite;
 }
 .hero-inner.walk {
@@ -237,7 +277,7 @@ body {
 .track.reduced .hero-inner {
   animation: none !important;
 }
-.track.reduced .hero-inner .sprite.bunny {
+.track.reduced .hero-inner .sprite.hero-art {
   animation: none !important;
 }
 
