@@ -3,6 +3,7 @@ import { defineConfig, loadEnv } from 'vite';
 import type { Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { groupWordTimings } from './src/narration/alignment';
+import { buildSystemPrompt, buildUserMessage, parseReply, replyToolSchema } from './src/partner/promptBuilder';
 
 interface TtsOptions {
   apiKey?: string;
@@ -71,6 +72,71 @@ function elevenLabsTts(opts: TtsOptions): Plugin {
   };
 }
 
+interface PartnerOptions {
+  apiKey?: string;
+  model: string;
+}
+
+/**
+ * Dev-only proxy for the Claude partner. ANTHROPIC_API_KEY is read server-side and never
+ * bundled. It forces a structured "reply" tool so the response maps cleanly to a
+ * PartnerResponse. Active only when VITE_PARTNER=claude on the client. Mirror this in a
+ * serverless function at /api/partner for production.
+ */
+function claudePartner(opts: PartnerOptions): Plugin {
+  return {
+    name: 'claude-partner',
+    configureServer(server) {
+      server.middlewares.use('/api/partner', (req: any, res: any, next: any) => {
+        if (req.method !== 'POST') return next();
+
+        const json = (code: number, body: unknown) => {
+          res.statusCode = code;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify(body));
+        };
+
+        if (!opts.apiKey) return json(503, { error: 'no-key' });
+
+        let raw = '';
+        req.on('data', (chunk: unknown) => (raw += chunk));
+        req.on('end', async () => {
+          let context: any;
+          try {
+            context = JSON.parse(raw || '{}');
+          } catch {
+            return json(400, { error: 'bad-json' });
+          }
+          if (!context?.level) return json(400, { error: 'bad-context' });
+
+          try {
+            const r = await fetch('https://api.anthropic.com/v1/messages', {
+              method: 'POST',
+              headers: { 'x-api-key': opts.apiKey!, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+              body: JSON.stringify({
+                model: opts.model,
+                max_tokens: 400,
+                system: buildSystemPrompt(context),
+                messages: [{ role: 'user', content: buildUserMessage(context) }],
+                tools: [replyToolSchema()],
+                tool_choice: { type: 'tool', name: 'reply' },
+              }),
+            });
+            if (!r.ok) return json(502, { error: 'partner-failed', status: r.status, detail: await r.text() });
+            const data: any = await r.json();
+            const toolUse = (data.content || []).find((c: any) => c.type === 'tool_use');
+            const parsed = parseReply(toolUse?.input);
+            if (!parsed) return json(502, { error: 'bad-reply' });
+            return json(200, parsed);
+          } catch (e) {
+            return json(502, { error: 'partner-error', detail: String(e) });
+          }
+        });
+      });
+    },
+  };
+}
+
 // Engine tests are pure (no DOM), so the default test environment is 'node'.
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
@@ -82,6 +148,10 @@ export default defineConfig(({ mode }) => {
         // Lily — a soft, warm British storyteller voice; override via ELEVENLABS_VOICE_ID.
         voiceId: env.ELEVENLABS_VOICE_ID || 'pFZP5JQG7iQjIQuC4Bku',
         modelId: env.ELEVENLABS_MODEL_ID || 'eleven_flash_v2_5',
+      }),
+      claudePartner({
+        apiKey: env.ANTHROPIC_API_KEY,
+        model: env.ANTHROPIC_MODEL || 'claude-haiku-4-5-20251001',
       }),
     ],
     test: {
