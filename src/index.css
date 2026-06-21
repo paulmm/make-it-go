@@ -34,10 +34,67 @@ body {
 /* ---- Theme picker (the only front door) ---- */
 .picker {
   min-height: 100dvh;
-  display: grid;
-  place-items: center;
-  padding: clamp(16px, 5vw, 48px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(20px, 5vh, 48px);
+  padding: clamp(20px, 5vw, 48px);
   background: linear-gradient(180deg, #eaf6ff, #e9f7e0);
+}
+.picker-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(6px, 1.6vh, 16px);
+  text-align: center;
+}
+/* The storybook wordmark: chunky rounded letters with a thick cream sticker outline. */
+.logo {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.16em;
+  font-family: 'Baloo 2', 'Trebuchet MS', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: clamp(48px, 10vw, 104px);
+  line-height: 0.92;
+  animation: logoBob 3.4s ease-in-out infinite;
+}
+.logo-word {
+  display: inline-block;
+  -webkit-text-stroke: 0.13em #fffaf0;
+  paint-order: stroke fill;
+  filter: drop-shadow(0 6px 5px rgba(0, 0, 0, 0.18));
+}
+.logo-make {
+  color: #6b5cff;
+  transform: rotate(-4deg);
+}
+.logo-it {
+  color: #ff9a3c;
+  transform: rotate(3deg) translateY(-0.05em);
+}
+.logo-go {
+  color: #4caf3f;
+  transform: rotate(-3deg);
+}
+.picker-title {
+  margin: 0;
+  font-family: 'Baloo 2', 'Trebuchet MS', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: clamp(19px, 3vw, 30px);
+  color: #5c6b4a;
+}
+@keyframes logoBob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
 }
 .picker-grid {
   display: grid;

@@ -12,6 +12,14 @@ interface ThemePickerProps {
 export function ThemePicker({ themes, onPick }: ThemePickerProps) {
   return (
     <div className="picker">
+      <header className="picker-head">
+        <h1 className="logo" aria-label="Make It Go">
+          <span className="logo-word logo-make">Make</span>
+          <span className="logo-word logo-it">it</span>
+          <span className="logo-word logo-go">go</span>
+        </h1>
+        <p className="picker-title">Choose your character</p>
+      </header>
       <div className="picker-grid">
         {themes.map((theme) => (
           <button

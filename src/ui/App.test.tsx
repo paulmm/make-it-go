@@ -9,6 +9,7 @@ describe('renders', () => {
   it('shows the theme picker first (the only front door)', () => {
     const html = renderToString(<App />);
     expect(html).toContain('picker');
+    expect(html).toContain('Choose your character');
     expect(html).toContain('Bunny Meadow');
     expect(html).toContain('Forest Fox');
   });
