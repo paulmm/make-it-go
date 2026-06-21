@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { localStub } from './localStub';
 import type { PartnerContext } from './types';
-import { LEVEL_1, LEVEL_3, LEVEL_4 } from '../engine/levels';
+import { LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4 } from '../engine/levels';
 import { run } from '../engine/interpreter';
 import type { Action, Outcome } from '../engine/types';
 
@@ -38,6 +38,15 @@ describe('localStub partner — L1', () => {
     expect(r.introduceConcept).toBe('exactly-what-you-say');
     expect(r.celebrate).toBe(false);
     expect(r.say.length).toBeGreaterThan(0);
+  });
+
+  it('opens by naming this level’s specific challenge, not a generic prompt', async () => {
+    const l1 = await localStub(ctx({ level: LEVEL_1 }));
+    expect(l1.say.toLowerCase()).toContain('gap');
+    const l2 = await localStub(ctx({ level: LEVEL_2 }));
+    expect(l2.say.toLowerCase()).toContain('order');
+    const l3 = await localStub(ctx({ level: LEVEL_3 }));
+    expect(l3.say.toLowerCase()).toContain('every');
   });
 
   it('celebrates a clean win and reinforces the anchor', async () => {

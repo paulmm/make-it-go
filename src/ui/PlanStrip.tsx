@@ -80,6 +80,9 @@ export function PlanStrip({ theme, plan, slotCount, highlightIndex, activeIndex,
           >
             {theme.actionArt[token.action]()}
             {token.type === 'repeat' && <RepeatBadge count={token.count} />}
+            <span className="chip-remove" aria-hidden="true">
+              ×
+            </span>
           </button>
         ))}
         {Array.from({ length: emptySlots }).map((_, i) => (

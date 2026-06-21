@@ -1,6 +1,18 @@
 import { ANCHORS } from '../engine/anchors';
-import type { Action, EventKind, Trace } from '../engine/types';
+import type { Action, AnchorId, EventKind, Trace } from '../engine/types';
 import type { PartnerContext, PartnerResponse, Scaffold } from './types';
+
+/**
+ * The opening line for each level — it names the specific challenge (not a generic prompt) so
+ * she knows what she's about to take on. Keyed by the level's anchor, so each level's one new
+ * idea is set up in childlike words.
+ */
+const INTRO: Record<AnchorId, (hero: string) => string> = {
+  'exactly-what-you-say': (hero) => `Uh oh, a gap! Pick the one move that gets the ${hero} across, then press go.`,
+  'steps-in-order': (hero) => `A gap AND a step! Give the ${hero} both moves, in the right order, then press go.`,
+  'bundle-and-repeat': (hero) => `So many gaps in a row! Get the ${hero} across every single one, then press go.`,
+  'find-and-fix': (hero) => `Two things to do! First grab the key, then open the gate for the ${hero}.`,
+};
 
 const OBSTACLE_WORD: Record<EventKind, string> = {
   GAP: 'gap',
@@ -35,9 +47,7 @@ export async function localStub(context: PartnerContext): Promise<PartnerRespons
 
   if (lastOutcome === null) {
     return {
-      say: keyGateLevel
-        ? `Two things to do! First get the key, then open the gate.`
-        : `Help the ${nouns.hero} get to the ${nouns.goal}! Pick what she should do, then press go.`,
+      say: INTRO[level.anchorId](nouns.hero),
       scaffold: { kind: 'none' },
       introduceConcept: level.anchorId,
       celebrate: false,

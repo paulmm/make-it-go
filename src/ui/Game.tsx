@@ -66,7 +66,7 @@ export function Game({
 
   const recorder = useRef(createRecorder());
   const reducedMotion = useReducedMotion();
-  const { speak, unlock, muted, setMuted, supported, spokenText, activeWord } = useNarration();
+  const { speak, prime, unlock, muted, setMuted, supported, spokenText, activeWord } = useNarration();
   const runner = useRunner(reducedMotion);
   const geo = layout(level);
   const capacity = level.points.length; // one action per obstacle — no extras
@@ -148,6 +148,23 @@ export function Game({
     const mastery = evaluateMastery(level, expanded, trace, { usedBundle: bundled });
     const recentHistory = recorder.current.outcomesFor(level.id);
     setPhase('running');
+
+    // Decide the partner's reaction now and warm its audio while the hero runs, so the voice
+    // is ready the instant the animation ends — no pause between the action and the line.
+    const reaction = partner({
+      themeId: theme.id,
+      nouns: theme.nouns,
+      level,
+      conceptsKnown: mastery.mastered ? [level.anchorId] : [],
+      currentPlan: expanded,
+      usedBundle: bundled,
+      lastOutcome: trace.outcome,
+      lastTrace: trace,
+      attemptsThisLevel: recorder.current.attemptsFor(level.id) + 1,
+      recentHistory,
+    });
+    reaction.then((r) => prime(r.say));
+
     // A clean solve (no extra tokens) cheers; a redundant win just stands at the goal.
     runner.play(trace, geo, mastery.mastered, theme.failPose, () => {
       recorder.current.record({
@@ -156,18 +173,7 @@ export function Game({
         outcome: trace.outcome,
         redundantTokens: mastery.redundantTokens,
       });
-      partner({
-        themeId: theme.id,
-        nouns: theme.nouns,
-        level,
-        conceptsKnown: mastery.mastered ? [level.anchorId] : [],
-        currentPlan: expanded,
-        usedBundle: bundled,
-        lastOutcome: trace.outcome,
-        lastTrace: trace,
-        attemptsThisLevel: recorder.current.attemptsFor(level.id),
-        recentHistory,
-      }).then((r) => {
+      reaction.then((r) => {
         setResponse(r);
         setPhase('result');
         speak(r.say, { track: true });
