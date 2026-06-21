@@ -1,0 +1,17 @@
+{
+  "name": "Make It Go",
+  "short_name": "Make It Go",
+  "description": "A no-reading, no-typing coding game for ages 3-7 — tap picture-tokens, press go, and the character does exactly what you said.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#eaf6ff",
+  "theme_color": "#bfe7f5",
+  "icons": [
+    { "src": "/favicon-32.png", "sizes": "32x32", "type": "image/png" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
