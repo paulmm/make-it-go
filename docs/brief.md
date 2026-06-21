@@ -30,10 +30,12 @@ question. She is not the audience to optimize for. She is the proof.
 1. **No reading, no typing, no microphone.** Input is large picture-tokens she taps and drags.
    Voice is output only (the partner speaks). Kid speech recognition is unreliable and a dead mic
    in the first ten seconds kills the demo, so we do not depend on it.
-2. **Literal execution is sacred.** When she presses play, the character does *exactly* what the
-   plan says, in order, no autocorrect, no "what she probably meant." Getting it wrong must be
-   visible and diagnosable (the character walks into the hazard and splashes). That gap between
-   what she meant and what she said is the debugging lesson, felt before it has a name.
+2. **Literal execution is sacred.** She composes an ordered plan of action tokens, then presses
+   go. The character auto-advances on its own and, at each event point in order, performs the next
+   action in her plan. It does *exactly* her ordered actions, in order, no autocorrect, no "what she
+   probably meant." A wrong action, or the right actions in the wrong order, fails visibly at that
+   event point (stumble, splash). That gap between what she meant and what she said is the debugging
+   lesson, felt before it has a name. See Core mechanic below.
 3. **Growth over engagement.** No streaks, no timers, no leaderboards, no time-on-app pressure.
    Those are the engagement traps this role is skeptical of. Progression is mastery-gated: each
    level introduces exactly one new idea and unlocks only after she demonstrates the previous one.
@@ -51,12 +53,33 @@ question. She is not the audience to optimize for. She is the proof.
    free fallback. Big targets, visible focus, reduced-motion respected, fully playable with audio
    off.
 
+## Core mechanic (the interpreter contract)
+
+The character walks itself. There is no walk or advance token, because on a path with a walk token
+walking is busywork and the only real decision is where the special action goes. Removing it makes
+every token she places a genuine decision and makes the literal-execution lesson sharper.
+
+- A level is an ordered list of **event points**, each with a required action type: gap needs jump,
+  branch needs duck, step needs climb, and later key needs grab, gate needs open.
+- Her plan is an ordered list of action tokens. On go, the character advances and consumes the next
+  token at each event point in turn. Match passes that point; mismatch fails there, visibly, and
+  stops. Clearing every point and reaching the goal wins.
+- A clean solve is exactly one correct token per event point, in order. Too few tokens and she runs
+  out at an unhandled point; extra tokens are visible redundancy that the mastery rule can read.
+- This is **plan-first, then run.** No real-time or twitch input while the character moves. It is
+  deliberately not a runner game: tapping an action as the character arrives would erase the plan
+  and with it the literal-execution lesson, the whole point.
+- **No turn or rotate tokens.** Perspective-taking (left and right flip when the character faces
+  her) is the single hardest thing for ages 3-5 in the robot-coding research, and it would
+  reintroduce exactly the confusion this mechanic is designed to remove.
+
 ## Theme system (the connection layer)
 
 A theme is a **data-driven asset pack over one shared mechanic engine**. Adding a theme is adding
-data, never forking engine logic. Each pack defines: the hero, the goal/treasure, the hazard, the
-environment and palette, the visuals for the two core verbs (advance, leap), the celebration, and
-optional voice flavor words.
+data, never forking engine logic. Each pack defines: the hero, the auto-walk animation, the
+event-point types and their matching action visuals (gap/jump, branch/duck, step/climb, and later
+key/grab, gate/open), the goal, the environment and palette, the celebration, and optional voice
+flavor words.
 
 Ship 5 to 6 original archetypes, for example: royal/castle, fashion and style, cute animals,
 trucks and diggers, space, dinosaurs. **Use original generic archetypes only. No branded or
@@ -71,18 +94,24 @@ homescreen or front door.
 
 Theme-agnostic levels, reskinned by the chosen pack. Each adds one idea, gated on the prior.
 
-- **L1 Sequence.** Short path, one hazard, tokens: advance and leap. Lesson: order matters, and
-  the character does exactly what you said.
-- **L2 Debugging.** Same tools, a layout almost everyone gets wrong on the first try, so the
-  revise loop is the whole lesson. The partner treats the splash as information, never as failure.
-- **L3 Iteration.** A path long enough that repeating the same token gets tedious, so a REPEAT
-  (loop) token is offered at the exact moment it would help, then folds the run into one chip.
-- **L4 Decomposition.** Two subgoals: get the key, then reach the gate. Ordering of subgoals.
-- **L5 Cause and effect (stretch, optional).** The gate is locked unless the key came first.
-  Keep it gentle; mark optional if it tests too old for a five-year-old.
+- **L1 Sequence.** Short path, one or two event points of different types (a gap then a step).
+  Actions: jump, duck, climb. Lesson: the right action goes at the right point, and the character
+  does exactly what you said.
+- **L2 Debugging.** Same tokens, an event-point order almost everyone gets wrong on the first try
+  (right actions, wrong order), so the revise loop is the whole lesson. The partner treats the
+  stumble as information, never as failure.
+- **L3 Iteration.** Several identical event points in a row, so repeating the same token gets
+  tedious and a REPEAT (loop) token is offered at the exact moment it would help, then folds the
+  run into one chip.
+- **L4 Decomposition.** Two dependent event points: grab the key, then open the gate. Wrong order
+  fails.
+- **L5 Cause and effect (stretch, optional).** The gate stays locked unless the key was grabbed
+  earlier (requires carrying state). Keep it gentle; mark optional if it tests too old for a
+  five-year-old.
 
-Define an explicit, simple **mastery rule** per level (for example: solved with no more than one
-redundant step and within N attempts). Mastery, not time, unlocks the next level.
+Define an explicit, simple **mastery rule** per level (for example: the correct action at every
+event point, in order, with no redundant tokens, within N attempts). Mastery, not time, unlocks the
+next level.
 
 ## Knowledge anchors (what actually has to persist)
 
@@ -172,7 +201,8 @@ optimize time-on-app.
 
 ## Build order (each milestone runs)
 
-1. Engine plus L1 with one theme, localStub partner, touch tokens, literal execution, splash, win.
+1. Engine plus L1 with one theme, localStub partner, touch action-tokens, auto-advance with the
+   ordered action queue consumed at each event point, fail-at-point and win, splash/stumble.
 2. Theme system: extract that scene into a data pack, add three more packs and the visual picker.
 3. Mastery gating plus L2, L3 (loop at moment of need), L4.
 4. Partner seam: localStub first, then wire claudeBrain server-side. Keep the transcript.
@@ -181,9 +211,12 @@ optimize time-on-app.
 ## Guardrails
 
 - No mic, no reading, no typing, no account, no ads, no streaks or timers.
+- No walk token, no real-time input, no runner mechanic. Plan-first, then run.
+- No turn or rotate tokens.
 - Never fork engine logic per theme.
-- Failure is never a dead end. Every wrong plan is a revise, with the partner asking one good
-  question, not handing over the answer.
+- Never add autocorrect to the interpreter; never gate progression on time or raw attempt count.
+- Failure is never a dead end. Every wrong plan is a revise, with the partner offering one good
+  nudge, not handing over the answer.
 
 ## For the write-up (Option B rationale)
 
