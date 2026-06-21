@@ -22,7 +22,7 @@ export default async function handler(req: any, res: any) {
     return;
   }
 
-  const voiceId = process.env.ELEVENLABS_VOICE_ID || 'XrExE9yKIg1WjnnlVkGX';
+  const voiceId = process.env.ELEVENLABS_VOICE_ID || 'pFZP5JQG7iQjIQuC4Bku'; // Lily (override via env)
   const modelId = process.env.ELEVENLABS_MODEL_ID || 'eleven_flash_v2_5';
 
   const body = typeof req.body === 'string' ? safeParse(req.body) : req.body ?? {};

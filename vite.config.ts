@@ -79,8 +79,8 @@ export default defineConfig(({ mode }) => {
       react(),
       elevenLabsTts({
         apiKey: env.ELEVENLABS_API_KEY,
-        // A warm, friendly storyteller voice (ElevenLabs "Matilda"); override in .env.local.
-        voiceId: env.ELEVENLABS_VOICE_ID || 'XrExE9yKIg1WjnnlVkGX',
+        // Lily — a soft, warm British storyteller voice; override via ELEVENLABS_VOICE_ID.
+        voiceId: env.ELEVENLABS_VOICE_ID || 'pFZP5JQG7iQjIQuC4Bku',
         modelId: env.ELEVENLABS_MODEL_ID || 'eleven_flash_v2_5',
       }),
     ],
