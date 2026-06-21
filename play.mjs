@@ -1,4 +1,4 @@
-// Temporary driver: plays Level 1 (event-point model) and screenshots the key states.
+// Temporary driver: plays L1, advances to L2, and shows order-matters there.
 import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
 
@@ -21,38 +21,50 @@ const waitForSay = (needle) =>
 
 await page.goto(URL, { waitUntil: 'networkidle' });
 await page.waitForSelector('.token');
-await page.screenshot({ path: `${OUT}/1-initial.png` });
+await page.screenshot({ path: `${OUT}/L1-1-initial.png` });
 
-// Win: pick Jump for the gap.
+// L1: clean win with Jump.
 await page.click('button[aria-label="Jump"]');
-await page.waitForTimeout(200);
-await page.screenshot({ path: `${OUT}/2-built.png` });
 await page.click('button[aria-label="Go"]');
-await page.waitForTimeout(900); // mid-run: walking / jumping
-await page.screenshot({ path: `${OUT}/2c-running.png` });
 await waitForSay('You did it');
 await page.waitForTimeout(500);
-await page.screenshot({ path: `${OUT}/3-win.png` });
-console.log('WIN:', JSON.stringify(await page.textContent('.partner-say')));
+await page.screenshot({ path: `${OUT}/L1-2-win.png` });
+console.log('L1 WIN:', JSON.stringify(await page.textContent('.partner-say')));
 
-// Redundant: Jump then an extra Climb -> reaches the goal but is not a clean win.
+// Advance to L2.
+await page.click('button[aria-label="Next level"]');
+await page.waitForTimeout(450);
+await page.screenshot({ path: `${OUT}/L2-1-initial.png` });
+console.log('L2 INTRO:', JSON.stringify(await page.textContent('.partner-say')));
+
+// L2 step stumble: Jump, Jump -> wrong action at the STEP -> dry trip (not wet).
+await page.click('button[aria-label="Jump"]');
+await page.click('button[aria-label="Jump"]');
+await page.click('button[aria-label="Go"]');
+await waitForSay('stumbl');
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/L2-2-stepstumble.png` });
+console.log('L2 STEP STUMBLE:', JSON.stringify(await page.textContent('.partner-say')));
+
+// L2 gap stumble: Climb at the gap -> wet splash.
+await page.click('button[aria-label="Clear all steps"]');
+await page.click('button[aria-label="Climb"]');
+await page.click('button[aria-label="Jump"]');
+await page.click('button[aria-label="Go"]');
+await waitForSay('stumbl');
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/L2-2b-gapstumble.png` });
+console.log('L2 GAP STUMBLE:', JSON.stringify(await page.textContent('.partner-say')));
+
+// L2 correct order: Jump, Climb -> win.
 await page.click('button[aria-label="Clear all steps"]');
 await page.click('button[aria-label="Jump"]');
 await page.click('button[aria-label="Climb"]');
 await page.click('button[aria-label="Go"]');
-await waitForSay('extra');
-await page.waitForTimeout(400);
-await page.screenshot({ path: `${OUT}/3b-redundant.png` });
-console.log('REDUNDANT:', JSON.stringify(await page.textContent('.partner-say')));
-
-// Stumble: pick Climb (wrong action for a gap).
-await page.click('button[aria-label="Clear all steps"]');
-await page.click('button[aria-label="Climb"]');
-await page.click('button[aria-label="Go"]');
-await waitForSay('stumbled');
-await page.waitForTimeout(400);
-await page.screenshot({ path: `${OUT}/4-stumble.png` });
-console.log('STUMBLE:', JSON.stringify(await page.textContent('.partner-say')));
+await waitForSay('You did it');
+await page.waitForTimeout(500);
+await page.screenshot({ path: `${OUT}/L2-3-win.png` });
+console.log('L2 WIN:', JSON.stringify(await page.textContent('.partner-say')));
 
 console.log('CONSOLE_ERRORS:', JSON.stringify(errors));
 await browser.close();

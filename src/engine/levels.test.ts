@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { run } from './interpreter';
-import { LEVEL_1 } from './levels';
+import { LEVEL_1, LEVEL_2 } from './levels';
 import { REQUIRED_ACTION } from './types';
 import type { Action } from './types';
 
@@ -23,5 +23,23 @@ describe('LEVEL_1', () => {
 
   it('plants the root anchor (the right action — it does exactly what you say)', () => {
     expect(LEVEL_1.anchorId).toBe('exactly-what-you-say');
+  });
+});
+
+describe('LEVEL_2 — order matters', () => {
+  it('wins with the right actions in order', () => {
+    expect(run(LEVEL_2, ['JUMP', 'CLIMB']).outcome).toBe('WIN');
+  });
+
+  it('stumbles on the right actions in the wrong order', () => {
+    expect(run(LEVEL_2, ['CLIMB', 'JUMP']).outcome).toBe('STUMBLE');
+  });
+
+  it('stumbles when the second obstacle gets the wrong action', () => {
+    expect(run(LEVEL_2, ['JUMP', 'JUMP']).outcome).toBe('STUMBLE');
+  });
+
+  it('plants the steps-in-order anchor', () => {
+    expect(LEVEL_2.anchorId).toBe('steps-in-order');
   });
 });

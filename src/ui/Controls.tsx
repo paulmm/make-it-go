@@ -2,11 +2,13 @@ interface ControlsProps {
   canGo: boolean;
   canClear: boolean;
   showReplay: boolean;
+  showNext: boolean;
   muted: boolean;
   speechSupported: boolean;
   onGo: () => void;
   onClear: () => void;
   onReplay: () => void;
+  onNext: () => void;
   onToggleMute: () => void;
 }
 
@@ -27,6 +29,15 @@ function ReplayIcon() {
   );
 }
 
+function NextIcon() {
+  return (
+    <svg viewBox="0 0 100 100" width="52" height="52" aria-hidden="true" fill="#ffffff">
+      <path d="M18 26 L44 50 L18 74 Z" />
+      <path d="M50 26 L76 50 L50 74 Z" />
+    </svg>
+  );
+}
+
 function ClearIcon() {
   return (
     <svg viewBox="0 0 100 100" width="40" height="40" aria-hidden="true" stroke="#5a5a6e" strokeWidth="11" strokeLinecap="round">
@@ -35,16 +46,18 @@ function ClearIcon() {
   );
 }
 
-/** GO (play), clear, replay-on-win, and the mute toggle. Icons only — no reading. */
+/** GO (play), clear, the win action (next level / replay), and the mute toggle. Icons only. */
 export function Controls({
   canGo,
   canClear,
   showReplay,
+  showNext,
   muted,
   speechSupported,
   onGo,
   onClear,
   onReplay,
+  onNext,
   onToggleMute,
 }: ControlsProps) {
   return (
@@ -59,7 +72,11 @@ export function Controls({
         <ClearIcon />
       </button>
 
-      {showReplay ? (
+      {showNext ? (
+        <button type="button" className="btn go" onClick={onNext} aria-label="Next level">
+          <NextIcon />
+        </button>
+      ) : showReplay ? (
         <button type="button" className="btn go" onClick={onReplay} aria-label="Play again">
           <ReplayIcon />
         </button>

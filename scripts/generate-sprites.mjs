@@ -117,6 +117,12 @@ const assets = [
     transparent: true,
     prompt: `A single low tree branch with a few soft round green leaves, arching horizontally. ONLY the branch and leaves — absolutely NO people, NO child, NO animals, NO characters. isolated on a fully transparent background, no ground, no text, no frame. ${STYLE}.`,
   },
+  {
+    name: 'bunny-stumble',
+    size: '1024x1024',
+    transparent: true,
+    prompt: `A cute baby bunny tripping and tumbling off-balance, with a few little swirly stars spinning above its head, surprised but unhurt and still adorable. Completely dry — NO water, NOT wet. ${CHAR}. ${SPRITE}. ${STYLE}.`,
+  },
 ];
 
 async function gen(a) {

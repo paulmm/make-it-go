@@ -215,6 +215,9 @@ body {
 .hero-inner.stumble {
   animation: stumbleWobble 0.56s ease;
 }
+.hero-inner.splash {
+  animation: stumbleWobble 0.56s ease;
+}
 .hero-inner.cheer {
   animation: cheerBounce 0.85s ease 2;
 }
@@ -304,14 +307,19 @@ body {
   border-radius: 14px;
   background: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.04) 0 18px, transparent 18px 30px);
 }
-.plan-hint {
-  display: flex;
-  gap: 16px;
-  align-items: center;
+.slot {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
 }
-.plan-hint svg {
-  width: 32px;
-  height: 40px;
+.slot.empty {
+  border: 3px dashed rgba(0, 0, 0, 0.22);
+}
+.slot.empty svg {
+  width: 60%;
+  height: 60%;
 }
 .chip {
   width: 64px;

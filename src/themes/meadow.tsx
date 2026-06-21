@@ -6,6 +6,7 @@ import bunnyIdle from './assets/meadow/bunny-idle.png';
 import bunnyHop from './assets/meadow/bunny-hop.png';
 import bunnyLeap from './assets/meadow/bunny-leap.png';
 import bunnySplash from './assets/meadow/bunny-splash.png';
+import bunnyStumble from './assets/meadow/bunny-stumble.png';
 import bunnyCheer from './assets/meadow/bunny-cheer.png';
 import bunnyClimb from './assets/meadow/bunny-climb.png';
 import bunnyDuck from './assets/meadow/bunny-duck.png';
@@ -48,7 +49,8 @@ const POSE: Record<HeroPose, { src: string; facesRight: boolean }> = {
   jump: { src: bunnyLeap, facesRight: false },
   climb: { src: bunnyClimb, facesRight: true },
   duck: { src: bunnyDuck, facesRight: true },
-  stumble: { src: bunnySplash, facesRight: false },
+  stumble: { src: bunnyStumble, facesRight: false },
+  splash: { src: bunnySplash, facesRight: false },
   cheer: { src: bunnyCheer, facesRight: false },
 };
 
@@ -134,5 +136,7 @@ export const MEADOW: ThemePack = {
     BRANCH: () => <Sprite src={branchImg} className="obstacle branch" />,
     STEP: () => <Sprite src={stoneImg} className="obstacle step" />,
   },
+  // Falling in the water gap is a splash; tripping at a step/branch is a dry stumble.
+  failPose: { GAP: 'splash', BRANCH: 'stumble', STEP: 'stumble' },
   voice: { flavorWords: ['hop', 'yay'] },
 };

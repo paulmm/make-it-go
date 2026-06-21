@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import type { Action, EventKind } from '../engine/types';
 
-/** The hero's poses. `walk` is the auto-walk gait between event points. */
-export type HeroPose = 'idle' | 'walk' | 'jump' | 'duck' | 'climb' | 'stumble' | 'cheer';
+/** The hero's poses. `walk` is the auto-walk gait; `splash`/`stumble` are fail looks. */
+export type HeroPose = 'idle' | 'walk' | 'jump' | 'duck' | 'climb' | 'stumble' | 'splash' | 'cheer';
 
 export interface ThemePalette {
   sky: string;
@@ -17,8 +17,8 @@ export interface ThemePalette {
 
 /**
  * A theme is data over the shared engine: the scene, the hero's poses, an action icon
- * per token, and an obstacle visual per event-point kind. Adding a theme is adding one
- * of these — never forking engine logic.
+ * per token, an obstacle per event-point kind, and which fail pose fits each obstacle.
+ * Adding a theme is adding one of these — never forking engine logic.
  */
 export interface ThemePack {
   id: string;
@@ -41,5 +41,7 @@ export interface ThemePack {
   actionArt: Record<Action, () => ReactNode>;
   /** The obstacle visual at each event-point kind. */
   obstacleArt: Record<EventKind, () => ReactNode>;
+  /** The fail pose that fits each obstacle (water gap -> splash, step/branch -> stumble). */
+  failPose: Record<EventKind, HeroPose>;
   voice?: { flavorWords?: string[] };
 }

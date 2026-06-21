@@ -16,7 +16,6 @@ import { useRunner } from './useRunner';
 import type { RunnerGeometry } from './useRunner';
 import { useSpeech } from './useSpeech';
 
-const MAX_PLAN = 8;
 const WORD_CUE: Record<Action, string> = { JUMP: 'Jump!', DUCK: 'Duck!', CLIMB: 'Climb!' };
 
 type Phase = 'building' | 'running' | 'result';
@@ -31,7 +30,17 @@ function layout(level: Level): RunnerGeometry {
 }
 
 /** The whole play surface for one level. State machine: building -> running -> result. */
-export function Game({ theme, level }: { theme: ThemePack; level: Level }) {
+export function Game({
+  theme,
+  level,
+  hasNext,
+  onNext,
+}: {
+  theme: ThemePack;
+  level: Level;
+  hasNext: boolean;
+  onNext: () => void;
+}) {
   const [plan, setPlan] = useState<Action[]>([]);
   const [phase, setPhase] = useState<Phase>('building');
   const [response, setResponse] = useState<PartnerResponse | null>(null);
@@ -42,6 +51,9 @@ export function Game({ theme, level }: { theme: ThemePack; level: Level }) {
   const { speak, unlock, muted, setMuted, supported } = useSpeech();
   const runner = useRunner(reducedMotion);
   const geo = layout(level);
+  const capacity = level.points.length; // one action per obstacle — no extras
+
+
 
   const requestIntro = useCallback(() => {
     partner({
@@ -74,7 +86,7 @@ export function Game({ theme, level }: { theme: ThemePack; level: Level }) {
   const addToken = (action: Action) => {
     unlock();
     if (phase === 'running') return;
-    setPlan((p) => (p.length >= MAX_PLAN ? p : [...p, action]));
+    setPlan((p) => (p.length >= capacity ? p : [...p, action]));
     setOnboarded(true);
     speak(WORD_CUE[action]);
     backToBuilding();
@@ -103,7 +115,7 @@ export function Game({ theme, level }: { theme: ThemePack; level: Level }) {
     const recentHistory = recorder.current.outcomesFor(level.id);
     setPhase('running');
     // A clean solve (no extra tokens) cheers; a redundant win just stands at the goal.
-    runner.play(trace, geo, mastery.mastered, () => {
+    runner.play(trace, geo, mastery.mastered, theme.failPose, () => {
       recorder.current.record({
         levelId: level.id,
         plan,
@@ -157,6 +169,7 @@ export function Game({ theme, level }: { theme: ThemePack; level: Level }) {
       <PlanStrip
         theme={theme}
         plan={plan}
+        slotCount={capacity}
         highlightIndex={highlightIndex}
         activeIndex={executingIndex}
         disabled={phase === 'running'}
@@ -166,19 +179,21 @@ export function Game({ theme, level }: { theme: ThemePack; level: Level }) {
         theme={theme}
         actions={level.allowedActions}
         offerAction={offerAction}
-        disabled={phase === 'running'}
+        disabled={phase === 'running' || plan.length >= capacity}
         hint={!onboarded}
         onAdd={addToken}
       />
       <Controls
         canGo={phase !== 'running' && plan.length > 0}
         canClear={phase !== 'running' && plan.length > 0}
-        showReplay={celebrate}
+        showReplay={celebrate && !hasNext}
+        showNext={celebrate && hasNext}
         muted={muted}
         speechSupported={supported}
         onGo={go}
         onClear={clearPlan}
         onReplay={clearPlan}
+        onNext={onNext}
         onToggleMute={() => setMuted((m) => !m)}
       />
     </div>

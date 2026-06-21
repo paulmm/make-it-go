@@ -19,4 +19,23 @@ export const LEVEL_1: Level = {
   mastery: { kind: 'reach-goal-within', maxRedundant: 0 },
 };
 
-export const LEVELS: Level[] = [LEVEL_1];
+/**
+ * Level 2 — order matters.
+ *
+ * Two different obstacles in a row, a gap then a step, so the actions must be the right
+ * ones IN ORDER.
+ *
+ *   path:  >>>  [ GAP ]  >>>  [ STEP ]  >>>  goal
+ *
+ * Clean solve: [JUMP, CLIMB]. CLIMB,JUMP stumbles at the gap; JUMP,JUMP stumbles at the
+ * step. This is the debugging lesson — find the wrong step and fix it.
+ */
+export const LEVEL_2: Level = {
+  id: 'L2',
+  points: ['GAP', 'STEP'],
+  allowedActions: ['JUMP', 'CLIMB'],
+  anchorId: 'steps-in-order',
+  mastery: { kind: 'reach-goal-within', maxRedundant: 0 },
+};
+
+export const LEVELS: Level[] = [LEVEL_1, LEVEL_2];

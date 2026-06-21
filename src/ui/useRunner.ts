@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Action, Trace } from '../engine/types';
+import type { Action, EventKind, Trace } from '../engine/types';
 import type { HeroPose } from '../themes/types';
 
 /** Where things sit along the path, as fractions of the scene width (0..1). */
@@ -21,7 +21,13 @@ interface RunnerState {
 }
 
 export interface Runner extends RunnerState {
-  play: (trace: Trace, geo: RunnerGeometry, clean: boolean, onDone: () => void) => void;
+  play: (
+    trace: Trace,
+    geo: RunnerGeometry,
+    clean: boolean,
+    failPose: Record<EventKind, HeroPose>,
+    onDone: () => void,
+  ) => void;
   reset: (startX: number) => void;
 }
 
@@ -56,7 +62,13 @@ export function useRunner(reducedMotion: boolean): Runner {
   );
 
   const play = useCallback(
-    (trace: Trace, geo: RunnerGeometry, clean: boolean, onDone: () => void) => {
+    (
+      trace: Trace,
+      geo: RunnerGeometry,
+      clean: boolean,
+      failPose: Record<EventKind, HeroPose>,
+      onDone: () => void,
+    ) => {
       clear();
       const walkMs = reducedMotion ? 360 : 700;
       const actMs = reducedMotion ? 320 : 560;
@@ -83,10 +95,10 @@ export function useRunner(reducedMotion: boolean): Runner {
           }
         } else if (step.result === 'WRONG') {
           beats.push({ x: px, pose: POSE_FOR_ACTION[step.played as Action], ms: Math.round(actMs * 0.55), point: step.pointIndex, moves: false });
-          beats.push({ x: px, pose: 'stumble', ms: actMs, point: step.pointIndex, moves: false });
+          beats.push({ x: px, pose: failPose[step.kind], ms: actMs, point: step.pointIndex, moves: false });
           break;
         } else {
-          beats.push({ x: px, pose: 'stumble', ms: actMs, point: step.pointIndex, moves: false });
+          beats.push({ x: px, pose: failPose[step.kind], ms: actMs, point: step.pointIndex, moves: false });
           break;
         }
       }
