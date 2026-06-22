@@ -6,6 +6,7 @@ import type { Action, Level, PlanToken } from '../engine/types';
 import { partner } from '../partner';
 import type { PartnerResponse } from '../partner/types';
 import { createRecorder } from '../telemetry/recorder';
+import { telemetry } from '../telemetry/store';
 import type { ThemePack } from '../themes/types';
 import { Controls } from './Controls';
 import { PartnerBubble } from './PartnerBubble';
@@ -178,13 +179,22 @@ export function Game({
 
     // A clean solve (no extra tokens) cheers; a redundant win just stands at the goal.
     runner.play(trace, geo, mastery.mastered, theme.failPose, () => {
-      recorder.current.record({
+      const rec = recorder.current.record({
         levelId: level.id,
         plan: expanded,
         outcome: trace.outcome,
         redundantTokens: mastery.redundantTokens,
       });
       reaction.then((r) => {
+        // Persist the attempt for the grown-ups signals — including whether the partner nudged.
+        telemetry.recordAttempt({
+          levelId: level.id,
+          anchorId: level.anchorId,
+          outcome: trace.outcome,
+          attemptNumber: rec.attemptNumber,
+          hinted: r.scaffold.kind !== 'none',
+          redundant: mastery.redundantTokens,
+        });
         if (seq !== partnerSeq.current) return; // superseded (e.g. she pressed home/clear)
         setResponse(r);
         setPhase('result');

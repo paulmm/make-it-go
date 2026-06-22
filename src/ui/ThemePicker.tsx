@@ -1,15 +1,29 @@
+import { useRef } from 'react';
 import type { ThemePack } from '../themes/types';
 
 interface ThemePickerProps {
   themes: ThemePack[];
   onPick: (theme: ThemePack) => void;
+  /** Opens the grown-ups dashboard — reached by a long-press, so a child's tap won't trigger it. */
+  onGrownUps: () => void;
 }
 
 /**
  * The only front door: a fast, fully visual one-tap grid of theme tiles (no reading).
  * One tap drops straight into Level 1 with that pack.
  */
-export function ThemePicker({ themes, onPick }: ThemePickerProps) {
+export function ThemePicker({ themes, onPick, onGrownUps }: ThemePickerProps) {
+  const hold = useRef<number | null>(null);
+  const startHold = () => {
+    hold.current = window.setTimeout(onGrownUps, 650);
+  };
+  const cancelHold = () => {
+    if (hold.current) {
+      clearTimeout(hold.current);
+      hold.current = null;
+    }
+  };
+
   return (
     <div className="picker">
       <header className="picker-head">
@@ -45,6 +59,17 @@ export function ThemePicker({ themes, onPick }: ThemePickerProps) {
           </button>
         ))}
       </div>
+      <button
+        type="button"
+        className="grownups-gate"
+        aria-label="For grown-ups (press and hold)"
+        onPointerDown={startHold}
+        onPointerUp={cancelHold}
+        onPointerLeave={cancelHold}
+        onPointerCancel={cancelHold}
+      >
+        for grown-ups
+      </button>
     </div>
   );
 }
