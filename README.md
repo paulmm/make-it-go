@@ -25,9 +25,9 @@ Tap picture‑tokens to build a plan, press **go**, and the character does *exac
 
 ## What is this?
 
-**Make It Go** teaches a child who *can't read yet* the core intuitions of programming — through play. She picks a theme, then solves a ladder of short challenges that get harder **one idea at a time**: sequence, literal execution (debugging), iteration, decomposition. A warm AI partner talks her through it by voice and decides when she's ready for the next idea.
+**Make It Go** teaches a child who *can't read yet* the core intuitions of programming — through play. They pick a theme, then solve a ladder of short challenges that get harder **one idea at a time**: sequence, literal execution (debugging), iteration, decomposition. A warm AI partner talks them through it by voice and decides when they're ready for the next idea.
 
-Success is measured by **capability gained, never time on app**. The win condition is that she *outgrows it* and graduates to ScratchJr and beyond. The name says the loop: she builds a plan, taps **go**, and the character does exactly what she said.
+Success is measured by **capability gained, never time on app**. The win condition is that they *outgrow it* and graduate to ScratchJr and beyond. The name says the loop: they build a plan, tap **go**, and the character does exactly what they said.
 
 ## Why I'm building this
 
@@ -35,23 +35,23 @@ I have two kids — **Zoe** (2½) and **Autumn** (5). When I went looking for ga
 
 Underneath the play there's a real question I want to answer:
 
-> **Can an AI partner make a pre‑literate child _more capable_ — by building on what she already knows, instead of marching her down a fixed path?**
+> **Can an AI partner make a pre‑literate child _more capable_ — by building on what they already know, instead of marching them down a fixed path?**
 
 That's the experiment. The app is the instrument; **the finding is the point.**
 
 ## What makes it different
 
-- 🚫 **No reading, no typing, no microphone.** Input is large picture‑tokens she taps. Voice is output only.
-- 🎯 **Literal execution is the lesson.** Her ordered plan runs exactly as written — a wrong action fails *visibly* (a stumble, a splash). The gap between what she meant and what she said *is* the debugging lesson. No autocorrect, ever.
+- 🚫 **No reading, no typing, no microphone.** Input is large picture‑tokens they tap. Voice is output only.
+- 🎯 **Literal execution is the lesson.** Their ordered plan runs exactly as written — a wrong action fails *visibly* (a stumble, a splash). The gap between what they meant and what they said *is* the debugging lesson. No autocorrect, ever.
 - 🌱 **Growth over engagement.** No streaks, no timers, no leaderboards. Progress is mastery‑gated — each level unlocks only after the last idea is demonstrated.
 - 🗣️ **A partner inside the play.** It reacts, narrates, and offers the right tool at the right moment — never an interrogation, never shame for a mistake.
 - 📱 **Touch‑first**, runs on tablet and laptop, fully playable with audio off.
 
 ## How it plays
 
-The character **walks itself** — walking is free, never something she programs. A level is a path of **event points**, each needing one action (a gap → jump, a branch → duck, a step → climb; later a key → grab, a gate → open).
+The character **walks itself** — walking is free, never something they program. A level is a path of **event points**, each needing one action (a gap → jump, a branch → duck, a step → climb; later a key → grab, a gate → open).
 
-She lays out an ordered row of action tokens, then taps **go**. The character advances and, at each event point in turn, performs the next action in her plan:
+They lay out an ordered row of action tokens, then tap **go**. The character advances and, at each event point in turn, performs the next action in their plan:
 
 > **match → pass · mismatch → fail right there, visibly · reach the goal → win**
 
@@ -70,7 +70,7 @@ Each level plants or reinforces **exactly one** idea, in order, and is reskinnab
 | **L5** | Decomposition — grab the key, then open the gate (forget it → **locked**) | *"When it's wrong, find the wrong step and fix it."* |
 | **L6–L9** | Combine them — the whole dance, a fold inside a run, carry a key past a hazard, a capstone | *(all four, reinforced)* |
 
-Then she enters **endless, never‑memorized practice**: levels are *generated*, not authored (and validated against the interpreter so they're always solvable), with the order shuffled so the action *sequence* can't be memorized — and the partner aims each one at the skill she's **least developed**. That's the transfer test made real: can she solve a level no one walked her through?
+Then they enter **endless, never‑memorized practice**: levels are *generated*, not authored (and validated against the interpreter so they're always solvable), with the order shuffled so the action *sequence* can't be memorized — and the partner aims each one at their **least‑developed skill**. That's the transfer test made real: can they solve a level no one walked them through?
 
 Anchors are spoken in the **same childlike words every time** — that's what makes them stick — and map straight onto ScratchJr (script order, the repeat block) for the handoff.
 
@@ -141,7 +141,7 @@ Deployed and playable at **[makeitgo.org](https://www.makeitgo.org)** (Vercel: `
 - ✅ Server‑side Claude partner (Sonnet) — warm, honest, readiness‑aware
 - ✅ Grown‑ups dashboard + a "ready for ScratchJr" handoff
 - ✅ ElevenLabs voice with karaoke highlighting, cached on‑device (instant replay, no repeat cost)
-- ✅ A nine‑rung ladder → **endless adaptive practice** that aims each generated level at her weakest skill
+- ✅ A nine‑rung ladder → **endless adaptive practice** that aims each generated level at their weakest skill
 
 **On the horizon:** Claude as the difficulty *director* (vs. the local one); per‑theme partner flavor; a parent‑facing readiness write‑up; a Play Store listing.
 
