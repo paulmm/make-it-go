@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { activeWordAt, wordIndexAtChar } from './alignment';
 import type { SpokenLine } from './alignment';
+import { getCachedLine, putCachedLine } from './audioCache';
 
 export interface Narration {
   /**
@@ -81,6 +82,13 @@ export function useNarration(): Narration {
   const ensureLine = useCallback(async (text: string): Promise<SpokenLine | null> => {
     const cache = cacheRef.current;
     if (cache.has(text)) return cache.get(text) ?? null;
+    // Persistent per-device cache: a fixed line (every intro) replays instantly and spends no
+    // credits after the first time it is heard on this device.
+    const stored = await getCachedLine(text);
+    if (stored) {
+      cache.set(text, stored);
+      return stored;
+    }
     try {
       const res = await fetch('/api/tts', {
         method: 'POST',
@@ -89,6 +97,7 @@ export function useNarration(): Narration {
       });
       const line = res.ok ? ((await res.json()) as SpokenLine) : null;
       cache.set(text, line);
+      if (line) void putCachedLine(text, line); // only cache successes — never a quota failure
       return line;
     } catch {
       cache.set(text, null);
