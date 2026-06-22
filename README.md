@@ -15,7 +15,7 @@ Tap picture‑tokens to build a plan, press **go**, and the character does *exac
 
 ### ▶ [**Play it live → makeitgo.org**](https://www.makeitgo.org/)
 
-📱 **[Install the Android app](https://www.makeitgo.org/make-it-go.apk)** — full‑screen, its own icon, no browser bar
+📱 **[Install the Android app](https://www.makeitgo.org/make-it-go.apk)** — full‑screen, its own icon, no browser bar (the way my kids like playing it)
 
 ![Make It Go — a bunny meadow level: a partner speech bubble, a path with a water gap, a carrot goal, and a tray of picture-tokens](docs/media/hero.png)
 
