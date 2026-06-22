@@ -70,14 +70,14 @@ function mixedShape(d: number, rng: () => number): { points: EventKind[]; master
   const roll = rng();
   if (d >= 4 && roll < 0.5) return gateShape(d, rng);
   if (d >= 3 && roll < 0.6) return runShape(rng);
-  const len = Math.max(1, Math.min(1 + Math.floor(rng() * d), 5));
+  const len = Math.max(2, Math.min(2 + Math.floor(rng() * d), 6)); // never a single obstacle
   return { points: Array.from({ length: len }, () => pick(HAZARDS, rng)), mastery: REACH };
 }
 
 function composePoints(d: number, emphasis: Emphasis, rng: () => number): { points: EventKind[]; mastery: MasteryRule } {
   switch (emphasis) {
     case 'fundamentals': {
-      const len = 1 + Math.floor(rng() * 2); // 1..2 — short, approachable, a clean first-try win
+      const len = 2 + Math.floor(rng() * 2); // 2..3 — approachable, but still a real little sequence
       return { points: Array.from({ length: len }, () => pick(HAZARDS, rng)), mastery: REACH };
     }
     case 'order':
@@ -169,10 +169,11 @@ export function varyLevel(level: Level, rng: () => number): Level {
 /**
  * The difficulty for the n-th generated level (0-based), reached only after the whole taught
  * ladder. Practice starts meaty (she has met every idea) and climbs as she clears more — paced
- * by mastery, never by time on app.
+ * by mastery, never by time on app. Starts at 5 — she has just cleared the whole taught ladder,
+ * so the first practice level should feel earned, not a step back to a single obstacle.
  */
 export function endlessDifficulty(solvedBeyondLadder: number): number {
-  return 4 + Math.floor(solvedBeyondLadder / 2);
+  return 5 + Math.floor(solvedBeyondLadder / 2);
 }
 
 /** A snapshot of what she can do — the four capability signals (strong or not) plus her progress. */

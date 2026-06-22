@@ -99,8 +99,23 @@ describe('generateLevel — emphasis shapes the practice', () => {
     }
   });
 
-  it('fundamentals emphasis stays short and approachable', () => {
-    for (let s = 1; s <= 12; s++) expect(generateLevel(7, makeRng(s), 'G', 'fundamentals').points.length).toBeLessThanOrEqual(2);
+  it('fundamentals emphasis stays short but is a real little sequence (never a single obstacle)', () => {
+    for (let s = 1; s <= 12; s++) {
+      const n = generateLevel(7, makeRng(s), 'G', 'fundamentals').points.length;
+      expect(n).toBeGreaterThanOrEqual(2);
+      expect(n).toBeLessThanOrEqual(3);
+    }
+  });
+
+  it('never generates a trivial single-obstacle level (post-ladder practice feels earned)', () => {
+    const all: Emphasis[] = ['fundamentals', 'order', 'iterate', 'decompose', 'mixed'];
+    for (const e of all) {
+      for (const d of [4, 5, 7, 10]) {
+        for (let s = 1; s <= 16; s++) {
+          expect(generateLevel(d, makeRng(s), 'G', e).points.length).toBeGreaterThanOrEqual(2);
+        }
+      }
+    }
   });
 
   it('every emphasis still yields a solvable level with a real choice', () => {
