@@ -9,7 +9,7 @@ Tap picture‑tokens to build a plan, press **go**, and the character does *exac
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)
-![tests](https://img.shields.io/badge/tests-86%20passing-3FB950)
+![tests](https://img.shields.io/badge/tests-128%20passing-3FB950)
 ![input](https://img.shields.io/badge/input-taps%20only-FF6B9D)
 
 ![Make It Go — a bunny meadow level: a partner speech bubble, a path with a water gap, a carrot goal, and a tray of picture-tokens](docs/media/hero.png)
@@ -56,12 +56,16 @@ It's **plan‑first, then run** — no twitch input, no runner mechanic. Just "s
 
 Each level plants or reinforces **exactly one** idea, in order, and is reskinnable by any theme.
 
-| Level | Idea | What she meets | Knowledge anchor |
-|------:|------|----------------|------------------|
-| **L1** | Sequence | one gap, two moves on the tray — pick the right one | *"It does exactly what you say."* |
-| **L2** | Debugging | a gap **then** a step — right moves, right order | *"Steps happen in order."* |
-| **L3** | Iteration | four gaps in a row — fold the run into one **repeat** chip | *"You can bundle steps and do them again."* |
-| **L4** | Decomposition + cause/effect | grab the key, then open the gate — forget the key and the gate is **locked** | *"When it's wrong, find the wrong step and fix it."* |
+| Level | Idea | Knowledge anchor |
+|------:|------|------------------|
+| **L1** | Sequence — the right move at the right spot (a gap → jump) | *"It does exactly what you say."* |
+| **L2** | A second move — a branch to duck under | *(same anchor, new mapping)* |
+| **L3** | Order — a gap **then** a step, right moves in order | *"Steps happen in order."* |
+| **L4** | Iteration — a run of gaps, folded into one **repeat** chip | *"You can bundle steps and do them again."* |
+| **L5** | Decomposition — grab the key, then open the gate (forget it → **locked**) | *"When it's wrong, find the wrong step and fix it."* |
+| **L6–L9** | Combine them — the whole dance, a fold inside a run, carry a key past a hazard, a capstone | *(all four, reinforced)* |
+
+Then she enters **endless, never‑memorized practice**: levels are *generated*, not authored (and validated against the interpreter so they're always solvable), with the order shuffled so the action *sequence* can't be memorized — and the partner aims each one at the skill she's **least developed**. That's the transfer test made real: can she solve a level no one walked her through?
 
 Anchors are spoken in the **same childlike words every time** — that's what makes them stick — and map straight onto ScratchJr (script order, the repeat block) for the handoff.
 
@@ -77,16 +81,16 @@ As the partner speaks, **each word grows in time with the voice** — an early�
 
 ## Tech
 
-React 18 · TypeScript · Vite · Vitest. The interpreter is **pure and theme‑agnostic** — fully unit‑tested (86 tests), with no engine logic ever forked per theme.
+React 18 · TypeScript · Vite · Vitest. The interpreter is **pure and theme‑agnostic** — fully unit‑tested (128 tests), with no engine logic ever forked per theme.
 
 ```
 src/
-  engine/      pure interpreter, mastery rules, levels, anchors  (tested)
-  themes/      data-only packs over one engine (Bunny Meadow, Forest Fox)
-  partner/     the "partner brain" behind one seam (local stub today, Claude next)
-  narration/   ElevenLabs voice + karaoke word-timing (Web Speech fallback)
+  engine/      pure interpreter, mastery rules, levels, level generator, anchors  (tested)
+  themes/      data-only packs over one engine (6: meadow, fox, dino, royal, trucks, space)
+  partner/     the "partner brain" behind one seam — local stub + server-side Claude (Sonnet)
+  narration/   ElevenLabs voice + karaoke word-timing, cached on-device (Web Speech fallback)
   telemetry/   capability signals — never time-on-app
-  ui/          picker, track, plan strip, token tray, runner
+  ui/          picker, track, plan strip, token tray, runner, grown-ups dashboard
 ```
 
 A **theme is just data** — a hero, its poses, the obstacle/action art, a palette. Adding one is adding a pack, never touching the engine.
@@ -101,24 +105,30 @@ npm run dev          # open the printed localhost URL
 npm test             # the engine + partner test suite
 ```
 
-**Voice (optional).** Out of the box the partner uses the browser's built‑in voice. For the warm ElevenLabs voice with word‑level highlighting, add a key — it's read server‑side and never shipped to the browser:
+**Keys (optional).** Out of the box the partner is a deterministic local stub with the browser's built‑in voice. For the full experience — the Claude partner and the warm ElevenLabs voice with word‑level highlighting — add keys to `.env.local`. They're read server‑side and never shipped to the browser:
 
 ```bash
 # .env.local  (gitignored)
-ELEVENLABS_API_KEY=your_key_here
-# optional: ELEVENLABS_VOICE_ID, ELEVENLABS_MODEL_ID
+ANTHROPIC_API_KEY=your_key_here     # the Claude partner (defaults to Sonnet)
+ELEVENLABS_API_KEY=your_key_here    # the warm voice + karaoke highlighting
+# optional: ANTHROPIC_MODEL, ELEVENLABS_VOICE_ID, ELEVENLABS_MODEL_ID
 ```
 
 ## Non‑negotiables
 
 No mic · no reading · no typing · no accounts · no ads · no streaks or timers · no walk token · no real‑time input · no turn/rotate tokens · the interpreter is never autocorrected · progression is never gated on time or attempt count. **Failure is never a dead end** — every wrong plan is a revise, with one good nudge from the partner, never the answer.
 
-## Roadmap
+## Status
 
-- More original theme packs (royal/castle, trucks & diggers, space, dinosaurs)
-- Server‑side `claudeBrain` partner (warm, patient readiness decisions)
-- A grown‑ups dashboard + a "ready for ScratchJr" handoff
-- Production voice endpoint for deploy
+Deployed and playable at **[makeitgo.org](https://www.makeitgo.org)** — also installable as a full‑screen Android app. Shipped since the first cut:
+
+- ✅ Six original theme packs (meadow, fox, dino, royal, trucks, space)
+- ✅ Server‑side Claude partner (Sonnet) — warm, honest, readiness‑aware
+- ✅ Grown‑ups dashboard + a "ready for ScratchJr" handoff
+- ✅ ElevenLabs voice with karaoke highlighting, cached on‑device (instant replay, no repeat cost)
+- ✅ A nine‑rung ladder → **endless adaptive practice** that aims each generated level at her weakest skill
+
+**On the horizon:** Claude as the difficulty *director* (vs. the local one); per‑theme partner flavor; a parent‑facing readiness write‑up; a Play Store listing.
 
 ## License
 
