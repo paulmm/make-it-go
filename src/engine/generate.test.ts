@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { generateLevel, makeRng, endlessDifficulty } from './generate';
+import { generateLevel, makeRng, endlessDifficulty, nextChallenge } from './generate';
+import type { Emphasis, SkillState } from './generate';
 import { run } from './interpreter';
 import { REQUIRED_ACTION } from './types';
 import type { Level } from './types';
@@ -72,5 +73,76 @@ describe('endlessDifficulty — practice escalates with mastery, not time', () =
   it('starts past the taught ladder and rises as she clears more', () => {
     expect(endlessDifficulty(0)).toBeGreaterThanOrEqual(4);
     expect(endlessDifficulty(8)).toBeGreaterThan(endlessDifficulty(0));
+  });
+});
+
+describe('generateLevel — emphasis shapes the practice', () => {
+  it('iterate emphasis always yields a foldable run', () => {
+    for (let s = 1; s <= 12; s++) expect(generateLevel(5, makeRng(s), 'G', 'iterate').mastery.kind).toBe('bundle-to-goal');
+  });
+
+  it('decompose emphasis always includes a key and a gate', () => {
+    for (let s = 1; s <= 12; s++) {
+      const l = generateLevel(5, makeRng(s), 'G', 'decompose');
+      expect(l.points).toContain('KEY');
+      expect(l.points).toContain('GATE');
+    }
+  });
+
+  it('order emphasis is distinct hazards in sequence — no gate, no fold', () => {
+    for (let s = 1; s <= 12; s++) {
+      const l = generateLevel(5, makeRng(s), 'G', 'order');
+      expect(l.points.length).toBeGreaterThanOrEqual(2);
+      expect(l.points).not.toContain('GATE');
+      expect(l.mastery.kind).not.toBe('bundle-to-goal');
+      expect(new Set(l.points).size).toBe(l.points.length); // distinct, so order is the lesson
+    }
+  });
+
+  it('fundamentals emphasis stays short and approachable', () => {
+    for (let s = 1; s <= 12; s++) expect(generateLevel(7, makeRng(s), 'G', 'fundamentals').points.length).toBeLessThanOrEqual(2);
+  });
+
+  it('every emphasis still yields a solvable level with a real choice', () => {
+    const all: Emphasis[] = ['fundamentals', 'order', 'iterate', 'decompose', 'mixed'];
+    for (const e of all) {
+      for (let s = 1; s <= 20; s++) {
+        const l = generateLevel(5, makeRng(s), 'G', e);
+        expect(run(l, l.points.map((p) => REQUIRED_ACTION[p])).outcome).toBe('WIN');
+        expect(l.allowedActions.length >= 2 || l.mastery.kind === 'bundle-to-goal').toBe(true);
+      }
+    }
+  });
+});
+
+describe('nextChallenge — the coach targets the least-developed capability', () => {
+  const skill = (o: Partial<SkillState> = {}): SkillState => ({
+    firstTry: true,
+    selfDebug: true,
+    transfer: true,
+    promptFade: true,
+    cleared: 4,
+    ...o,
+  });
+
+  it('eases to fundamentals when she rarely wins first try', () => {
+    expect(nextChallenge(skill({ firstTry: false })).emphasis).toBe('fundamentals');
+  });
+
+  it('gives a debuggable order level when she has not recovered from a mistake', () => {
+    expect(nextChallenge(skill({ selfDebug: false })).emphasis).toBe('order');
+  });
+
+  it('pushes a novel mixed level when transfer is the gap', () => {
+    expect(nextChallenge(skill({ transfer: false })).emphasis).toBe('mixed');
+  });
+
+  it('escalates difficulty above the baseline when every signal is strong', () => {
+    expect(nextChallenge(skill({ cleared: 4 })).difficulty).toBeGreaterThan(endlessDifficulty(4));
+  });
+
+  it('defaults to fundamentals for a blank slate (no signals yet)', () => {
+    const blank = skill({ firstTry: false, selfDebug: false, transfer: false, promptFade: false, cleared: 0 });
+    expect(nextChallenge(blank).emphasis).toBe('fundamentals');
   });
 });

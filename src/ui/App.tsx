@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { LEVELS } from '../engine/levels';
-import { endlessDifficulty, generateLevel, makeRng } from '../engine/generate';
+import { generateLevel, makeRng, nextChallenge } from '../engine/generate';
+import { computeSignals } from '../telemetry/signals';
+import { telemetry } from '../telemetry/store';
 import type { Level } from '../engine/types';
 import { THEMES } from '../themes';
 import type { ThemePack } from '../themes/types';
@@ -49,8 +51,19 @@ export function App() {
   const goNext = () => {
     const next = levelIndex + 1;
     if (next >= sequence.length) {
-      // Past the ladder: compose the next practice level and step onto it in the same update.
-      setGenerated((g) => [...g, generateLevel(endlessDifficulty(g.length), makeRng(seedBase + g.length + 1), `G${g.length + 1}`)]);
+      // Past the ladder: the coach reads her capability and aims the next level at the skill she
+      // has least developed, then we step onto it in the same update.
+      setGenerated((g) => {
+        const s = computeSignals(telemetry.attempts());
+        const { difficulty, emphasis } = nextChallenge({
+          firstTry: s.firstTry.strong,
+          selfDebug: s.selfDebug.strong,
+          transfer: s.transfer.strong,
+          promptFade: s.promptFade.strong,
+          cleared: g.length,
+        });
+        return [...g, generateLevel(difficulty, makeRng(seedBase + g.length + 1), `G${g.length + 1}`, emphasis)];
+      });
     }
     setLevelIndex(next);
   };
