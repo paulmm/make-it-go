@@ -14,6 +14,8 @@ Tap picture‑tokens to build a plan, press **go**, and the character does *exac
 
 ### ▶ [**Play it live → makeitgo.org**](https://www.makeitgo.org/)
 
+📱 **[Install the Android app](https://www.makeitgo.org/make-it-go.apk)** — full‑screen, its own icon, no browser bar
+
 ![Make It Go — a bunny meadow level: a partner speech bubble, a path with a water gap, a carrot goal, and a tray of picture-tokens](docs/media/hero.png)
 
 </div>
@@ -82,6 +84,16 @@ Anchors are spoken in the **same childlike words every time** — that's what ma
 As the partner speaks, **each word grows in time with the voice** — an early‑reading cue that ties the sound to the written word:
 
 ![A partner line with the word being spoken enlarged and highlighted in pink](docs/media/karaoke.png)
+
+## 📱 Install on Android
+
+Make It Go installs as a **full‑screen app** on Android (a Trusted Web Activity over the live site):
+
+1. On your phone or tablet, open **[makeitgo.org/make-it-go.apk](https://www.makeitgo.org/make-it-go.apk)** in Chrome — it downloads.
+2. Tap the downloaded file → allow installing from this source → **Install**.
+3. Launch **Make It Go** from the home screen — its own icon, no browser bar.
+
+> It's a direct install (not a Play Store listing yet), so Android asks you to allow it once — normal for an app from outside the store. On iPad/iPhone, open Safari → **Share → Add to Home Screen** for the same full‑screen app.
 
 ## Tech
 
