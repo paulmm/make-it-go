@@ -5,3 +5,8 @@ dist-ssr
 .DS_Store
 .vite
 npm-debug.log*
+
+# TWA / Android build — keep only the config + script, never the signing key or build output
+twa/*
+!twa/twa-manifest.json
+!twa/build.sh

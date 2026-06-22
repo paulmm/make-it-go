@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "org.makeitgo.twa",
+      "sha256_cert_fingerprints": [
+        "A5:68:82:42:3B:EA:3B:67:18:9F:22:97:1D:CE:0C:A9:79:77:B6:CB:A8:16:42:29:64:0F:88:5A:C1:BC:1C:1C"
+      ]
+    }
+  }
+]
