@@ -11,10 +11,10 @@ function useTelemetrySnapshot() {
 }
 
 const LABELS = {
-  transfer: { title: 'Figures it out herself', hint: 'Solves a new idea with no hints.' },
+  transfer: { title: 'Figures it out on their own', hint: 'Solves a new idea with no hints.' },
   firstTry: { title: 'Gets it first try', hint: 'Clean wins on the very first go.' },
-  selfDebug: { title: 'Fixes her own mistakes', hint: 'Reworks a wrong plan into a win.' },
-  promptFade: { title: 'Needs less help', hint: 'Fewer nudges as she goes on.' },
+  selfDebug: { title: 'Fixes their own mistakes', hint: 'Reworks a wrong plan into a win.' },
+  promptFade: { title: 'Needs less help', hint: 'Fewer nudges as they go on.' },
 } as const;
 
 function Meter({ title, hint, signal }: { title: string; hint: string; signal: Signal }) {
@@ -44,20 +44,20 @@ export function Dashboard({ onClose }: { onClose: () => void }) {
     <div className="dash-overlay" role="dialog" aria-modal="true" aria-label="Grown-ups dashboard">
       <div className="dash">
         <header className="dash-head">
-          <h2>How she's doing</h2>
+          <h2>How they're doing</h2>
           <button type="button" className="dash-close" onClick={onClose} aria-label="Close">
             ×
           </button>
         </header>
         <p className="dash-sub">
-          {s.levelsSolved} idea{s.levelsSolved === 1 ? '' : 's'} solved so far. This measures what she
+          {s.levelsSolved} idea{s.levelsSolved === 1 ? '' : 's'} solved so far. This measures what they
           <em> can do</em> — never time on app.
         </p>
 
         {s.ready && (
           <div className="dash-ready">
-            <strong>She's ready for ScratchJr! 🎉</strong>
-            <p>She plans, debugs, and builds on what she knows. Outgrowing this is the win — time to graduate.</p>
+            <strong>They're ready for ScratchJr! 🎉</strong>
+            <p>They plan, debug, and build on what they know. Outgrowing this is the win — time to graduate.</p>
             <a href="https://www.scratchjr.org/" target="_blank" rel="noreferrer">
               Get ScratchJr →
             </a>
@@ -77,14 +77,14 @@ export function Dashboard({ onClose }: { onClose: () => void }) {
             checked={explainedItBack}
             onChange={(e) => telemetry.setExplainedItBack(e.target.checked)}
           />
-          <span>She explained an idea back to me in her own words</span>
+          <span>They explained an idea back to me in their own words</span>
         </label>
 
         <button
           type="button"
           className="dash-reset"
           onClick={() => {
-            if (confirm('Clear all of her progress data on this device?')) telemetry.reset();
+            if (confirm('Clear all of their progress data on this device?')) telemetry.reset();
           }}
         >
           Reset data
