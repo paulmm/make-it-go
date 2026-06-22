@@ -11,6 +11,7 @@ Tap picture‑tokens to build a plan, press **go**, and the character does *exac
 ![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)
 ![tests](https://img.shields.io/badge/tests-128%20passing-3FB950)
 ![input](https://img.shields.io/badge/input-taps%20only-FF6B9D)
+![license](https://img.shields.io/badge/license-MIT-blue)
 
 ### ▶ [**Play it live → makeitgo.org**](https://www.makeitgo.org/)
 
@@ -146,7 +147,7 @@ Deployed and playable at **[makeitgo.org](https://www.makeitgo.org)** (Vercel: `
 
 ## License
 
-Not licensed yet. MIT is a good fit for a tool meant to be outgrown and shared — add a `LICENSE` file before making the repo public.
+[MIT](LICENSE) © 2026 Paul Mangiamele — a fitting license for a tool meant to be outgrown and shared.
 
 ---
 
