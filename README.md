@@ -12,6 +12,8 @@ Tap picture‑tokens to build a plan, press **go**, and the character does *exac
 ![tests](https://img.shields.io/badge/tests-128%20passing-3FB950)
 ![input](https://img.shields.io/badge/input-taps%20only-FF6B9D)
 
+### ▶ [**Play it live → makeitgo.org**](https://www.makeitgo.org/)
+
 ![Make It Go — a bunny meadow level: a partner speech bubble, a path with a water gap, a carrot goal, and a tray of picture-tokens](docs/media/hero.png)
 
 </div>
@@ -122,7 +124,7 @@ No mic · no reading · no typing · no accounts · no ads · no streaks or time
 
 ## Status
 
-Deployed and playable at **[makeitgo.org](https://www.makeitgo.org)** — also installable as a full‑screen Android app. Shipped since the first cut:
+Deployed and playable at **[makeitgo.org](https://www.makeitgo.org)** (Vercel: `makeitgo-zoe.vercel.app`) — also installable as a full‑screen Android app. Shipped since the first cut:
 
 - ✅ Six original theme packs (meadow, fox, dino, royal, trucks, space)
 - ✅ Server‑side Claude partner (Sonnet) — warm, honest, readiness‑aware
