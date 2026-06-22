@@ -4,8 +4,12 @@ import { activeWordAt, wordIndexAtChar } from './alignment';
 import type { SpokenLine } from './alignment';
 
 export interface Narration {
-  /** Speak a line. `track` marks the partner's line so the bubble highlights each word. */
-  speak: (text: string, opts?: { track?: boolean }) => void;
+  /**
+   * Speak a line. `track` marks the partner's line so the bubble highlights each word.
+   * `onDone` fires once when the line finishes being read aloud (or right away when muted),
+   * so the UI can react to "the voice stopped talking" — e.g. revealing the win choices.
+   */
+  speak: (text: string, opts?: { track?: boolean; onDone?: () => void }) => void;
   /** Warm a line's audio ahead of time (e.g. during the run animation) so it plays with no pause. */
   prime: (text: string) => void;
   /** Call on a user tap so any line blocked by autoplay rules plays now. */
@@ -23,6 +27,15 @@ interface Pending {
   text: string;
   track: boolean;
   line: SpokenLine | null;
+  onDone?: () => void;
+}
+
+const MUTED_DONE_MS = 1300; // with audio off, wait a celebratory beat before signaling "done"
+
+/** Rough spoken duration (seconds) for a fallback timer when exact word timings aren't available. */
+function estimateSeconds(text: string): number {
+  const words = text.trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1.2, words / 2.4);
 }
 
 /**
@@ -91,10 +104,21 @@ export function useNarration(): Narration {
   );
 
   const play = useCallback(
-    (text: string, track: boolean, line: SpokenLine | null) => {
-      if (mutedRef.current || !supported) return;
+    (text: string, track: boolean, line: SpokenLine | null, onDone?: () => void) => {
+      if (mutedRef.current || !supported) {
+        if (onDone) window.setTimeout(onDone, MUTED_DONE_MS);
+        return;
+      }
       stopAll();
       const seq = ++seqRef.current;
+      // Fire onDone exactly once when this line finishes (or a safety timer elapses), unless a
+      // newer line has superseded it — so the UI can react to "the voice finished talking".
+      let doneFired = false;
+      const finish = () => {
+        if (doneFired || seq !== seqRef.current) return;
+        doneFired = true;
+        onDone?.();
+      };
       if (track) {
         setSpokenText(text);
         setActiveWord(null);
@@ -105,10 +129,14 @@ export function useNarration(): Narration {
 
       if (line && line.audioBase64) {
         const a = audioEl();
-        if (!a) return;
+        if (!a) {
+          finish();
+          return;
+        }
         a.src = `data:audio/mpeg;base64,${line.audioBase64}`;
         a.onended = () => {
           if (seq === seqRef.current && track) setActiveWord(null);
+          finish();
         };
         a.play()
           .then(() => {
@@ -125,6 +153,11 @@ export function useNarration(): Narration {
           .catch(() => {
             /* blocked by autoplay: stays pending until a tap calls unlock() */
           });
+        // Safety net: if 'ended' never fires (autoplay-blocked), still finish on time.
+        if (onDone) {
+          const last = line.words[line.words.length - 1];
+          window.setTimeout(finish, ((last?.end ?? estimateSeconds(text)) + 0.6) * 1000);
+        }
         return;
       }
 
@@ -139,26 +172,37 @@ export function useNarration(): Narration {
             const idx = wordIndexAtChar(text, e.charIndex ?? 0);
             if (idx != null) setActiveWord(idx);
           };
-          u.onend = () => {
-            if (seq === seqRef.current) setActiveWord(null);
-          };
         }
+        u.onend = () => {
+          if (seq === seqRef.current && track) setActiveWord(null);
+          finish();
+        };
         window.speechSynthesis.cancel();
         window.speechSynthesis.speak(u);
         clearPending();
+        if (onDone) window.setTimeout(finish, (estimateSeconds(text) + 0.8) * 1000);
+      } else {
+        finish();
       }
     },
     [audioEl, stopAll, supported],
   );
 
   const speak = useCallback(
-    (text: string, opts?: { track?: boolean }) => {
-      if (!text || !supported) return;
+    (text: string, opts?: { track?: boolean; onDone?: () => void }) => {
+      if (!text || !supported) {
+        opts?.onDone?.();
+        return;
+      }
       const track = !!opts?.track;
+      const onDone = opts?.onDone;
       void ensureLine(text).then((line) => {
-        if (mutedRef.current) return;
-        pendingRef.current = { text, track, line }; // remembered; cleared on a successful play
-        play(text, track, line); // optimistic — succeeds in or just after a gesture
+        if (mutedRef.current) {
+          if (onDone) window.setTimeout(onDone, MUTED_DONE_MS);
+          return;
+        }
+        pendingRef.current = { text, track, line, onDone }; // remembered; cleared on a successful play
+        play(text, track, line, onDone); // optimistic — succeeds in or just after a gesture
       });
     },
     [ensureLine, play, supported],
@@ -166,7 +210,7 @@ export function useNarration(): Narration {
 
   const unlock = useCallback(() => {
     const p = pendingRef.current;
-    if (p && !mutedRef.current) play(p.text, p.track, p.line);
+    if (p && !mutedRef.current) play(p.text, p.track, p.line, p.onDone);
   }, [play]);
 
   useEffect(() => {

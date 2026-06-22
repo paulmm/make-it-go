@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import type { Level } from '../engine/types';
 import type { HeroPose, ThemePack } from '../themes/types';
 import type { RunnerGeometry } from './useRunner';
@@ -13,10 +14,12 @@ interface TrackProps {
   tick: number;
   celebrate: boolean;
   reducedMotion: boolean;
+  /** Optional overlay rendered on top of the scene (the post-win choices). */
+  winChoices?: ReactNode;
 }
 
 /** The scene: a backdrop, the obstacles at their event points, and the hero auto-walking. */
-export function Track({ theme, level, geo, heroX, heroPose, heroMs, tick, celebrate, reducedMotion }: TrackProps) {
+export function Track({ theme, level, geo, heroX, heroPose, heroMs, tick, celebrate, reducedMotion, winChoices }: TrackProps) {
   const [petKey, setPetKey] = useState(0);
   const [petting, setPetting] = useState(false);
   const [pokeKey, setPokeKey] = useState(0);
@@ -89,6 +92,8 @@ export function Track({ theme, level, geo, heroX, heroPose, heroMs, tick, celebr
           {theme.celebration()}
         </div>
       )}
+
+      {winChoices}
     </div>
   );
 }

@@ -775,6 +775,92 @@ body {
   line-height: 1;
 }
 
+/* ---- Win choices: try-again / next, popped over the celebrating scene ---- */
+.win-choices {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center; /* centered in the scene */
+  justify-content: center;
+  gap: clamp(26px, 8vw, 68px);
+  pointer-events: none; /* only the buttons take taps; the scene shows through */
+  animation: wcIn 0.44s cubic-bezier(0.2, 1.1, 0.4, 1) both;
+}
+.win-choices.reduced {
+  animation: none;
+}
+.wc-btn {
+  position: relative;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  overflow: hidden; /* clip the glossy sheen to the circle */
+}
+/* a soft top highlight gives the storybook "glossy bubble" sheen */
+.wc-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 26%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 60%);
+  pointer-events: none;
+}
+.wc-btn svg {
+  width: 54%;
+  height: 54%;
+  filter: drop-shadow(0 1.5px 0 rgba(0, 0, 0, 0.14));
+}
+.wc-retry {
+  width: clamp(76px, 16vw, 108px);
+  height: clamp(76px, 16vw, 108px);
+  background: linear-gradient(180deg, #ffffff 0%, #eceaf3 100%);
+  box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.9), 0 7px 0 rgba(0, 0, 0, 0.12), 0 14px 24px rgba(0, 0, 0, 0.22);
+}
+.wc-retry:active {
+  transform: translateY(3px);
+  box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.9), 0 3px 0 rgba(0, 0, 0, 0.12), 0 8px 16px rgba(0, 0, 0, 0.22);
+}
+.wc-next {
+  width: clamp(122px, 28vw, 176px);
+  height: clamp(122px, 28vw, 176px);
+  color: #ffffff;
+  /* glossy sheen over the theme accent + a white "sticker" ring and chunky drop */
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(0, 0, 0, 0.18)), var(--accent, #6b5cd6);
+  box-shadow: 0 0 0 6px #ffffff, 0 10px 0 rgba(0, 0, 0, 0.18), 0 22px 34px rgba(0, 0, 0, 0.3);
+  animation: wcPulse 1.6s ease-in-out infinite;
+}
+.win-choices.reduced .wc-next {
+  animation: none;
+}
+.wc-next:active {
+  filter: brightness(0.94);
+}
+@keyframes wcIn {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.82);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes wcPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
 /* ---- Focus ---- */
 :focus-visible {
   outline: 4px solid #2b6cff;

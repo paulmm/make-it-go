@@ -13,6 +13,7 @@ import { PartnerBubble } from './PartnerBubble';
 import { PlanStrip } from './PlanStrip';
 import { Track } from './Track';
 import { TokenTray } from './TokenTray';
+import { WinChoices } from './WinChoices';
 import { useReducedMotion } from './useReducedMotion';
 import { useRunner } from './useRunner';
 import type { RunnerGeometry } from './useRunner';
@@ -66,6 +67,8 @@ export function Game({
   const [phase, setPhase] = useState<Phase>('building');
   const [response, setResponse] = useState<PartnerResponse | null>(null);
   const [onboarded, setOnboarded] = useState(false);
+  // The post-win choices appear only after the celebration line has finished being read aloud.
+  const [showWinChoices, setShowWinChoices] = useState(false);
 
   const recorder = useRef(createRecorder());
   const partnerSeq = useRef(0); // only the latest partner reply is applied (dedupes races)
@@ -151,6 +154,20 @@ export function Game({
     requestIntro();
   };
 
+  // The post-win choices, each dismissing the overlay first.
+  const retryLevel = () => {
+    setShowWinChoices(false);
+    clearPlan();
+  };
+  const goNext = () => {
+    setShowWinChoices(false);
+    onNext();
+  };
+  const goHome = () => {
+    setShowWinChoices(false);
+    onHome();
+  };
+
   const go = () => {
     unlock();
     if (phase === 'running' || plan.length === 0) return;
@@ -159,6 +176,7 @@ export function Game({
     const mastery = evaluateMastery(level, expanded, trace, { usedBundle: bundled });
     const recentHistory = recorder.current.outcomesFor(level.id);
     setPhase('running');
+    setShowWinChoices(false);
     const seq = ++partnerSeq.current;
 
     // Decide the partner's reaction now and warm its audio while the hero runs, so the voice
@@ -198,7 +216,13 @@ export function Game({
         if (seq !== partnerSeq.current) return; // superseded (e.g. she pressed home/clear)
         setResponse(r);
         setPhase('result');
-        speak(r.say, { track: true });
+        // On a clean win, reveal the try-again / next choices only once the line finishes reading.
+        const reveal = r.celebrate
+          ? () => {
+              if (seq === partnerSeq.current) setShowWinChoices(true);
+            }
+          : undefined;
+        speak(r.say, { track: true, onDone: reveal });
       });
     });
   };
@@ -247,6 +271,18 @@ export function Game({
         tick={runner.tick}
         celebrate={celebrate}
         reducedMotion={reducedMotion}
+        winChoices={
+          showWinChoices ? (
+            <WinChoices
+              theme={theme}
+              hasNext={hasNext}
+              onRetry={retryLevel}
+              onNext={goNext}
+              onHome={goHome}
+              reducedMotion={reducedMotion}
+            />
+          ) : null
+        }
       />
       <PlanStrip
         theme={theme}
@@ -270,10 +306,10 @@ export function Game({
         onAddRepeat={addRepeat}
       />
       <Controls
-        canGo={phase !== 'running' && plan.length > 0}
-        canClear={phase !== 'running' && plan.length > 0}
-        showReplay={celebrate && !hasNext}
-        showNext={celebrate && hasNext}
+        canGo={phase !== 'running' && plan.length > 0 && !celebrate}
+        canClear={phase !== 'running' && plan.length > 0 && !celebrate}
+        showReplay={false}
+        showNext={false}
         muted={muted}
         speechSupported={supported}
         onGo={go}
