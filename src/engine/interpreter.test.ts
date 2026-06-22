@@ -26,6 +26,15 @@ describe('run — event-point execution', () => {
     expect(trace.clearedPoints).toBe(1);
   });
 
+  it('treats an empty slot as no action — fails in place, never shifting the next token forward', () => {
+    // Hole at point 0 with CLIMB queued for point 1: CLIMB must NOT slide back to the gap.
+    const trace = run(makeLevel(['GAP', 'STEP']), [null, 'CLIMB']);
+    expect(trace.outcome).toBe('INCOMPLETE');
+    expect(trace.clearedPoints).toBe(0);
+    expect(trace.steps[0].result).toBe('MISSING');
+    expect(trace.steps[0].played).toBeNull();
+  });
+
   it('stumbles on the wrong action at a point', () => {
     const trace = run(makeLevel(['GAP']), ['CLIMB']);
     expect(trace.outcome).toBe('STUMBLE');

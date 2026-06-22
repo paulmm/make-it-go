@@ -1,10 +1,11 @@
 import { expandPlan } from '../engine/plan';
+import type { Slot } from '../engine/plan';
 import type { Action, PlanToken } from '../engine/types';
 import type { ThemePack } from '../themes/types';
 
 interface PlanStripProps {
   theme: ThemePack;
-  plan: PlanToken[];
+  plan: Slot[];
   /** How many actions the level needs — one slot per obstacle. */
   slotCount: number;
   /** Token the partner is pointing at (the wrong one), or null. */
@@ -69,22 +70,29 @@ export function PlanStrip({ theme, plan, slotCount, highlightIndex, activeIndex,
       </div>
 
       <div className="plan-lane">
-        {plan.map((token, i) => (
-          <button
-            key={i}
-            type="button"
-            className={`chip${token.type === 'repeat' ? ' repeat' : ''}${highlightIndex === i ? ' highlight' : ''}${activeIndex === i ? ' active' : ''}`}
-            onClick={() => onRemove(i)}
-            disabled={disabled}
-            aria-label={chipLabel(token, i)}
-          >
-            {theme.actionArt[token.action]()}
-            {token.type === 'repeat' && <RepeatBadge count={token.count} />}
-            <span className="chip-remove" aria-hidden="true">
-              ×
-            </span>
-          </button>
-        ))}
+        {plan.map((token, i) =>
+          token === null ? (
+            // A hole left by a removal — an open slot the next pick will fill, kept in place.
+            <div key={i} className="slot empty" aria-hidden="true">
+              <Footprint />
+            </div>
+          ) : (
+            <button
+              key={i}
+              type="button"
+              className={`chip${token.type === 'repeat' ? ' repeat' : ''}${highlightIndex === i ? ' highlight' : ''}${activeIndex === i ? ' active' : ''}`}
+              onClick={() => onRemove(i)}
+              disabled={disabled}
+              aria-label={chipLabel(token, i)}
+            >
+              {theme.actionArt[token.action]()}
+              {token.type === 'repeat' && <RepeatBadge count={token.count} />}
+              <span className="chip-remove" aria-hidden="true">
+                ×
+              </span>
+            </button>
+          ),
+        )}
         {Array.from({ length: emptySlots }).map((_, i) => (
           <div key={`empty-${i}`} className="slot empty" aria-hidden="true">
             <Footprint />

@@ -24,12 +24,13 @@ export interface MasteryContext {
  */
 export function evaluateMastery(
   level: Level,
-  plan: Action[],
+  plan: (Action | null)[],
   trace: Trace,
   context: MasteryContext = {},
 ): MasteryResult {
   const won = trace.outcome === 'WIN';
-  const redundantTokens = won ? Math.max(0, plan.length - level.points.length) : 0;
+  const placed = plan.filter((a) => a !== null).length; // empty slots aren't tokens
+  const redundantTokens = won ? Math.max(0, placed - level.points.length) : 0;
 
   let mastered: boolean;
   switch (level.mastery.kind) {

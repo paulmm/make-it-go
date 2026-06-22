@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { run } from '../engine/interpreter';
 import { evaluateMastery } from '../engine/mastery';
-import { bundleTail, expandPlan, usedBundle } from '../engine/plan';
-import type { Action, Level, PlanToken } from '../engine/types';
+import { bundleTail, canPlace, expandPlan, placeAction, removeToken, usedBundle } from '../engine/plan';
+import type { Slot } from '../engine/plan';
+import type { Action, Level } from '../engine/types';
 import { partner } from '../partner';
 import type { PartnerResponse } from '../partner/types';
 import { createRecorder } from '../telemetry/recorder';
@@ -31,10 +32,10 @@ const REPEAT_CUE = 'Again and again!';
 type Phase = 'building' | 'running' | 'result';
 
 /** Each expanded action's source token index, so the right chip glows as the run plays. */
-function pointToToken(plan: PlanToken[]): number[] {
+function pointToToken(plan: Slot[]): number[] {
   const map: number[] = [];
   plan.forEach((token, i) => {
-    const copies = token.type === 'repeat' ? token.count : 1;
+    const copies = token && token.type === 'repeat' ? token.count : 1;
     for (let k = 0; k < copies; k++) map.push(i);
   });
   return map;
@@ -63,7 +64,7 @@ export function Game({
   onNext: () => void;
   onHome: () => void;
 }) {
-  const [plan, setPlan] = useState<PlanToken[]>([]);
+  const [plan, setPlan] = useState<Slot[]>([]);
   const [phase, setPhase] = useState<Phase>('building');
   const [response, setResponse] = useState<PartnerResponse | null>(null);
   const [onboarded, setOnboarded] = useState(false);
@@ -79,7 +80,7 @@ export function Game({
   const geo = layout(level);
   const capacity = level.points.length; // one action per obstacle — no extras
   const expanded = expandPlan(plan); // what the interpreter actually runs
-  const atCapacity = expanded.length >= capacity;
+  const atCapacity = !canPlace(plan, capacity);
   // This level teaches iteration, so it offers the REPEAT tool that folds a run into a chip.
   const allowsRepeat = level.mastery.kind === 'bundle-to-goal';
 
@@ -123,7 +124,7 @@ export function Game({
   const addToken = (action: Action) => {
     unlock();
     if (phase === 'running') return;
-    setPlan((p) => (expandPlan(p).length >= capacity ? p : [...p, { type: 'action', action }]));
+    setPlan((p) => placeAction(p, action, capacity));
     setOnboarded(true);
     speak(WORD_CUE[action]);
     backToBuilding();
@@ -142,7 +143,7 @@ export function Game({
   const removeAt = (index: number) => {
     unlock();
     if (phase === 'running') return;
-    setPlan((p) => p.filter((_, i) => i !== index));
+    setPlan((p) => removeToken(p, index));
     backToBuilding();
   };
 
@@ -174,6 +175,7 @@ export function Game({
     const trace = run(level, expanded);
     const bundled = usedBundle(plan);
     const mastery = evaluateMastery(level, expanded, trace, { usedBundle: bundled });
+    const placed = expanded.filter((a): a is Action => a !== null); // the actions she placed (no holes)
     const recentHistory = recorder.current.outcomesFor(level.id);
     setPhase('running');
     setShowWinChoices(false);
@@ -186,7 +188,7 @@ export function Game({
       nouns: theme.nouns,
       level,
       conceptsKnown: mastery.mastered ? [level.anchorId] : [],
-      currentPlan: expanded,
+      currentPlan: placed,
       usedBundle: bundled,
       lastOutcome: trace.outcome,
       lastTrace: trace,
@@ -199,7 +201,7 @@ export function Game({
     runner.play(trace, geo, mastery.mastered, theme.failPose, () => {
       const rec = recorder.current.record({
         levelId: level.id,
-        plan: expanded,
+        plan: placed,
         outcome: trace.outcome,
         redundantTokens: mastery.redundantTokens,
       });

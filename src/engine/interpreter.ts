@@ -7,7 +7,7 @@ import { REQUIRED_ACTION } from './types';
  * token left -> she runs out and stops. Clearing every point reaches the goal and wins.
  * No autocorrect, ever — the gap between what she meant and what she said is the lesson.
  */
-export function run(level: Level, plan: Action[]): Trace {
+export function run(level: Level, plan: (Action | null)[]): Trace {
   const steps: Step[] = [];
   let outcome: Outcome = 'WIN';
   let clearedPoints = 0;
@@ -32,7 +32,8 @@ export function run(level: Level, plan: Action[]): Trace {
     }
   }
 
-  const redundantTokens = outcome === 'WIN' ? Math.max(0, plan.length - level.points.length) : 0;
+  const placed = plan.filter((a) => a !== null).length; // holes aren't tokens
+  const redundantTokens = outcome === 'WIN' ? Math.max(0, placed - level.points.length) : 0;
 
   return { outcome, steps, clearedPoints, redundantTokens };
 }
