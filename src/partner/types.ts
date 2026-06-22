@@ -16,6 +16,8 @@ export interface PartnerNouns {
 export interface PartnerContext {
   themeId: string;
   nouns: PartnerNouns;
+  /** The active theme's playful flavor words (e.g. "hop", "beep"), for warmth. */
+  flavor?: string[];
   level: Level;
   conceptsKnown: AnchorId[];
   /** The plan as the interpreter saw it (repeats already expanded). */

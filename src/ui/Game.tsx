@@ -93,6 +93,7 @@ export function Game({
     partner({
       themeId: theme.id,
       nouns: theme.nouns,
+      flavor: theme.voice?.flavorWords,
       level,
       conceptsKnown: [],
       currentPlan: [],
@@ -188,6 +189,7 @@ export function Game({
     const reaction = partner({
       themeId: theme.id,
       nouns: theme.nouns,
+      flavor: theme.voice?.flavorWords,
       level,
       conceptsKnown: mastery.mastered ? [level.anchorId] : [],
       currentPlan: placed,

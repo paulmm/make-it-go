@@ -15,7 +15,7 @@ const ANCHOR_IDS: AnchorId[] = ['exactly-what-you-say', 'steps-in-order', 'bundl
 /** The partner's persona and unbreakable rules. The anchor words are fixed and quoted. */
 export function buildSystemPrompt(context: PartnerContext): string {
   const anchor = ANCHORS[context.level.anchorId];
-  return [
+  const lines = [
     `You are the partner brain inside "Make It Go", a wordless coding game for a child aged 3-7 who cannot read yet.`,
     `Your words are read ALOUD to her by a gentle voice; she only taps picture-tokens, never types or reads.`,
     `You are warm, patient and playful — a delighted, encouraging teacher.`,
@@ -35,9 +35,14 @@ export function buildSystemPrompt(context: PartnerContext): string {
     `- At most ONE short question, and only if it truly moves her forward. No interrogation.`,
     `- Set celebrate=true ONLY on a clean win: she reached the goal with no wrong and no wasted/extra tokens. Otherwise celebrate=false.`,
     `- Refer to the hero as "${context.nouns.hero}" and the goal as "${context.nouns.goal}".`,
-    ``,
-    `Reply ONLY by calling the "reply" tool.`,
-  ].join('\n');
+  ];
+  if (context.flavor?.length) {
+    lines.push(
+      `- This pack has a playful sound — ${context.flavor.join(' / ')}. You MAY slip ONE in occasionally for warmth (a happy "${context.flavor[0]}!" on a win), never forced and never more than one per line.`,
+    );
+  }
+  lines.push(``, `Reply ONLY by calling the "reply" tool.`);
+  return lines.join('\n');
 }
 
 /** The turn's situation, as compact readable facts for the model. */
