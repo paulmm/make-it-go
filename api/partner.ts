@@ -33,7 +33,7 @@ export default async function handler(req: any, res: any) {
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) return send(503, { error: 'no-key' });
-    const model = process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5-20251001';
+    const model = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6';
 
     const context = await readBody(req);
     if (!context?.level) return send(400, { error: 'bad-context' });
