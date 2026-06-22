@@ -1,18 +1,7 @@
 import { ANCHORS } from '../engine/anchors';
-import type { Action, AnchorId, EventKind, Trace } from '../engine/types';
+import { REQUIRED_ACTION } from '../engine/types';
+import type { Action, EventKind, Level, Trace } from '../engine/types';
 import type { PartnerContext, PartnerResponse, Scaffold } from './types';
-
-/**
- * The opening line for each level — it names the specific challenge (not a generic prompt) so
- * she knows what she's about to take on. Keyed by the level's anchor, so each level's one new
- * idea is set up in childlike words.
- */
-const INTRO: Record<AnchorId, (hero: string) => string> = {
-  'exactly-what-you-say': (hero) => `Uh oh, a gap! Pick the one move that gets the ${hero} across, then press go.`,
-  'steps-in-order': (hero) => `A gap AND a step! Give the ${hero} both moves, in the right order, then press go.`,
-  'bundle-and-repeat': (hero) => `So many gaps in a row! Get the ${hero} across every single one, then press go.`,
-  'find-and-fix': (hero) => `Two things to do! First grab the key, then open the gate for the ${hero}.`,
-};
 
 const OBSTACLE_WORD: Record<EventKind, string> = {
   GAP: 'gap',
@@ -28,6 +17,43 @@ const ACTION_WORD: Record<Action, string> = {
   GRAB: 'grab',
   OPEN: 'open',
 };
+
+/**
+ * The opening line for a level — it names the specific challenge (not a generic prompt), built
+ * from the level's own points so it speaks correctly to every rung, including new ones, without
+ * per-level code. Decomposition (a gate) and iteration (a foldable run) get their own framing;
+ * everything else is "the right move" (one point) or "the right moves, in order" (several).
+ */
+function levelIntro(level: Level, hero: string): string {
+  const pts = level.points;
+
+  if (pts.includes('GATE')) {
+    return pts.length > 2
+      ? `Big one! Grab the key and carry it — get the ${hero} all the way to the gate, then open it. In order!`
+      : `Two things to do! First grab the key, then open the gate for the ${hero}.`;
+  }
+  if (level.mastery.kind === 'bundle-to-goal') {
+    return `So many in a row! Get the ${hero} past every single one — you can bundle them — then press go.`;
+  }
+  if (pts.length === 1) {
+    return `Uh oh, a ${OBSTACLE_WORD[pts[0]]}! Pick the one move that gets the ${hero} past it, then press go.`;
+  }
+  const words = pts.map((p) => OBSTACLE_WORD[p]);
+  const human =
+    words.length === 2
+      ? `a ${words[0]} and then a ${words[1]}`
+      : `a ${words.slice(0, -1).join(', a ')}, and a ${words[words.length - 1]}`;
+  return `Look — ${human}! Give the ${hero} the right moves, in the right order, then press go.`;
+}
+
+/** The action of the most-repeated event point — the one a REPEAT bundle should fold. */
+function repeatedAction(level: Level): Action {
+  const counts = new Map<EventKind, number>();
+  for (const p of level.points) counts.set(p, (counts.get(p) ?? 0) + 1);
+  let best = level.points[0];
+  for (const p of level.points) if ((counts.get(p) ?? 0) > (counts.get(best) ?? 0)) best = p;
+  return REQUIRED_ACTION[best];
+}
 
 /** The point where the run ended (the wrong or missing one), if any. */
 function failedStep(trace: Trace | null) {
@@ -47,7 +73,7 @@ export async function localStub(context: PartnerContext): Promise<PartnerRespons
 
   if (lastOutcome === null) {
     return {
-      say: INTRO[level.anchorId](nouns.hero),
+      say: levelIntro(level, nouns.hero),
       scaffold: { kind: 'none' },
       introduceConcept: level.anchorId,
       celebrate: false,
@@ -56,10 +82,10 @@ export async function localStub(context: PartnerContext): Promise<PartnerRespons
 
   switch (lastOutcome) {
     case 'WIN': {
-      // Iteration level: she crossed every gap, but one-by-one isn't the lesson. Reaching
+      // Iteration level: she crossed every point, but one-by-one isn't the lesson. Reaching
       // the goal by brute force earns the nudge to fold the run into one repeat chip.
       if (bundleLevel && !usedBundle) {
-        const word = ACTION_WORD[level.allowedActions[0]];
+        const word = ACTION_WORD[repeatedAction(level)];
         return {
           say: `You did it! That was a lot of ${word}s. You can bundle them — tap repeat to do them all at once!`,
           scaffold: { kind: 'offer-repeat' },
@@ -79,7 +105,7 @@ export async function localStub(context: PartnerContext): Promise<PartnerRespons
       }
       if (keyGateLevel) {
         return {
-          say: `You did it! First the key, then the gate. Two parts, both done — in order!`,
+          say: `You did it! First the key, then the gate. Both parts, done — in order!`,
           scaffold: { kind: 'none' },
           introduceConcept: 'find-and-fix',
           celebrate: true,
@@ -113,7 +139,7 @@ export async function localStub(context: PartnerContext): Promise<PartnerRespons
     case 'INCOMPLETE': {
       const step = failedStep(lastTrace);
       const obstacle = step ? OBSTACLE_WORD[step.kind] : 'goal';
-      // On the iteration level a run-out means the bundle is too small — grow it.
+      // On an iteration level a run-out means the bundle is too small — grow it.
       if (bundleLevel && step) {
         return {
           say: `So close! She needs to ${ACTION_WORD[step.required]} at every ${obstacle}. Make the repeat bigger!`,

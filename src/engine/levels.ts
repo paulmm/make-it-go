@@ -1,82 +1,121 @@
 import type { Level } from './types';
 
 /**
- * Level 1 — the right action.
+ * The capability ladder. Each rung introduces or deepens exactly one idea, and mastering it
+ * unlocks the next. The early rungs are deliberately easy wins — one obvious move at a time — so
+ * she feels success fast and likes the game; the later rungs combine the ideas she has met into
+ * richer challenges (a longer dance, a fold inside a run, carrying a key past a hazard).
  *
- * A single event point (a gap) with two actions on the tray, so picking the correct one
- * is a genuine decision. No ordering yet — that is Level 2's idea.
- *
- *   path:  >>>>>  [ GAP ]  >>>>>  goal
- *
- * Clean solve: [JUMP]. Wrong choice: [CLIMB] -> stumble at the gap.
+ * Levels are pure data over one shared interpreter; adding a rung is adding data, never engine
+ * logic. `id` follows play order; the partner keys its words off the anchor and the shape of the
+ * points, so it speaks to every rung without per-level code.
  */
-export const LEVEL_1: Level = {
+
+/** L1 — the right action. One gap; pick JUMP over CLIMB. (exactly-what-you-say) */
+export const GAP_LEVEL: Level = {
   id: 'L1',
   points: ['GAP'],
   allowedActions: ['JUMP', 'CLIMB'],
   anchorId: 'exactly-what-you-say',
-  // A clean solve is exactly the right action, nothing extra: every token matters.
   mastery: { kind: 'reach-goal-within', maxRedundant: 0 },
 };
 
-/**
- * Level 2 — order matters.
- *
- * Two different obstacles in a row, a gap then a step, so the actions must be the right
- * ones IN ORDER.
- *
- *   path:  >>>  [ GAP ]  >>>  [ STEP ]  >>>  goal
- *
- * Clean solve: [JUMP, CLIMB]. CLIMB,JUMP stumbles at the gap; JUMP,JUMP stumbles at the
- * step. This is the debugging lesson — find the wrong step and fix it.
- */
-export const LEVEL_2: Level = {
+/** L2 — a second mapping. One branch to duck under; pick DUCK over JUMP. (exactly-what-you-say) */
+export const BRANCH_LEVEL: Level = {
   id: 'L2',
+  points: ['BRANCH'],
+  allowedActions: ['DUCK', 'JUMP'],
+  anchorId: 'exactly-what-you-say',
+  mastery: { kind: 'reach-goal-within', maxRedundant: 0 },
+};
+
+/** L3 — order matters. A gap then a step: JUMP then CLIMB, in that order. (steps-in-order) */
+export const ORDER_LEVEL: Level = {
+  id: 'L3',
   points: ['GAP', 'STEP'],
   allowedActions: ['JUMP', 'CLIMB'],
   anchorId: 'steps-in-order',
   mastery: { kind: 'reach-goal-within', maxRedundant: 0 },
 };
 
-/**
- * Level 3 — bundle and repeat (iteration).
- *
- * A run of identical obstacles — four gaps — so the same action over and over is the
- * natural solve. The tray offers only that one action (no choosing to confound the new
- * idea) plus the REPEAT tool. Placing JUMP four times reaches the goal but is the tedium
- * that motivates the fold; tapping REPEAT bundles the run into a single chip.
- *
- *   path:  >> [GAP] [GAP] [GAP] [GAP] >> goal
- *
- * Clean solve: REPEAT(JUMP, 4). Mastery requires actually bundling — brute force reaches
- * the goal but does not demonstrate iteration, so the partner offers the fold.
- */
-export const LEVEL_3: Level = {
-  id: 'L3',
+/** L4 — iteration. Four gaps in a row; the one action, folded into a REPEAT. (bundle-and-repeat) */
+export const REPEAT_LEVEL: Level = {
+  id: 'L4',
   points: ['GAP', 'GAP', 'GAP', 'GAP'],
   allowedActions: ['JUMP'],
   anchorId: 'bundle-and-repeat',
   mastery: { kind: 'bundle-to-goal' },
 };
 
-/**
- * Level 4 — decomposition (key, then gate).
- *
- * The goal breaks into two subgoals: first get the key, then open the gate. The key is a
- * pickup, not a hazard — walk past it with the wrong action and she simply doesn't have it,
- * and the gate won't open (it's locked). That visible cause and effect is the lesson: when
- * the gate won't open, find the missing step — the key — and fix it.
- *
- *   path:  >> [KEY] >> [GATE] >> goal
- *
- * Clean solve: [GRAB, OPEN]. Forgetting the key: [OPEN, OPEN] -> she reaches a locked gate.
- */
-export const LEVEL_4: Level = {
-  id: 'L4',
+/** L5 — decomposition. Grab the key, then open the gate; wrong order stays locked. (find-and-fix) */
+export const KEY_GATE_LEVEL: Level = {
+  id: 'L5',
   points: ['KEY', 'GATE'],
   allowedActions: ['GRAB', 'OPEN'],
   anchorId: 'find-and-fix',
   mastery: { kind: 'reach-goal-within', maxRedundant: 0 },
 };
 
-export const LEVELS: Level[] = [LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4];
+/** L6 — the whole dance. A gap, a branch, a step: JUMP, DUCK, CLIMB, all three in order. */
+export const MIXED_LEVEL: Level = {
+  id: 'L6',
+  points: ['GAP', 'BRANCH', 'STEP'],
+  allowedActions: ['JUMP', 'DUCK', 'CLIMB'],
+  anchorId: 'steps-in-order',
+  mastery: { kind: 'reach-goal-within', maxRedundant: 0 },
+};
+
+/**
+ * L7 — fold a run inside a longer plan. A gap, then three branches: JUMP, then REPEAT(DUCK). The
+ * repeated run is at the tail, so tapping REPEAT folds it cleanly. (bundle-and-repeat, deepened)
+ */
+export const RUN_THEN_LEVEL: Level = {
+  id: 'L7',
+  points: ['GAP', 'BRANCH', 'BRANCH', 'BRANCH'],
+  allowedActions: ['JUMP', 'DUCK'],
+  anchorId: 'bundle-and-repeat',
+  mastery: { kind: 'bundle-to-goal' },
+};
+
+/**
+ * L8 — carry it. Grab the key, clear a gap, THEN open the gate: the key rides across the hazard,
+ * so cause and effect now spans a distance. Forget the key and the gate locks. (find-and-fix)
+ */
+export const CARRY_LEVEL: Level = {
+  id: 'L8',
+  points: ['KEY', 'GAP', 'GATE'],
+  allowedActions: ['GRAB', 'JUMP', 'OPEN'],
+  anchorId: 'find-and-fix',
+  mastery: { kind: 'reach-goal-within', maxRedundant: 0 },
+};
+
+/**
+ * L9 — the capstone. Grab the key, duck under three branches, then open the gate: decomposition
+ * and carry and a run, all in one ordered plan. Solved a step at a time, in order. (find-and-fix)
+ */
+export const CAPSTONE_LEVEL: Level = {
+  id: 'L9',
+  points: ['KEY', 'BRANCH', 'BRANCH', 'BRANCH', 'GATE'],
+  allowedActions: ['GRAB', 'DUCK', 'OPEN'],
+  anchorId: 'find-and-fix',
+  mastery: { kind: 'reach-goal-within', maxRedundant: 0 },
+};
+
+/** The ladder, in play order. Mastery of each unlocks the next. */
+export const LEVELS: Level[] = [
+  GAP_LEVEL,
+  BRANCH_LEVEL,
+  ORDER_LEVEL,
+  REPEAT_LEVEL,
+  KEY_GATE_LEVEL,
+  MIXED_LEVEL,
+  RUN_THEN_LEVEL,
+  CARRY_LEVEL,
+  CAPSTONE_LEVEL,
+];
+
+// Back-compat aliases for the original four rungs (kept so existing fixtures stay stable).
+export const LEVEL_1 = GAP_LEVEL;
+export const LEVEL_2 = ORDER_LEVEL;
+export const LEVEL_3 = REPEAT_LEVEL;
+export const LEVEL_4 = KEY_GATE_LEVEL;

@@ -1,94 +1,116 @@
 import { describe, it, expect } from 'vitest';
 import { run } from './interpreter';
-import { LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4, LEVELS } from './levels';
+import {
+  GAP_LEVEL,
+  BRANCH_LEVEL,
+  ORDER_LEVEL,
+  REPEAT_LEVEL,
+  KEY_GATE_LEVEL,
+  MIXED_LEVEL,
+  RUN_THEN_LEVEL,
+  CARRY_LEVEL,
+  CAPSTONE_LEVEL,
+  LEVELS,
+} from './levels';
 import { REQUIRED_ACTION } from './types';
-import type { Action } from './types';
+import type { Action, Level } from './types';
 
-describe('LEVEL_1', () => {
-  it('is a single event point with at least two action choices on the tray', () => {
-    expect(LEVEL_1.points).toHaveLength(1);
-    expect(LEVEL_1.allowedActions.length).toBeGreaterThanOrEqual(2);
+/** The clean solve: the required action at each point, in order. */
+const solve = (level: Level): Action[] => level.points.map((p) => REQUIRED_ACTION[p]);
+
+describe('the ladder', () => {
+  it('is nine rungs, in play order, with unique sequential ids', () => {
+    expect(LEVELS).toHaveLength(9);
+    expect(LEVELS.map((l) => l.id)).toEqual(['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7', 'L8', 'L9']);
   });
 
-  it('is solved by the action its point requires', () => {
-    const required = REQUIRED_ACTION[LEVEL_1.points[0]];
-    expect(run(LEVEL_1, [required]).outcome).toBe('WIN');
+  it('every rung is solved cleanly by the right action at each point, in order', () => {
+    for (const level of LEVELS) {
+      const trace = run(level, solve(level));
+      expect(trace.outcome, `${level.id} should be winnable`).toBe('WIN');
+      expect(trace.redundantTokens, `${level.id} clean solve has no extra tokens`).toBe(0);
+    }
   });
 
-  it('stumbles on a wrong action choice', () => {
-    const required = REQUIRED_ACTION[LEVEL_1.points[0]];
-    const wrong = LEVEL_1.allowedActions.find((a) => a !== required) as Action;
-    expect(run(LEVEL_1, [wrong]).outcome).toBe('STUMBLE');
+  it('every rung poses a real choice (two+ actions, or the REPEAT tool)', () => {
+    for (const level of LEVELS) {
+      const hasChoice = level.allowedActions.length >= 2 || level.mastery.kind === 'bundle-to-goal';
+      expect(hasChoice, `${level.id} should pose a real choice`).toBe(true);
+    }
   });
 
-  it('plants the root anchor (the right action — it does exactly what you say)', () => {
-    expect(LEVEL_1.anchorId).toBe('exactly-what-you-say');
-  });
-});
-
-describe('LEVEL_2 — order matters', () => {
-  it('wins with the right actions in order', () => {
-    expect(run(LEVEL_2, ['JUMP', 'CLIMB']).outcome).toBe('WIN');
-  });
-
-  it('stumbles on the right actions in the wrong order', () => {
-    expect(run(LEVEL_2, ['CLIMB', 'JUMP']).outcome).toBe('STUMBLE');
-  });
-
-  it('stumbles when the second obstacle gets the wrong action', () => {
-    expect(run(LEVEL_2, ['JUMP', 'JUMP']).outcome).toBe('STUMBLE');
-  });
-
-  it('plants the steps-in-order anchor', () => {
-    expect(LEVEL_2.anchorId).toBe('steps-in-order');
+  it('offers every required action on the tray', () => {
+    for (const level of LEVELS) {
+      for (const p of level.points) {
+        expect(level.allowedActions, `${level.id} must offer ${REQUIRED_ACTION[p]}`).toContain(REQUIRED_ACTION[p]);
+      }
+    }
   });
 });
 
-describe('LEVEL_3 — iteration', () => {
-  it('is several identical points, so doing the same step again and again is the natural solve', () => {
-    expect(LEVEL_3.points.length).toBeGreaterThanOrEqual(3);
-    expect(new Set(LEVEL_3.points).size).toBe(1);
+describe('L1 / L2 — the two single-action mappings (exactly-what-you-say)', () => {
+  it('L1 is a gap cleared by JUMP; a wrong pick stumbles', () => {
+    expect(GAP_LEVEL.points).toEqual(['GAP']);
+    expect(run(GAP_LEVEL, ['JUMP']).outcome).toBe('WIN');
+    expect(run(GAP_LEVEL, ['CLIMB']).outcome).toBe('STUMBLE');
+    expect(GAP_LEVEL.anchorId).toBe('exactly-what-you-say');
   });
 
-  it('offers a single action, so bundling — not choosing — is the new idea', () => {
-    expect(LEVEL_3.allowedActions).toHaveLength(1);
-    expect(LEVEL_3.allowedActions[0]).toBe(REQUIRED_ACTION[LEVEL_3.points[0]]);
-  });
-
-  it('is reached when every point gets its action', () => {
-    const plan: Action[] = LEVEL_3.points.map((p) => REQUIRED_ACTION[p]);
-    expect(run(LEVEL_3, plan).outcome).toBe('WIN');
-  });
-
-  it('is incomplete when too few actions are queued for the run of points', () => {
-    expect(run(LEVEL_3, [REQUIRED_ACTION[LEVEL_3.points[0]]]).outcome).toBe('INCOMPLETE');
-  });
-
-  it('plants the bundle-and-repeat anchor and gates on bundling', () => {
-    expect(LEVEL_3.anchorId).toBe('bundle-and-repeat');
-    expect(LEVEL_3.mastery.kind).toBe('bundle-to-goal');
+  it('L2 is a branch cleared by DUCK, with JUMP as the tempting wrong pick', () => {
+    expect(BRANCH_LEVEL.points).toEqual(['BRANCH']);
+    expect(BRANCH_LEVEL.allowedActions).toEqual(expect.arrayContaining(['DUCK', 'JUMP']));
+    expect(run(BRANCH_LEVEL, ['DUCK']).outcome).toBe('WIN');
+    expect(run(BRANCH_LEVEL, ['JUMP']).outcome).toBe('STUMBLE');
+    expect(BRANCH_LEVEL.anchorId).toBe('exactly-what-you-say');
   });
 });
 
-describe('LEVEL_4 — decomposition (key then gate)', () => {
-  it('is two subgoals: a key to grab and a gate to open', () => {
-    expect(LEVEL_4.points).toEqual(['KEY', 'GATE']);
-    expect(LEVEL_4.allowedActions).toEqual(['GRAB', 'OPEN']);
+describe('L3 / L6 — order matters (steps-in-order)', () => {
+  it('L3 needs JUMP then CLIMB; the wrong order stumbles', () => {
+    expect(run(ORDER_LEVEL, ['JUMP', 'CLIMB']).outcome).toBe('WIN');
+    expect(run(ORDER_LEVEL, ['CLIMB', 'JUMP']).outcome).toBe('STUMBLE');
   });
 
-  it('is solved by grabbing the key then opening the gate', () => {
-    expect(run(LEVEL_4, ['GRAB', 'OPEN']).outcome).toBe('WIN');
+  it('L6 is the whole vocabulary in order: JUMP, DUCK, CLIMB', () => {
+    expect(MIXED_LEVEL.points).toEqual(['GAP', 'BRANCH', 'STEP']);
+    expect(run(MIXED_LEVEL, ['JUMP', 'DUCK', 'CLIMB']).outcome).toBe('WIN');
+    expect(run(MIXED_LEVEL, ['DUCK', 'JUMP', 'CLIMB']).outcome).toBe('STUMBLE');
+    expect(MIXED_LEVEL.anchorId).toBe('steps-in-order');
+  });
+});
+
+describe('L4 / L7 — iteration, folded with REPEAT (bundle-and-repeat)', () => {
+  it('L4 is a run of identical gaps, gated on bundling', () => {
+    expect(new Set(REPEAT_LEVEL.points).size).toBe(1);
+    expect(REPEAT_LEVEL.points.length).toBeGreaterThanOrEqual(3);
+    expect(REPEAT_LEVEL.mastery.kind).toBe('bundle-to-goal');
   });
 
-  it('locks the gate when she forgets the key', () => {
-    expect(run(LEVEL_4, ['OPEN', 'OPEN']).outcome).toBe('LOCKED');
+  it('L7 puts the foldable run at the tail: a gap, then a run of branches', () => {
+    expect(RUN_THEN_LEVEL.points[0]).toBe('GAP');
+    expect(RUN_THEN_LEVEL.points.slice(1).every((p) => p === 'BRANCH')).toBe(true);
+    expect(run(RUN_THEN_LEVEL, ['JUMP', 'DUCK', 'DUCK', 'DUCK']).outcome).toBe('WIN');
+    expect(RUN_THEN_LEVEL.mastery.kind).toBe('bundle-to-goal');
+  });
+});
+
+describe('L5 / L8 / L9 — decomposition, carry, capstone (find-and-fix)', () => {
+  it('L5 needs the key before the gate; forgetting it locks the gate', () => {
+    expect(run(KEY_GATE_LEVEL, ['GRAB', 'OPEN']).outcome).toBe('WIN');
+    expect(run(KEY_GATE_LEVEL, ['OPEN', 'OPEN']).outcome).toBe('LOCKED');
   });
 
-  it('plants the find-and-fix anchor', () => {
-    expect(LEVEL_4.anchorId).toBe('find-and-fix');
+  it('L8 carries the key across a gap to the gate; losing the key still locks it', () => {
+    expect(CARRY_LEVEL.points).toEqual(['KEY', 'GAP', 'GATE']);
+    expect(run(CARRY_LEVEL, ['GRAB', 'JUMP', 'OPEN']).outcome).toBe('WIN');
+    expect(run(CARRY_LEVEL, ['JUMP', 'JUMP', 'OPEN']).outcome).toBe('LOCKED');
   });
 
-  it('is the fourth rung of the ladder', () => {
-    expect(LEVELS[3]).toBe(LEVEL_4);
+  it('L9 capstone: key, a run of branches, then the gate — solved a step at a time', () => {
+    expect(CAPSTONE_LEVEL.points[0]).toBe('KEY');
+    expect(CAPSTONE_LEVEL.points[CAPSTONE_LEVEL.points.length - 1]).toBe('GATE');
+    expect(run(CAPSTONE_LEVEL, ['GRAB', 'DUCK', 'DUCK', 'DUCK', 'OPEN']).outcome).toBe('WIN');
+    expect(run(CAPSTONE_LEVEL, ['DUCK', 'DUCK', 'DUCK', 'DUCK', 'OPEN']).outcome).toBe('LOCKED');
+    expect(CAPSTONE_LEVEL.anchorId).toBe('find-and-fix');
   });
 });
