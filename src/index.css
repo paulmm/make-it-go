@@ -374,6 +374,10 @@ body {
 .obstacle {
   object-position: center bottom;
 }
+/* A branch is an overhead hazard — lift it to head height so it reads as "duck under it". */
+.obstacle.branch {
+  transform: translateY(-32%);
+}
 
 .goal-slot {
   position: absolute;
