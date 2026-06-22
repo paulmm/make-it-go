@@ -67,6 +67,8 @@ export function Game({
   const [onboarded, setOnboarded] = useState(false);
 
   const recorder = useRef(createRecorder());
+  const partnerSeq = useRef(0); // only the latest partner reply is applied (dedupes races)
+  const introStarted = useRef(false); // the level intro fires once, despite StrictMode
   const reducedMotion = useReducedMotion();
   const { speak, prime, unlock, muted, setMuted, supported, spokenText, activeWord } = useNarration();
   const runner = useRunner(reducedMotion);
@@ -80,6 +82,7 @@ export function Game({
 
 
   const requestIntro = useCallback(() => {
+    const seq = ++partnerSeq.current;
     partner({
       themeId: theme.id,
       nouns: theme.nouns,
@@ -92,13 +95,18 @@ export function Game({
       attemptsThisLevel: recorder.current.attemptsFor(level.id),
       recentHistory: [],
     }).then((r) => {
+      if (seq !== partnerSeq.current) return; // a newer reply superseded this one
       setResponse(r);
       speak(r.say, { track: true });
     });
   }, [theme, level, speak]);
 
   useEffect(() => {
-    requestIntro();
+    // Guard against React StrictMode running this effect twice (it would speak two intros).
+    if (!introStarted.current) {
+      introStarted.current = true;
+      requestIntro();
+    }
     runner.reset(geo.startX);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requestIntro]);
@@ -150,6 +158,7 @@ export function Game({
     const mastery = evaluateMastery(level, expanded, trace, { usedBundle: bundled });
     const recentHistory = recorder.current.outcomesFor(level.id);
     setPhase('running');
+    const seq = ++partnerSeq.current;
 
     // Decide the partner's reaction now and warm its audio while the hero runs, so the voice
     // is ready the instant the animation ends — no pause between the action and the line.
@@ -176,6 +185,7 @@ export function Game({
         redundantTokens: mastery.redundantTokens,
       });
       reaction.then((r) => {
+        if (seq !== partnerSeq.current) return; // superseded (e.g. she pressed home/clear)
         setResponse(r);
         setPhase('result');
         speak(r.say, { track: true });

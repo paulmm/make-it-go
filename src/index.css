@@ -35,7 +35,7 @@ body {
 .home-btn {
   position: absolute;
   z-index: 6;
-  top: clamp(8px, 2vw, 18px);
+  bottom: clamp(8px, 2vw, 18px);
   left: clamp(8px, 2vw, 18px);
   width: clamp(46px, 9vw, 58px);
   height: clamp(46px, 9vw, 58px);

@@ -9,6 +9,10 @@ import type { PartnerContext, PartnerResponse, PartnerStep } from './types';
  * offline localStub so the app never goes quiet. Selected via VITE_PARTNER=claude.
  */
 export const claudeBrain: PartnerStep = async (context: PartnerContext): Promise<PartnerResponse> => {
+  // The level intro is a generic welcome with no plan to react to yet, so serve it from the
+  // instant offline line — the first thing she hears has no lag. Claude handles the reactions,
+  // where it adds the real value and where the run animation already hides its latency.
+  if (context.lastOutcome === null) return localStub(context);
   try {
     const res = await fetch('/api/partner', {
       method: 'POST',
