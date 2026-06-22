@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { generateLevel, makeRng, endlessDifficulty, nextChallenge } from './generate';
+import { generateLevel, makeRng, endlessDifficulty, nextChallenge, varyLevel } from './generate';
 import type { Emphasis, SkillState } from './generate';
 import { run } from './interpreter';
 import { REQUIRED_ACTION } from './types';
@@ -144,5 +144,53 @@ describe('nextChallenge — the coach targets the least-developed capability', (
   it('defaults to fundamentals for a blank slate (no signals yet)', () => {
     const blank = skill({ firstTry: false, selfDebug: false, transfer: false, promptFade: false, cleared: 0 });
     expect(nextChallenge(blank).emphasis).toBe('fundamentals');
+  });
+});
+
+describe('varyLevel — the action sequence cannot be memorized', () => {
+  const lvl = (points: Level['points'], allowedActions: Level['allowedActions'], mastery: Level['mastery']): Level => ({
+    id: 'L',
+    points,
+    allowedActions,
+    anchorId: 'steps-in-order',
+    mastery,
+  });
+  const reach = { kind: 'reach-goal-within', maxRedundant: 0 } as const;
+
+  it('shuffles a free hazard sequence, keeps the same obstacles, stays solvable', () => {
+    const order3 = lvl(['GAP', 'BRANCH', 'STEP'], ['JUMP', 'DUCK', 'CLIMB'], reach);
+    const orders = new Set<string>();
+    for (let s = 1; s <= 24; s++) {
+      const v = varyLevel(order3, makeRng(s));
+      expect([...v.points].sort()).toEqual(['BRANCH', 'GAP', 'STEP']);
+      expect(run(v, v.points.map((p) => REQUIRED_ACTION[p])).outcome).toBe('WIN');
+      orders.add(v.points.join(','));
+    }
+    expect(orders.size).toBeGreaterThan(1);
+  });
+
+  it('keeps the key first and gate last but refreshes the middle, staying solvable', () => {
+    const cap = lvl(['KEY', 'BRANCH', 'BRANCH', 'BRANCH', 'GATE'], ['GRAB', 'DUCK', 'OPEN'], reach);
+    const middles = new Set<string>();
+    for (let s = 1; s <= 24; s++) {
+      const v = varyLevel(cap, makeRng(s));
+      expect(v.points[0]).toBe('KEY');
+      expect(v.points[v.points.length - 1]).toBe('GATE');
+      expect(v.points).toHaveLength(5);
+      expect(run(v, v.points.map((p) => REQUIRED_ACTION[p])).outcome).toBe('WIN');
+      for (const p of v.points) expect(v.allowedActions).toContain(REQUIRED_ACTION[p]);
+      middles.add(v.points.slice(1, -1).join(','));
+    }
+    expect(middles.size).toBeGreaterThan(1); // not always three branches
+  });
+
+  it('leaves an iteration level untouched (the fold needs its run)', () => {
+    const fold = lvl(['GAP', 'BRANCH', 'BRANCH', 'BRANCH'], ['JUMP', 'DUCK'], { kind: 'bundle-to-goal' });
+    expect(varyLevel(fold, makeRng(5))).toEqual(fold);
+  });
+
+  it('leaves a single-obstacle level untouched (no order to vary)', () => {
+    const single = lvl(['BRANCH'], ['DUCK', 'JUMP'], reach);
+    expect(varyLevel(single, makeRng(5)).points).toEqual(['BRANCH']);
   });
 });

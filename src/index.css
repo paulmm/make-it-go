@@ -865,6 +865,30 @@ body {
   }
 }
 
+/* ---- Level badge: a themed medallion showing the current level (gentle wayfinding) ---- */
+.level-badge {
+  position: absolute;
+  top: clamp(8px, 2.2vw, 16px);
+  left: clamp(8px, 2.2vw, 16px);
+  z-index: 4;
+  width: clamp(42px, 9vw, 60px);
+  height: clamp(42px, 9vw, 60px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.3), rgba(0, 0, 0, 0.16)), var(--accent, #6b5cd6);
+  box-shadow: 0 0 0 4px #ffffff, 0 5px 0 rgba(0, 0, 0, 0.16), 0 9px 16px rgba(0, 0, 0, 0.22);
+  color: #ffffff;
+}
+.level-badge span {
+  font-family: 'Baloo 2', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: clamp(20px, 4.6vw, 30px);
+  line-height: 1;
+  text-shadow: 0 1.5px 0 rgba(0, 0, 0, 0.2);
+}
+
 /* ---- Focus ---- */
 :focus-visible {
   outline: 4px solid #2b6cff;

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { LEVELS } from '../engine/levels';
-import { generateLevel, makeRng, nextChallenge } from '../engine/generate';
+import { generateLevel, makeRng, nextChallenge, varyLevel } from '../engine/generate';
 import { computeSignals } from '../telemetry/signals';
 import { telemetry } from '../telemetry/store';
 import type { Level } from '../engine/types';
@@ -45,7 +45,10 @@ export function App() {
   }
 
   const sequence = [...LEVELS, ...generated];
-  const level = sequence[levelIndex] ?? sequence[sequence.length - 1]; // never undefined
+  const baseLevel = sequence[levelIndex] ?? sequence[sequence.length - 1]; // never undefined
+  // Vary the taught levels' obstacle order so the action sequence can't be memorized (generated
+  // levels already vary). Deterministic per (session, level), so a retry is the same level.
+  const level = levelIndex < LEVELS.length ? varyLevel(baseLevel, makeRng(seedBase + levelIndex * 101 + 7)) : baseLevel;
   const hasNext = true; // endless: there is always another challenge
 
   const goNext = () => {
@@ -74,6 +77,7 @@ export function App() {
         key={`${theme.id}-${level.id}`}
         theme={theme}
         level={level}
+        levelNumber={levelIndex + 1}
         hasNext={hasNext}
         onNext={goNext}
         onHome={() => setTheme(null)}

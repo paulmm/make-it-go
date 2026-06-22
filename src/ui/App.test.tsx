@@ -16,7 +16,7 @@ describe('renders', () => {
 
   it('mounts a level scene without throwing', () => {
     const html = renderToString(
-      <Game theme={MEADOW} level={LEVEL_1} hasNext={false} onNext={() => {}} onHome={() => {}} />,
+      <Game theme={MEADOW} level={LEVEL_1} levelNumber={1} hasNext={false} onNext={() => {}} onHome={() => {}} />,
     );
     expect(html).toContain('class="game"');
     expect(html).toContain('Steps you can add');

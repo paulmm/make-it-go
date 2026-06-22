@@ -30,14 +30,18 @@ export function makeRng(seed: number): () => number {
 
 const pick = <T>(arr: T[], rng: () => number): T => arr[Math.floor(rng() * arr.length)];
 
+/** Fisher-Yates, in place, with the injected rng. */
+function shuffle<T>(arr: T[], rng: () => number): T[] {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 /** A shuffled prefix of the hazard kinds — distinct obstacles, so order is the real challenge. */
 function distinctHazards(n: number, rng: () => number): EventKind[] {
-  const pool = HAZARDS.slice();
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
-  return pool.slice(0, Math.min(Math.max(1, n), pool.length));
+  return shuffle(HAZARDS.slice(), rng).slice(0, Math.min(Math.max(1, n), HAZARDS.length));
 }
 
 const REACH: MasteryRule = { kind: 'reach-goal-within', maxRedundant: 0 };
@@ -125,6 +129,41 @@ export function generateLevel(difficulty: number, rng: () => number, id: string,
   // Never show an unsolvable level: validate the clean solve, fall back to a trivial gap if off.
   const trace = run(level, points.map((p) => REQUIRED_ACTION[p]));
   return trace.outcome === 'WIN' && trace.redundantTokens === 0 ? level : FALLBACK(id);
+}
+
+function withVariedPoints(level: Level, points: EventKind[]): Level {
+  const required = Array.from(new Set(points.map((p) => REQUIRED_ACTION[p])));
+  let allowedActions = required;
+  if (required.length < 2) {
+    const distractor = HAZARD_ACTIONS.find((a) => !required.includes(a))!;
+    allowedActions = [...required, distractor];
+  }
+  return { ...level, points, allowedActions };
+}
+
+/**
+ * Vary a level's obstacle order so the action *sequence* can't be memorized — she has to read
+ * each obstacle and choose. Order-free hazard sequences are shuffled; a key/gate level keeps the
+ * key first and the gate last (the decomposition holds) but refreshes the hazards carried between,
+ * so even the capstone differs each time; an iteration level is left alone (the fold needs its
+ * identical, trailing run). Pure and validated — the original is returned if anything is ever off.
+ */
+export function varyLevel(level: Level, rng: () => number): Level {
+  let varied = level;
+  if (level.mastery.kind === 'bundle-to-goal') {
+    return level;
+  } else if (level.points.includes('GATE')) {
+    const middleCount = level.points.filter((p) => p !== 'KEY' && p !== 'GATE').length;
+    if (middleCount > 0) {
+      const middle = Array.from({ length: middleCount }, () => pick(HAZARDS, rng));
+      varied = withVariedPoints(level, ['KEY', ...middle, 'GATE']);
+    }
+  } else if (level.points.length >= 2) {
+    varied = withVariedPoints(level, shuffle(level.points.slice(), rng));
+  }
+
+  const trace = run(varied, varied.points.map((p) => REQUIRED_ACTION[p]));
+  return trace.outcome === 'WIN' && trace.redundantTokens === 0 ? varied : level;
 }
 
 /**

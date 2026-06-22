@@ -54,12 +54,14 @@ function layout(level: Level): RunnerGeometry {
 export function Game({
   theme,
   level,
+  levelNumber,
   hasNext,
   onNext,
   onHome,
 }: {
   theme: ThemePack;
   level: Level;
+  levelNumber: number;
   hasNext: boolean;
   onNext: () => void;
   onHome: () => void;
@@ -266,6 +268,7 @@ export function Game({
       <Track
         theme={theme}
         level={level}
+        levelNumber={levelNumber}
         geo={geo}
         heroX={runner.heroX}
         heroPose={runner.heroPose}

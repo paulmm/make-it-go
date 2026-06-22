@@ -3,10 +3,12 @@ import type { ReactNode } from 'react';
 import type { Level } from '../engine/types';
 import type { HeroPose, ThemePack } from '../themes/types';
 import type { RunnerGeometry } from './useRunner';
+import { LevelBadge } from './LevelBadge';
 
 interface TrackProps {
   theme: ThemePack;
   level: Level;
+  levelNumber: number;
   geo: RunnerGeometry;
   heroX: number;
   heroPose: HeroPose;
@@ -19,7 +21,7 @@ interface TrackProps {
 }
 
 /** The scene: a backdrop, the obstacles at their event points, and the hero auto-walking. */
-export function Track({ theme, level, geo, heroX, heroPose, heroMs, tick, celebrate, reducedMotion, winChoices }: TrackProps) {
+export function Track({ theme, level, levelNumber, geo, heroX, heroPose, heroMs, tick, celebrate, reducedMotion, winChoices }: TrackProps) {
   const [petKey, setPetKey] = useState(0);
   const [petting, setPetting] = useState(false);
   const [pokeKey, setPokeKey] = useState(0);
@@ -39,6 +41,7 @@ export function Track({ theme, level, geo, heroX, heroPose, heroMs, tick, celebr
   return (
     <div className={`track${reducedMotion ? ' reduced' : ''}${celebrate ? ' won' : ''}`}>
       <div className="scene-backdrop">{theme.backdrop()}</div>
+      <LevelBadge number={levelNumber} theme={theme} />
       <div className="path" aria-hidden="true" />
 
       <button
