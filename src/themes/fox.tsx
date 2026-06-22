@@ -34,7 +34,7 @@ const palette: ThemePalette = {
 };
 
 const POSE: Record<HeroPose, { src: string; facesRight: boolean }> = {
-  idle: { src: foxIdle, facesRight: true },
+  idle: { src: foxIdle, facesRight: false }, // art is drawn facing left, like walk — flip it right
   walk: { src: foxWalk, facesRight: false },
   jump: { src: foxJump, facesRight: true },
   climb: { src: foxClimb, facesRight: true },
