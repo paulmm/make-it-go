@@ -10,3 +10,7 @@ npm-debug.log*
 twa/*
 !twa/twa-manifest.json
 !twa/build.sh
+
+# Internal design docs — kept local, not published to GitHub
+docs/brief.md
+docs/superpowers/
