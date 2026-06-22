@@ -98,7 +98,8 @@ export function useNarration(): Narration {
 
   const prime = useCallback(
     (text: string) => {
-      if (text && supported) void ensureLine(text);
+      // Don't spend a TTS request to warm audio we won't play while muted.
+      if (text && supported && !mutedRef.current) void ensureLine(text);
     },
     [ensureLine, supported],
   );
@@ -194,8 +195,13 @@ export function useNarration(): Narration {
         opts?.onDone?.();
         return;
       }
-      const track = !!opts?.track;
       const onDone = opts?.onDone;
+      if (mutedRef.current) {
+        // Muted: spend no TTS request at all — just let the UI advance.
+        if (onDone) window.setTimeout(onDone, MUTED_DONE_MS);
+        return;
+      }
+      const track = !!opts?.track;
       void ensureLine(text).then((line) => {
         if (mutedRef.current) {
           if (onDone) window.setTimeout(onDone, MUTED_DONE_MS);
