@@ -15,3 +15,6 @@ twa/*
 docs/brief.md
 docs/superpowers/
 docs/writeup.md
+
+# Claude Code agent instructions — kept local, not published
+CLAUDE.md
