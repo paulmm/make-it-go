@@ -34,6 +34,8 @@ Underneath the play there's a real question I want to answer:
 
 That's the experiment. The app is the instrument; **the finding is the point.**
 
+📄 **[Read the full write‑up →](docs/writeup.md)** — how Make It Go turns AI‑assisted play into active, capability‑building learning.
+
 ## What makes it different
 
 - 🚫 **No reading, no typing, no microphone.** Input is large picture‑tokens she taps. Voice is output only.
