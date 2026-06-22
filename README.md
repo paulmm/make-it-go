@@ -73,7 +73,7 @@ Anchors are spoken in the **same childlike words every time** — that's what ma
 
 | The only front door | Iteration: fold many into one | Cause & effect |
 |---|---|---|
-| ![Theme picker with a bunny tile and a fox tile](docs/media/picker.png) | ![Four jumps folded into a single repeat chip](docs/media/repeat.png) | ![The bunny at a locked gate, having walked past the key](docs/media/locked.png) |
+| ![Choose your character — six original characters in a grid: bunny, fox, dino, princess, truck, astronaut](docs/media/picker.png) | ![Four jumps folded into a single repeat chip](docs/media/repeat.png) | ![The bunny at a locked gate, having walked past the key](docs/media/locked.png) |
 
 As the partner speaks, **each word grows in time with the voice** — an early‑reading cue that ties the sound to the written word:
 
