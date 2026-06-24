@@ -113,8 +113,8 @@ A **theme is just data** — a hero, its poses, the obstacle/action art, a palet
 ## Getting started
 
 ```bash
-git clone https://github.com/paulmm/makeitgo.git
-cd makeitgo
+git clone https://github.com/paulmm/make-it-go.git
+cd make-it-go
 npm install
 npm run dev          # open the printed localhost URL
 npm test             # the engine + partner test suite
