@@ -35,7 +35,7 @@ const palette: ThemePalette = {
 
 const POSE: Record<HeroPose, { src: string; facesRight: boolean }> = {
   idle: { src: truckIdle, facesRight: false },
-  walk: { src: truckWalk, facesRight: false },
+  walk: { src: truckWalk, facesRight: true }, // walk art is drawn facing right already — don't flip
   jump: { src: truckJump, facesRight: false },
   climb: { src: truckClimb, facesRight: false },
   duck: { src: truckDuck, facesRight: false },
