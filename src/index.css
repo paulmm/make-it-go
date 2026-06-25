@@ -1272,3 +1272,60 @@ body {
   text-decoration: underline;
   cursor: pointer;
 }
+
+/* ---- Short-screen / landscape-tablet layout ---- */
+/* Normally the tray and controls are separate rows; this wrapper is transparent so the laptop
+   layout is unchanged. On short viewports it becomes a single row (see the media query below). */
+.action-row {
+  display: contents;
+}
+
+/* On short viewports (e.g. an Amazon Fire 7 at 1024x600 landscape) the vertical stack would push
+   the play button off-screen. Compact the pieces and fold the tray + controls into one row so it
+   all fits and the scene keeps the most room. Primary touch targets stay >= 64px. */
+@media (max-height: 700px) {
+  .game {
+    gap: clamp(5px, 1.2vh, 10px);
+    padding: clamp(6px, 1.5vw, 14px);
+  }
+  .partner {
+    min-height: 0;
+  }
+  .partner-say {
+    font-size: clamp(15px, 2.6vh, 20px);
+  }
+  .track {
+    min-height: 120px;
+  }
+  .plan {
+    min-height: 0;
+  }
+  .plan-lane {
+    min-height: 50px;
+  }
+  .action-row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(10px, 2.5vw, 28px);
+  }
+  .token {
+    width: clamp(64px, 8.5vh, 84px);
+    height: clamp(64px, 8.5vh, 84px);
+  }
+  .btn.go {
+    width: clamp(64px, 9.5vh, 88px);
+    height: clamp(64px, 9.5vh, 88px);
+  }
+  .btn.secondary {
+    width: clamp(58px, 8vh, 68px);
+    height: clamp(58px, 8vh, 68px);
+  }
+  .token-tray,
+  .controls {
+    gap: clamp(8px, 2vw, 20px);
+    padding-top: 0;
+  }
+}

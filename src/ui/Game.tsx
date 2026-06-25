@@ -307,31 +307,35 @@ export function Game({
         disabled={phase === 'running'}
         onRemove={removeAt}
       />
-      <TokenTray
-        theme={theme}
-        actions={level.allowedActions}
-        offerAction={offerAction}
-        disabled={phase === 'running' || atCapacity}
-        allowsRepeat={allowsRepeat}
-        offerRepeat={offerRepeat}
-        repeatDisabled={phase === 'running'}
-        hint={!onboarded}
-        onAdd={addToken}
-        onAddRepeat={addRepeat}
-      />
-      <Controls
-        canGo={phase !== 'running' && plan.length > 0 && !celebrate}
-        canClear={phase !== 'running' && plan.length > 0 && !celebrate}
-        showReplay={false}
-        showNext={false}
-        muted={muted}
-        speechSupported={supported}
-        onGo={go}
-        onClear={clearPlan}
-        onReplay={clearPlan}
-        onNext={onNext}
-        onToggleMute={() => setMuted((m) => !m)}
-      />
+      {/* Tray + controls: a column normally (display: contents), one row on short screens so the
+          play button never falls off a landscape tablet. */}
+      <div className="action-row">
+        <TokenTray
+          theme={theme}
+          actions={level.allowedActions}
+          offerAction={offerAction}
+          disabled={phase === 'running' || atCapacity}
+          allowsRepeat={allowsRepeat}
+          offerRepeat={offerRepeat}
+          repeatDisabled={phase === 'running'}
+          hint={!onboarded}
+          onAdd={addToken}
+          onAddRepeat={addRepeat}
+        />
+        <Controls
+          canGo={phase !== 'running' && plan.length > 0 && !celebrate}
+          canClear={phase !== 'running' && plan.length > 0 && !celebrate}
+          showReplay={false}
+          showNext={false}
+          muted={muted}
+          speechSupported={supported}
+          onGo={go}
+          onClear={clearPlan}
+          onReplay={clearPlan}
+          onNext={onNext}
+          onToggleMute={() => setMuted((m) => !m)}
+        />
+      </div>
     </div>
   );
 }
