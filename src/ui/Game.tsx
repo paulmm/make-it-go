@@ -72,6 +72,10 @@ export function Game({
   const [onboarded, setOnboarded] = useState(false);
   // The post-win choices appear only after the celebration line has finished being read aloud.
   const [showWinChoices, setShowWinChoices] = useState(false);
+  // Whether the last run cleanly mastered the level. Drives the celebration and the way forward
+  // OBJECTIVELY — never the partner's celebrate flag, which the live LLM can get wrong (e.g. a
+  // bundled iteration win it forgets to celebrate), which would otherwise leave her stuck.
+  const [mastered, setMastered] = useState(false);
 
   const recorder = useRef(createRecorder());
   const partnerSeq = useRef(0); // only the latest partner reply is applied (dedupes races)
@@ -182,6 +186,7 @@ export function Game({
     const recentHistory = recorder.current.outcomesFor(level.id);
     setPhase('running');
     setShowWinChoices(false);
+    setMastered(false);
     const seq = ++partnerSeq.current;
 
     // Decide the partner's reaction now and warm its audio while the hero runs, so the voice
@@ -222,8 +227,10 @@ export function Game({
         if (seq !== partnerSeq.current) return; // superseded (e.g. she pressed home/clear)
         setResponse(r);
         setPhase('result');
-        // On a clean win, reveal the try-again / next choices only once the line finishes reading.
-        const reveal = r.celebrate
+        setMastered(mastery.mastered);
+        // She mastered it (objective) -> reveal the try-again / next choices once the line is read.
+        // Tied to mastery, NOT the partner's celebrate flag, so a clean win always offers the way on.
+        const reveal = mastery.mastered
           ? () => {
               if (seq === partnerSeq.current) setShowWinChoices(true);
             }
@@ -236,7 +243,7 @@ export function Game({
   const scaffold = phase === 'result' ? response?.scaffold : undefined;
   const offerAction = scaffold?.kind === 'offer-action' ? scaffold.action : null;
   const offerRepeat = scaffold?.kind === 'offer-repeat';
-  const celebrate = phase === 'result' && !!response?.celebrate;
+  const celebrate = phase === 'result' && mastered;
 
   // The partner and runner speak in point indices; chips are tokens. Map across so a bundle
   // chip glows for every point it covers.
