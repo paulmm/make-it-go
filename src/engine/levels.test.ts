@@ -11,6 +11,7 @@ import {
   CARRY_LEVEL,
   CAPSTONE_LEVEL,
   LEVELS,
+  anchorsMastered,
 } from './levels';
 import { REQUIRED_ACTION } from './types';
 import type { Action, Level } from './types';
@@ -45,6 +46,27 @@ describe('the ladder', () => {
         expect(level.allowedActions, `${level.id} must offer ${REQUIRED_ACTION[p]}`).toContain(REQUIRED_ACTION[p]);
       }
     }
+  });
+});
+
+describe('anchorsMastered — the ideas demonstrated by the rungs she has unlocked', () => {
+  it('knows nothing at the first rung', () => {
+    expect(anchorsMastered(0)).toEqual([]);
+  });
+
+  it('collects each anchor once as the ladder unlocks', () => {
+    expect(anchorsMastered(1)).toEqual(['exactly-what-you-say']);
+    expect(anchorsMastered(3)).toEqual(['exactly-what-you-say', 'steps-in-order']);
+    expect(anchorsMastered(4)).toEqual(['exactly-what-you-say', 'steps-in-order', 'bundle-and-repeat']);
+  });
+
+  it('caps at all four anchors past the ladder (endless practice)', () => {
+    expect(anchorsMastered(LEVELS.length + 5)).toEqual([
+      'exactly-what-you-say',
+      'steps-in-order',
+      'bundle-and-repeat',
+      'find-and-fix',
+    ]);
   });
 });
 

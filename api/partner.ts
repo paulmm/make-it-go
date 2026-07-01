@@ -81,7 +81,7 @@ export default async function handler(req: any, res: any) {
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) return send(503, { error: 'no-key' });
-    const model = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6';
+    const model = process.env.ANTHROPIC_MODEL || 'claude-sonnet-5';
 
     const context = await readBody(req);
     if (JSON.stringify(context).length > MAX_CONTEXT_CHARS) return send(400, { error: 'too-big' });
@@ -93,6 +93,9 @@ export default async function handler(req: any, res: any) {
       body: JSON.stringify({
         model,
         max_tokens: 400,
+        // Sonnet 5 runs adaptive thinking when this is omitted — for one or two spoken
+        // sentences behind a forced tool call, that is pure latency and tokens.
+        thinking: { type: 'disabled' },
         system: buildSystemPrompt(context),
         messages: [{ role: 'user', content: buildUserMessage(context) }],
         tools: [replyToolSchema()],
@@ -144,12 +147,15 @@ function buildSystemPrompt(context: any): string {
 }
 
 function buildUserMessage(context: any): string {
-  const { level, currentPlan, lastOutcome, lastTrace, usedBundle, attemptsThisLevel, recentHistory } = context;
+  const { level, conceptsKnown, currentPlan, lastOutcome, lastTrace, usedBundle, attemptsThisLevel, recentHistory } = context;
   const lines: string[] = [];
   lines.push(`Level ${level.id}. Path event points (in order): ${level.points.join(', ')}.`);
   lines.push(`Each point needs: ${level.points.map((p: string) => `${p}->${REQUIRED_ACTION[p]}`).join(', ')}.`);
   lines.push(
     `Tokens she can place: ${level.allowedActions.join(', ')}${level.mastery.kind === 'bundle-to-goal' ? ' plus a REPEAT tool' : ''}.`,
+  );
+  lines.push(
+    `Ideas she has already mastered: ${conceptsKnown?.length ? conceptsKnown.join(', ') : 'none yet — this is her first'}.`,
   );
   lines.push(`Her current plan (in order): ${currentPlan.length ? currentPlan.join(', ') : '(empty)'}.`);
   if (usedBundle) lines.push(`She used a REPEAT bundle.`);

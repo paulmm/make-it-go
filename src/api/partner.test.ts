@@ -131,4 +131,25 @@ describe('/api/partner — guards against strangers spending the Claude credits'
     expect(r.statusCode).toBe(200);
     expect((r.body as { say: string }).say).toContain('gap');
   });
+
+  it('tells Claude which ideas she has already mastered', async () => {
+    vi.stubEnv('ANTHROPIC_API_KEY', 'k');
+    stubUpstreamOk();
+    await handler(req({ body: { ...context(), conceptsKnown: ['exactly-what-you-say'] } }), res());
+    const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+    expect(body.messages[0].content).toContain('exactly-what-you-say');
+  });
+
+  it('defaults to the current Sonnet with thinking off (short spoken replies, low latency)', async () => {
+    vi.stubEnv('ANTHROPIC_API_KEY', 'k');
+    stubUpstreamOk();
+    await handler(req(), res());
+    const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+    expect(body.model).toBe('claude-sonnet-5');
+    // Sonnet 5 runs adaptive thinking when the field is omitted — for one or two spoken
+    // sentences behind a forced tool call, that is pure latency and tokens.
+    expect(body.thinking).toEqual({ type: 'disabled' });
+  });
 });

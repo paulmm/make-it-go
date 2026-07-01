@@ -1,4 +1,4 @@
-import type { Level } from './types';
+import type { AnchorId, Level } from './types';
 
 /**
  * The capability ladder. Each rung introduces or deepens exactly one idea, and mastering it
@@ -100,6 +100,17 @@ export const CAPSTONE_LEVEL: Level = {
   anchorId: 'find-and-fix',
   mastery: { kind: 'reach-goal-within', maxRedundant: 0 },
 };
+
+/**
+ * The anchors demonstrated by the rungs before `unlockedIndex` — unlocks are mastery-gated, so
+ * every earlier rung's idea has been shown, not just seen. Feeds the partner's `conceptsKnown`
+ * so it can calibrate to what she already knows. Deduplicated, in ladder order.
+ */
+export function anchorsMastered(unlockedIndex: number): AnchorId[] {
+  const seen = new Set<AnchorId>();
+  for (const level of LEVELS.slice(0, Math.max(0, unlockedIndex))) seen.add(level.anchorId);
+  return [...seen];
+}
 
 /** The ladder, in play order. Mastery of each unlocks the next. */
 export const LEVELS: Level[] = [

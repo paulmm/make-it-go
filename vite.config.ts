@@ -116,6 +116,9 @@ function claudePartner(opts: PartnerOptions): Plugin {
               body: JSON.stringify({
                 model: opts.model,
                 max_tokens: 400,
+                // Sonnet 5 runs adaptive thinking when this is omitted — for one or two spoken
+                // sentences behind a forced tool call, that is pure latency and tokens.
+                thinking: { type: 'disabled' },
                 system: buildSystemPrompt(context),
                 messages: [{ role: 'user', content: buildUserMessage(context) }],
                 tools: [replyToolSchema()],
@@ -151,7 +154,7 @@ export default defineConfig(({ mode }) => {
       }),
       claudePartner({
         apiKey: env.ANTHROPIC_API_KEY,
-        model: env.ANTHROPIC_MODEL || 'claude-sonnet-4-6',
+        model: env.ANTHROPIC_MODEL || 'claude-sonnet-5',
       }),
     ],
     test: {

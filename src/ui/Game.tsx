@@ -3,7 +3,7 @@ import { run } from '../engine/interpreter';
 import { evaluateMastery } from '../engine/mastery';
 import { bundleTail, canPlace, expandPlan, placeAction, removeToken, usedBundle } from '../engine/plan';
 import type { Slot } from '../engine/plan';
-import type { Action, Level } from '../engine/types';
+import type { Action, AnchorId, Level } from '../engine/types';
 import { partner } from '../partner';
 import type { PartnerResponse } from '../partner/types';
 import { createRecorder } from '../telemetry/recorder';
@@ -55,6 +55,7 @@ export function Game({
   theme,
   level,
   levelNumber,
+  conceptsKnown,
   hasNext,
   onNext,
   onHome,
@@ -62,6 +63,8 @@ export function Game({
   theme: ThemePack;
   level: Level;
   levelNumber: number;
+  /** Anchors she has mastered on earlier rungs — the partner calibrates to what she knows. */
+  conceptsKnown: AnchorId[];
   hasNext: boolean;
   onNext: () => void;
   onHome: () => void;
@@ -99,7 +102,7 @@ export function Game({
       nouns: theme.nouns,
       flavor: theme.voice?.flavorWords,
       level,
-      conceptsKnown: [],
+      conceptsKnown,
       currentPlan: [],
       usedBundle: false,
       lastOutcome: null,
@@ -111,7 +114,7 @@ export function Game({
       setResponse(r);
       speak(r.say, { track: true });
     });
-  }, [theme, level, speak]);
+  }, [theme, level, conceptsKnown, speak]);
 
   useEffect(() => {
     // Guard against React StrictMode running this effect twice (it would speak two intros).
@@ -196,7 +199,7 @@ export function Game({
       nouns: theme.nouns,
       flavor: theme.voice?.flavorWords,
       level,
-      conceptsKnown: mastery.mastered ? [level.anchorId] : [],
+      conceptsKnown: mastery.mastered ? Array.from(new Set([...conceptsKnown, level.anchorId])) : conceptsKnown,
       currentPlan: placed,
       usedBundle: bundled,
       lastOutcome: trace.outcome,

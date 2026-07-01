@@ -27,6 +27,24 @@ describe('buildUserMessage — reports the point the run actually ended at', () 
     // Claude should still be told about the missed pickup so its line stays honest.
     expect(msg).toContain('walked past the KEY');
   });
+
+  it('tells Claude which ideas she has already mastered, so it can calibrate', () => {
+    const trace = run(CARRY_LEVEL, ['GRAB', 'JUMP', 'OPEN']);
+    const context: PartnerContext = {
+      themeId: 'meadow',
+      nouns: { hero: 'bunny', goal: 'carrot' },
+      level: CARRY_LEVEL,
+      conceptsKnown: ['exactly-what-you-say', 'steps-in-order'],
+      currentPlan: ['GRAB', 'JUMP', 'OPEN'],
+      usedBundle: false,
+      lastOutcome: trace.outcome,
+      lastTrace: trace,
+      attemptsThisLevel: 1,
+      recentHistory: [],
+    };
+    expect(buildUserMessage(context)).toContain('exactly-what-you-say, steps-in-order');
+    expect(buildUserMessage({ ...context, conceptsKnown: [] })).toContain('none yet');
+  });
 });
 
 describe('parseReply — validates Claude tool output into a PartnerResponse', () => {

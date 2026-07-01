@@ -48,11 +48,14 @@ export function buildSystemPrompt(context: PartnerContext): string {
 
 /** The turn's situation, as compact readable facts for the model. */
 export function buildUserMessage(context: PartnerContext): string {
-  const { level, currentPlan, lastOutcome, lastTrace, usedBundle, attemptsThisLevel, recentHistory } = context;
+  const { level, conceptsKnown, currentPlan, lastOutcome, lastTrace, usedBundle, attemptsThisLevel, recentHistory } = context;
   const lines: string[] = [];
   lines.push(`Level ${level.id}. Path event points (in order): ${level.points.join(', ')}.`);
   lines.push(`Each point needs: ${level.points.map((p) => `${p}->${REQUIRED_ACTION[p]}`).join(', ')}.`);
   lines.push(`Tokens she can place: ${level.allowedActions.join(', ')}${level.mastery.kind === 'bundle-to-goal' ? ' plus a REPEAT tool' : ''}.`);
+  lines.push(
+    `Ideas she has already mastered: ${conceptsKnown.length ? conceptsKnown.join(', ') : 'none yet — this is her first'}.`,
+  );
   lines.push(`Her current plan (in order): ${currentPlan.length ? currentPlan.join(', ') : '(empty)'}.`);
   if (usedBundle) lines.push(`She used a REPEAT bundle.`);
 

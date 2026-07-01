@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LEVELS } from '../engine/levels';
+import { LEVELS, anchorsMastered } from '../engine/levels';
 import { generateLevel, makeRng, nextChallenge, varyLevel } from '../engine/generate';
 import { computeSignals } from '../telemetry/signals';
 import { telemetry } from '../telemetry/store';
@@ -85,6 +85,7 @@ export function App() {
         theme={theme}
         level={level}
         levelNumber={levelIndex + 1}
+        conceptsKnown={anchorsMastered(levelIndex)}
         hasNext={hasNext}
         onNext={goNext}
         onHome={() => setTheme(null)}
