@@ -3,6 +3,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import { activeWordAt, wordIndexAtChar } from './alignment';
 import type { SpokenLine } from './alignment';
 import { getCachedLine, putCachedLine } from './audioCache';
+import { requestSpokenLine } from './tts';
 
 export interface Narration {
   /**
@@ -89,20 +90,10 @@ export function useNarration(): Narration {
       cache.set(text, stored);
       return stored;
     }
-    try {
-      const res = await fetch('/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
-      });
-      const line = res.ok ? ((await res.json()) as SpokenLine) : null;
-      cache.set(text, line);
-      if (line) void putCachedLine(text, line); // only cache successes — never a quota failure
-      return line;
-    } catch {
-      cache.set(text, null);
-      return null;
-    }
+    const line = await requestSpokenLine(text); // null on failure or timeout -> Web Speech
+    cache.set(text, line);
+    if (line) void putCachedLine(text, line); // only cache successes — never a quota failure
+    return line;
   }, []);
 
   const prime = useCallback(

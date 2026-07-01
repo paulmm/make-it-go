@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { localStub } from './localStub';
 import type { PartnerContext } from './types';
-import { LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4 } from '../engine/levels';
+import { CARRY_LEVEL, LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4 } from '../engine/levels';
 import { run } from '../engine/interpreter';
 import type { Action, Outcome } from '../engine/types';
 
@@ -105,6 +105,28 @@ describe('localStub partner — L3 (iteration)', () => {
     const r = await localStub(afterL3(['JUMP', 'JUMP'], true));
     expect(r.scaffold).toEqual({ kind: 'offer-repeat' });
     expect(r.say.toLowerCase()).toContain('bigger');
+  });
+});
+
+describe('localStub partner — L8 (carry: key, gap, gate)', () => {
+  function afterL8(plan: Action[]): PartnerContext {
+    const trace = run(CARRY_LEVEL, plan);
+    return ctx({ level: CARRY_LEVEL, currentPlan: plan, lastOutcome: trace.outcome, lastTrace: trace });
+  }
+
+  it('points at the stumble, not the harmlessly missed key before it', async () => {
+    // KEY+JUMP -> she walks past (MISSED, non-fatal); GAP+OPEN -> the run actually ends here.
+    const r = await localStub(afterL8(['JUMP', 'OPEN', 'OPEN']));
+    expect(r.scaffold).toEqual({ kind: 'highlight-step', stepIndex: 1 });
+    expect(r.say.toLowerCase()).toContain('gap');
+    expect(r.say.toLowerCase()).not.toContain('key');
+  });
+
+  it('names the point she actually ran out at, not the missed key', async () => {
+    // KEY+JUMP -> MISSED; the GAP has no token left, so the run ends there.
+    const r = await localStub(afterL8(['JUMP']));
+    expect(r.say.toLowerCase()).toContain('gap');
+    expect(r.say.toLowerCase()).not.toContain('key');
   });
 });
 

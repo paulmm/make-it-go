@@ -62,7 +62,12 @@ export function buildUserMessage(context: PartnerContext): string {
     );
   } else {
     lines.push(`She pressed GO. Outcome: ${lastOutcome}.`);
-    const failed = lastTrace?.steps.find((s) => s.result !== 'PASS');
+    // A MISSED key is non-fatal (she walked past it) — the run ends at a later point, and that
+    // later point is the one to report. The missed pickup is still stated so the line stays honest.
+    if (lastTrace?.steps.some((s) => s.result === 'MISSED')) {
+      lines.push(`She walked past the KEY without grabbing it.`);
+    }
+    const failed = lastTrace?.steps.find((s) => s.result !== 'PASS' && s.result !== 'MISSED');
     if (failed) {
       lines.push(
         `It ended at point ${failed.pointIndex} (a ${failed.kind}): it needed ${failed.required}, she played ${failed.played ?? 'nothing'} -> ${failed.result}.`,

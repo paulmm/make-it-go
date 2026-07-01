@@ -62,6 +62,21 @@ describe('computeSignals', () => {
     expect(rising.promptFade.strong).toBe(false);
   });
 
+  it('keeps prompt-fade in play order once generated levels (G1, G2…) join the log', () => {
+    // Ladder solved clean first, then generated levels that each needed help — help is NOT
+    // fading. Sorting by levelId string would put G1/G2 before L1/L2 and read the trend backwards.
+    const g = (levelId: string, hinted: boolean): LevelAttempt => ({
+      levelId,
+      anchorId: 'steps-in-order',
+      outcome: 'WIN',
+      attemptNumber: 1,
+      hinted,
+      redundant: 0,
+    });
+    const s = computeSignals([att('L1', 'WIN', 1, false), att('L2', 'WIN', 1, false), g('G1', true), g('G2', true)]);
+    expect(s.promptFade.strong).toBe(false);
+  });
+
   it('flags readiness only when all four signals are strong', () => {
     // Four clean unaided first-try wins, plus a self-debug recovery on a replay.
     const graduate = computeSignals([

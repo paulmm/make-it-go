@@ -1,5 +1,33 @@
 import { describe, it, expect } from 'vitest';
-import { parseReply } from './promptBuilder';
+import { buildUserMessage, parseReply } from './promptBuilder';
+import { CARRY_LEVEL } from '../engine/levels';
+import { run } from '../engine/interpreter';
+import type { Action } from '../engine/types';
+import type { PartnerContext } from './types';
+
+describe('buildUserMessage — reports the point the run actually ended at', () => {
+  it('skips a harmlessly missed key and reports the stumble after it', () => {
+    const plan: Action[] = ['JUMP', 'OPEN', 'OPEN'];
+    const trace = run(CARRY_LEVEL, plan);
+    const context: PartnerContext = {
+      themeId: 'meadow',
+      nouns: { hero: 'bunny', goal: 'carrot' },
+      level: CARRY_LEVEL,
+      conceptsKnown: [],
+      currentPlan: plan,
+      usedBundle: false,
+      lastOutcome: trace.outcome,
+      lastTrace: trace,
+      attemptsThisLevel: 1,
+      recentHistory: [],
+    };
+    const msg = buildUserMessage(context);
+    expect(msg).toContain('point 1 (a GAP)');
+    expect(msg).not.toContain('(a KEY)');
+    // Claude should still be told about the missed pickup so its line stays honest.
+    expect(msg).toContain('walked past the KEY');
+  });
+});
 
 describe('parseReply — validates Claude tool output into a PartnerResponse', () => {
   it('accepts a well-formed reply', () => {

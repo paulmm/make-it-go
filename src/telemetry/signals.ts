@@ -112,11 +112,10 @@ export function computeSignals(attempts: LevelAttempt[]): CapabilitySignals {
     strong: selfDebugCount >= 1,
   };
 
-  // Prompt-fade: hints trend down across solved levels (in ladder order; levelId sorts L1..L4).
-  const hintsByLadder = [...solved]
-    .sort((a, b) => (a.levelId < b.levelId ? -1 : 1))
-    .map((l) => l.hints);
-  const promptFade = fadeSignal(hintsByLadder);
+  // Prompt-fade: hints trend down across solved levels, in the order she met them. `summarize`
+  // preserves first-encounter order, which IS play order; levelId strings don't sort by it
+  // (generated 'G1'/'G10' would land before 'L1'), so never sort here.
+  const promptFade = fadeSignal(solved.map((l) => l.hints));
 
   const ready = transfer.strong && firstTry.strong && selfDebug.strong && promptFade.strong;
   return { levelsSolved, transfer, promptFade, firstTry, selfDebug, ready };

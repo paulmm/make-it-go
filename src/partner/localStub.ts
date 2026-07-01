@@ -55,9 +55,13 @@ function repeatedAction(level: Level): Action {
   return REQUIRED_ACTION[best];
 }
 
-/** The point where the run ended (the wrong or missing one), if any. */
+/**
+ * The point where the run actually ended (wrong, missing, or locked), if any. A MISSED key is
+ * non-fatal — she just walked past it — so it is never the step to point at; the character
+ * visibly fails further along, and the pointer must agree with what she saw.
+ */
 function failedStep(trace: Trace | null) {
-  return trace?.steps.find((s) => s.result !== 'PASS') ?? null;
+  return trace?.steps.find((s) => s.result !== 'PASS' && s.result !== 'MISSED') ?? null;
 }
 
 /**
