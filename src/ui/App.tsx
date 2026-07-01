@@ -9,6 +9,7 @@ import type { ThemePack } from '../themes/types';
 import { Dashboard } from './Dashboard';
 import { Game } from './Game';
 import { ThemePicker } from './ThemePicker';
+import { loadProgress, saveProgress } from './progress';
 
 /**
  * The theme picker is the only front door. One tap drops into Level 1 with that pack; mastering a
@@ -18,7 +19,8 @@ import { ThemePicker } from './ThemePicker';
  */
 export function App() {
   const [theme, setTheme] = useState<ThemePack | null>(null);
-  const [levelIndex, setLevelIndex] = useState(0);
+  // Resume at her furthest unlocked rung — a reload never sends her back to Level 1.
+  const [levelIndex, setLevelIndex] = useState(() => loadProgress());
   const [generated, setGenerated] = useState<Level[]>([]);
   // One random base per session, so the generated run differs each time but stays reproducible
   // within the session (pure updater -> StrictMode-safe).
@@ -34,7 +36,11 @@ export function App() {
           themes={THEMES}
           onPick={(t) => {
             setTheme(t);
-            setLevelIndex(0);
+            // The ladder is theme-agnostic — switching characters reskins the same progression,
+            // so she keeps her rung (in-memory when storage is unavailable, else the stored
+            // unlock). Generated levels are per-theme-session, so an endless index folds back
+            // to the last taught rung.
+            setLevelIndex((i) => Math.max(Math.min(i, LEVELS.length - 1), loadProgress()));
             setGenerated([]);
           }}
           onGrownUps={() => setShowDashboard(true)}
@@ -53,6 +59,7 @@ export function App() {
 
   const goNext = () => {
     const next = levelIndex + 1;
+    saveProgress(next); // mastery unlocked this rung — remember it across sessions
     if (next >= sequence.length) {
       // Past the ladder: the coach reads her capability and aims the next level at the skill she
       // has least developed, then we step onto it in the same update.

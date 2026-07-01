@@ -9,6 +9,52 @@
 
 const cache = new Map<string, unknown>();
 
+// The partner speaks one or two short sentences; nothing legitimate comes close to this, so a
+// stranger can't buy a novel's worth of TTS with one request.
+const MAX_TEXT_CHARS = 300;
+
+/**
+ * Same-origin gate: the game is served from the same host as this API, so a browser call from
+ * the app always carries a matching Origin (or at least Referer); cross-site pages and naive
+ * scripts don't. Headers are forgeable, so this is a damage-bounder alongside the length cap
+ * and rate limit, not a lock. No hardcoded domain — preview deploys pass too.
+ */
+function sameOrigin(req: any): boolean {
+  const host = req.headers?.host;
+  if (!host) return false;
+  for (const header of [req.headers?.origin, req.headers?.referer]) {
+    if (typeof header === 'string' && header) {
+      try {
+        return new URL(header).host === host;
+      } catch {
+        return false;
+      }
+    }
+  }
+  return false;
+}
+
+// Best-effort per-IP rate limit. The map is per serverless instance, so it bounds abuse rather
+// than strictly enforcing a global quota — good enough to stop a hammering script.
+const RATE_WINDOW_MS = 60_000;
+const RATE_MAX = 30;
+const rateHits = new Map<string, { count: number; start: number }>();
+
+function rateLimited(req: any): boolean {
+  const ip = String(req.headers?.['x-forwarded-for'] ?? '').split(',')[0].trim() || 'unknown';
+  const now = Date.now();
+  const hit = rateHits.get(ip);
+  if (!hit || now - hit.start >= RATE_WINDOW_MS) {
+    if (rateHits.size > 1000) {
+      for (const [k, v] of rateHits) if (now - v.start >= RATE_WINDOW_MS) rateHits.delete(k);
+    }
+    rateHits.set(ip, { count: 1, start: now });
+    return false;
+  }
+  hit.count += 1;
+  return hit.count > RATE_MAX;
+}
+
 export default async function handler(req: any, res: any) {
   const send = (code: number, body: unknown) => {
     res.statusCode = code;
@@ -18,6 +64,8 @@ export default async function handler(req: any, res: any) {
 
   try {
     if (req.method !== 'POST') return send(405, { error: 'method-not-allowed' });
+    if (!sameOrigin(req)) return send(403, { error: 'forbidden' });
+    if (rateLimited(req)) return send(429, { error: 'rate-limited' });
 
     const apiKey = process.env.ELEVENLABS_API_KEY;
     if (!apiKey) return send(503, { error: 'no-key' });
@@ -28,6 +76,7 @@ export default async function handler(req: any, res: any) {
     const body = await readBody(req);
     const text = String(body?.text ?? '').trim();
     if (!text) return send(400, { error: 'empty' });
+    if (text.length > MAX_TEXT_CHARS) return send(400, { error: 'too-long' });
 
     const cacheKey = `${voiceId}|${modelId}|${text}`;
     const hit = cache.get(cacheKey);

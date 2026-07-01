@@ -2,6 +2,7 @@ import { useEffect, useReducer } from 'react';
 import { telemetry } from '../telemetry/store';
 import { computeSignals } from '../telemetry/signals';
 import type { Signal } from '../telemetry/signals';
+import { resetProgress } from './progress';
 
 /** Re-render whenever the persistent telemetry changes. */
 function useTelemetrySnapshot() {
@@ -84,7 +85,10 @@ export function Dashboard({ onClose }: { onClose: () => void }) {
           type="button"
           className="dash-reset"
           onClick={() => {
-            if (confirm('Clear all of their progress data on this device?')) telemetry.reset();
+            if (confirm('Clear all of their progress data on this device?')) {
+              telemetry.reset();
+              resetProgress(); // the ladder unlock is progress data too
+            }
           }}
         >
           Reset data

@@ -21,6 +21,52 @@ const ANCHOR_TEXT: Record<string, string> = {
 const ACTIONS = ['JUMP', 'DUCK', 'CLIMB', 'GRAB', 'OPEN'];
 const ANCHOR_IDS = ['exactly-what-you-say', 'steps-in-order', 'bundle-and-repeat', 'find-and-fix'];
 
+// A real turn's context (level + trace + short history) is a few KB; anything bigger is someone
+// stuffing the prompt to inflate the Claude bill.
+const MAX_CONTEXT_CHARS = 16_000;
+
+/**
+ * Same-origin gate: the game is served from the same host as this API, so a browser call from
+ * the app always carries a matching Origin (or at least Referer); cross-site pages and naive
+ * scripts don't. Headers are forgeable, so this is a damage-bounder alongside the size cap and
+ * rate limit, not a lock. No hardcoded domain — preview deploys pass too.
+ */
+function sameOrigin(req: any): boolean {
+  const host = req.headers?.host;
+  if (!host) return false;
+  for (const header of [req.headers?.origin, req.headers?.referer]) {
+    if (typeof header === 'string' && header) {
+      try {
+        return new URL(header).host === host;
+      } catch {
+        return false;
+      }
+    }
+  }
+  return false;
+}
+
+// Best-effort per-IP rate limit. The map is per serverless instance, so it bounds abuse rather
+// than strictly enforcing a global quota — good enough to stop a hammering script.
+const RATE_WINDOW_MS = 60_000;
+const RATE_MAX = 20;
+const rateHits = new Map<string, { count: number; start: number }>();
+
+function rateLimited(req: any): boolean {
+  const ip = String(req.headers?.['x-forwarded-for'] ?? '').split(',')[0].trim() || 'unknown';
+  const now = Date.now();
+  const hit = rateHits.get(ip);
+  if (!hit || now - hit.start >= RATE_WINDOW_MS) {
+    if (rateHits.size > 1000) {
+      for (const [k, v] of rateHits) if (now - v.start >= RATE_WINDOW_MS) rateHits.delete(k);
+    }
+    rateHits.set(ip, { count: 1, start: now });
+    return false;
+  }
+  hit.count += 1;
+  return hit.count > RATE_MAX;
+}
+
 export default async function handler(req: any, res: any) {
   const send = (code: number, body: unknown) => {
     res.statusCode = code;
@@ -30,12 +76,15 @@ export default async function handler(req: any, res: any) {
 
   try {
     if (req.method !== 'POST') return send(405, { error: 'method-not-allowed' });
+    if (!sameOrigin(req)) return send(403, { error: 'forbidden' });
+    if (rateLimited(req)) return send(429, { error: 'rate-limited' });
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) return send(503, { error: 'no-key' });
     const model = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6';
 
     const context = await readBody(req);
+    if (JSON.stringify(context).length > MAX_CONTEXT_CHARS) return send(400, { error: 'too-big' });
     if (!context?.level) return send(400, { error: 'bad-context' });
 
     const r = await fetch('https://api.anthropic.com/v1/messages', {
