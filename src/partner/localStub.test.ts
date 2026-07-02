@@ -108,6 +108,27 @@ describe('localStub partner — L3 (iteration)', () => {
   });
 });
 
+describe('localStub partner — speaks about the hero by its theme noun', () => {
+  it('never says "she" — the hero may be a truck', async () => {
+    const truck = { nouns: { hero: 'truck', goal: 'flag' } };
+    const noShe = (say: string) => expect(say).not.toMatch(/\bshe\b/i);
+
+    const stumble = run(LEVEL_1, ['CLIMB']);
+    const s = await localStub(ctx({ ...truck, currentPlan: ['CLIMB'], lastOutcome: stumble.outcome, lastTrace: stumble, attemptsThisLevel: 1 }));
+    expect(s.say.toLowerCase()).toContain('truck');
+    noShe(s.say);
+
+    const incomplete = run(LEVEL_1, []);
+    const i = await localStub(ctx({ ...truck, lastOutcome: incomplete.outcome, lastTrace: incomplete, attemptsThisLevel: 1 }));
+    noShe(i.say);
+
+    const locked = run(LEVEL_4, ['OPEN', 'OPEN']);
+    const l = await localStub(ctx({ ...truck, level: LEVEL_4, currentPlan: ['OPEN', 'OPEN'], lastOutcome: locked.outcome, lastTrace: locked, attemptsThisLevel: 1 }));
+    expect(l.say.toLowerCase()).toContain('truck');
+    noShe(l.say);
+  });
+});
+
 describe('localStub partner — L8 (carry: key, gap, gate)', () => {
   function afterL8(plan: Action[]): PartnerContext {
     const trace = run(CARRY_LEVEL, plan);

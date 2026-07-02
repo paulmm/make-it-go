@@ -55,7 +55,6 @@ export function App() {
   // Vary the taught levels' obstacle order so the action sequence can't be memorized (generated
   // levels already vary). Deterministic per (session, level), so a retry is the same level.
   const level = levelIndex < LEVELS.length ? varyLevel(baseLevel, makeRng(seedBase + levelIndex * 101 + 7)) : baseLevel;
-  const hasNext = true; // endless: there is always another challenge
 
   const goNext = () => {
     const next = levelIndex + 1;
@@ -86,7 +85,6 @@ export function App() {
         level={level}
         levelNumber={levelIndex + 1}
         conceptsKnown={anchorsMastered(levelIndex)}
-        hasNext={hasNext}
         onNext={goNext}
         onHome={() => setTheme(null)}
       />

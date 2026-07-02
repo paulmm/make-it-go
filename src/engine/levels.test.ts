@@ -12,6 +12,7 @@ import {
   CAPSTONE_LEVEL,
   LEVELS,
   anchorsMastered,
+  repeatFoldAction,
 } from './levels';
 import { REQUIRED_ACTION } from './types';
 import type { Action, Level } from './types';
@@ -106,6 +107,12 @@ describe('L4 / L7 — iteration, folded with REPEAT (bundle-and-repeat)', () => 
     expect(new Set(REPEAT_LEVEL.points).size).toBe(1);
     expect(REPEAT_LEVEL.points.length).toBeGreaterThanOrEqual(3);
     expect(REPEAT_LEVEL.mastery.kind).toBe('bundle-to-goal');
+  });
+
+  it('repeatFoldAction is the action of the most-repeated point — what the REPEAT tool folds', () => {
+    expect(repeatFoldAction(REPEAT_LEVEL)).toBe('JUMP');
+    // L7's tray starts with JUMP, but the run to fold is the three branches -> DUCK.
+    expect(repeatFoldAction(RUN_THEN_LEVEL)).toBe('DUCK');
   });
 
   it('L7 puts the foldable run at the tail: a gap, then a run of branches', () => {

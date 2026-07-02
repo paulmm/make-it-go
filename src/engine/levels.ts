@@ -1,4 +1,5 @@
-import type { AnchorId, Level } from './types';
+import { REQUIRED_ACTION } from './types';
+import type { Action, AnchorId, EventKind, Level } from './types';
 
 /**
  * The capability ladder. Each rung introduces or deepens exactly one idea, and mastering it
@@ -100,6 +101,19 @@ export const CAPSTONE_LEVEL: Level = {
   anchorId: 'find-and-fix',
   mastery: { kind: 'reach-goal-within', maxRedundant: 0 },
 };
+
+/**
+ * The action of the most-repeated event point — the run the REPEAT tool folds. Drives the
+ * repeat tool's icon and its empty-plan seed, so what it shows is what it does (on L7 the tray
+ * leads with JUMP, but the run to fold is the branches -> DUCK).
+ */
+export function repeatFoldAction(level: Level): Action {
+  const counts = new Map<EventKind, number>();
+  for (const p of level.points) counts.set(p, (counts.get(p) ?? 0) + 1);
+  let best = level.points[0];
+  for (const p of level.points) if ((counts.get(p) ?? 0) > (counts.get(best) ?? 0)) best = p;
+  return REQUIRED_ACTION[best];
+}
 
 /**
  * The anchors demonstrated by the rungs before `unlockedIndex` — unlocks are mastery-gated, so

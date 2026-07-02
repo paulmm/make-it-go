@@ -1,5 +1,5 @@
 import { ANCHORS } from '../engine/anchors';
-import { REQUIRED_ACTION } from '../engine/types';
+import { repeatFoldAction } from '../engine/levels';
 import type { Action, EventKind, Level, Trace } from '../engine/types';
 import type { PartnerContext, PartnerResponse, Scaffold } from './types';
 
@@ -46,15 +46,6 @@ function levelIntro(level: Level, hero: string): string {
   return `Look — ${human}! Give the ${hero} the right moves, in the right order, then press go.`;
 }
 
-/** The action of the most-repeated event point — the one a REPEAT bundle should fold. */
-function repeatedAction(level: Level): Action {
-  const counts = new Map<EventKind, number>();
-  for (const p of level.points) counts.set(p, (counts.get(p) ?? 0) + 1);
-  let best = level.points[0];
-  for (const p of level.points) if ((counts.get(p) ?? 0) > (counts.get(best) ?? 0)) best = p;
-  return REQUIRED_ACTION[best];
-}
-
 /**
  * The point where the run actually ended (wrong, missing, or locked), if any. A MISSED key is
  * non-fatal — she just walked past it — so it is never the step to point at; the character
@@ -89,7 +80,7 @@ export async function localStub(context: PartnerContext): Promise<PartnerRespons
       // Iteration level: she crossed every point, but one-by-one isn't the lesson. Reaching
       // the goal by brute force earns the nudge to fold the run into one repeat chip.
       if (bundleLevel && !usedBundle) {
-        const word = ACTION_WORD[repeatedAction(level)];
+        const word = ACTION_WORD[repeatFoldAction(level)];
         return {
           say: `You did it! That was a lot of ${word}s. You can bundle them — tap repeat to do them all at once!`,
           scaffold: { kind: 'offer-repeat' },
@@ -135,8 +126,8 @@ export async function localStub(context: PartnerContext): Promise<PartnerRespons
             : { kind: 'none' };
       const say =
         stumbledBefore && step
-          ? `Still stumbling! At the ${obstacle}, she needs to ${ACTION_WORD[step.required]}. Try that one.`
-          : `Oops, she stumbled! The ${nouns.hero} did exactly what you said. What does the ${obstacle} need? Pick that one.`;
+          ? `Still stumbling! At the ${obstacle}, the ${nouns.hero} needs to ${ACTION_WORD[step.required]}. Try that one.`
+          : `Oops, a stumble! The ${nouns.hero} did exactly what you said. What does the ${obstacle} need? Pick that one.`;
       return { say, scaffold, introduceConcept: 'exactly-what-you-say', celebrate: false };
     }
 
@@ -146,13 +137,13 @@ export async function localStub(context: PartnerContext): Promise<PartnerRespons
       // On an iteration level a run-out means the bundle is too small — grow it.
       if (bundleLevel && step) {
         return {
-          say: `So close! She needs to ${ACTION_WORD[step.required]} at every ${obstacle}. Make the repeat bigger!`,
+          say: `So close! The ${nouns.hero} needs to ${ACTION_WORD[step.required]} at every ${obstacle}. Make the repeat bigger!`,
           scaffold: { kind: 'offer-repeat' },
           celebrate: false,
         };
       }
       return {
-        say: `She reached the ${obstacle} with nothing to do! Add an action for it.`,
+        say: `The ${nouns.hero} reached the ${obstacle} with nothing to do! Add an action for it.`,
         scaffold: { kind: 'none' },
         celebrate: false,
       };
@@ -161,7 +152,7 @@ export async function localStub(context: PartnerContext): Promise<PartnerRespons
     case 'LOCKED': {
       // The find-and-fix moment: the gate won't open because the key step is missing.
       return {
-        say: `The gate is locked! She walked right past the key. Get the key first, then open the gate.`,
+        say: `The gate is locked! The ${nouns.hero} walked right past the key. Get the key first, then open the gate.`,
         scaffold: { kind: 'offer-action', action: 'GRAB' },
         introduceConcept: 'find-and-fix',
         celebrate: false,

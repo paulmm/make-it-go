@@ -51,7 +51,7 @@ export function Dashboard({ onClose }: { onClose: () => void }) {
           </button>
         </header>
         <p className="dash-sub">
-          {s.levelsSolved} idea{s.levelsSolved === 1 ? '' : 's'} solved so far. This measures what they
+          {`${s.levelsSolved} level${s.levelsSolved === 1 ? '' : 's'} solved so far.`} This measures what they
           <em> can do</em> — never time on app.
         </p>
 

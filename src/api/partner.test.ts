@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import handler from '../../api/partner';
+import { buildSystemPrompt, buildUserMessage, replyToolSchema } from '../partner/promptBuilder';
+import { CARRY_LEVEL, RUN_THEN_LEVEL } from '../engine/levels';
+import { run } from '../engine/interpreter';
+import type { Action } from '../engine/types';
+import type { PartnerContext } from '../partner/types';
 
 /** A minimal, legitimate partner context — the level intro turn. */
 function context() {
@@ -139,6 +144,56 @@ describe('/api/partner — guards against strangers spending the Claude credits'
     const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
     const body = JSON.parse(fetchMock.mock.calls[0][1].body as string);
     expect(body.messages[0].content).toContain('exactly-what-you-say');
+  });
+
+  it('stays in sync with src/partner/promptBuilder — the two are hand-mirrored', async () => {
+    // api/partner.ts is deliberately self-contained (no ../src imports on the serverless
+    // runtime), so its prompt logic is a copy. This pins the copy to the original: if a prompt
+    // tweak lands in one file and not the other, this fails.
+    vi.stubEnv('ANTHROPIC_API_KEY', 'k');
+
+    const plan: Action[] = ['JUMP', 'OPEN', 'OPEN'];
+    const trace = run(CARRY_LEVEL, plan);
+    const contexts: PartnerContext[] = [
+      {
+        // The intro turn, with flavor words (covers the system prompt's flavor branch).
+        themeId: 'truck',
+        nouns: { hero: 'truck', goal: 'flag' },
+        flavor: ['beep', 'yay'],
+        level: RUN_THEN_LEVEL,
+        conceptsKnown: ['exactly-what-you-say'],
+        currentPlan: [],
+        usedBundle: false,
+        lastOutcome: null,
+        lastTrace: null,
+        attemptsThisLevel: 0,
+        recentHistory: [],
+      },
+      {
+        // A reaction turn with a missed key and a stumble (covers the trace branches).
+        themeId: 'meadow',
+        nouns: { hero: 'bunny', goal: 'carrot' },
+        level: CARRY_LEVEL,
+        conceptsKnown: [],
+        currentPlan: plan,
+        usedBundle: false,
+        lastOutcome: trace.outcome,
+        lastTrace: trace,
+        attemptsThisLevel: 2,
+        recentHistory: ['STUMBLE'],
+      },
+    ];
+
+    for (const context of contexts) {
+      stubUpstreamOk();
+      await handler(req({ body: context }), res());
+      const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+      expect(body.system).toBe(buildSystemPrompt(context));
+      expect(body.messages[0].content).toBe(buildUserMessage(context));
+      expect(body.tools[0]).toEqual(replyToolSchema());
+      vi.unstubAllGlobals();
+    }
   });
 
   it('defaults to the current Sonnet with thinking off (short spoken replies, low latency)', async () => {

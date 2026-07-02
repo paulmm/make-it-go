@@ -10,6 +10,8 @@ interface TokenTrayProps {
   disabled: boolean;
   /** This level offers the REPEAT tool (iteration). */
   allowsRepeat: boolean;
+  /** The action the REPEAT tool folds (the most-repeated point's) — its icon shows this. */
+  repeatAction: Action;
   /** The partner is offering the fold right now (pulse the REPEAT tool). */
   offerRepeat: boolean;
   /** REPEAT tool disabled (running). It never overflows the path, so capacity doesn't gate it. */
@@ -53,6 +55,7 @@ export function TokenTray({
   offerAction,
   disabled,
   allowsRepeat,
+  repeatAction,
   offerRepeat,
   repeatDisabled,
   hint,
@@ -87,7 +90,7 @@ export function TokenTray({
           disabled={repeatDisabled}
           aria-label="Repeat"
         >
-          {theme.actionArt[actions[0]]()}
+          {theme.actionArt[repeatAction]()}
           <LoopArrow />
         </button>
       )}

@@ -21,35 +21,20 @@ function ForwardGlyph() {
   );
 }
 
-/** House — shown on the last level, where "next" means back to the character picker. */
-function HomeGlyph() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#ffffff" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 11.5 12 4l9 7.5" />
-      <path d="M5.5 10.5V20h13v-9.5" />
-      <path d="M10 20v-5h4v5" />
-    </svg>
-  );
-}
-
 /**
  * The post-win choice, popped over the celebrating scene once the partner's line has been read:
  * a small "try again" and a big, gently pulsing "next". Iconography only (no reading), colored
- * from the active theme. On the final level the big button goes home to pick another character.
+ * from the active theme. There is always a next — past the ladder, levels are generated.
  */
 export function WinChoices({
   theme,
-  hasNext,
   onRetry,
   onNext,
-  onHome,
   reducedMotion,
 }: {
   theme: ThemePack;
-  hasNext: boolean;
   onRetry: () => void;
   onNext: () => void;
-  onHome: () => void;
   reducedMotion: boolean;
 }) {
   // The accent feeds a CSS gradient so the button reads as a glossy storybook sticker.
@@ -59,15 +44,9 @@ export function WinChoices({
       <button type="button" className="wc-btn wc-retry" onClick={onRetry} aria-label="Try this one again">
         <RetryGlyph color={theme.palette.text} />
       </button>
-      {hasNext ? (
-        <button type="button" className="wc-btn wc-next" style={accentStyle} onClick={onNext} aria-label="Go to the next level">
-          <ForwardGlyph />
-        </button>
-      ) : (
-        <button type="button" className="wc-btn wc-next" style={accentStyle} onClick={onHome} aria-label="Choose another character">
-          <HomeGlyph />
-        </button>
-      )}
+      <button type="button" className="wc-btn wc-next" style={accentStyle} onClick={onNext} aria-label="Go to the next level">
+        <ForwardGlyph />
+      </button>
     </div>
   );
 }

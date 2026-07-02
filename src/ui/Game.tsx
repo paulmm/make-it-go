@@ -4,6 +4,7 @@ import { evaluateMastery } from '../engine/mastery';
 import { bundleTail, canPlace, expandPlan, placeAction, removeToken, usedBundle } from '../engine/plan';
 import type { Slot } from '../engine/plan';
 import type { Action, AnchorId, Level } from '../engine/types';
+import { repeatFoldAction } from '../engine/levels';
 import { partner } from '../partner';
 import type { PartnerResponse } from '../partner/types';
 import { createRecorder } from '../telemetry/recorder';
@@ -56,7 +57,6 @@ export function Game({
   level,
   levelNumber,
   conceptsKnown,
-  hasNext,
   onNext,
   onHome,
 }: {
@@ -65,7 +65,7 @@ export function Game({
   levelNumber: number;
   /** Anchors she has mastered on earlier rungs — the partner calibrates to what she knows. */
   conceptsKnown: AnchorId[];
-  hasNext: boolean;
+  /** Advance to the next challenge — the ladder is endless, so there is always one. */
   onNext: () => void;
   onHome: () => void;
 }) {
@@ -87,11 +87,15 @@ export function Game({
   const { speak, prime, unlock, muted, setMuted, supported, spokenText, activeWord } = useNarration();
   const runner = useRunner(reducedMotion);
   const geo = layout(level);
-  const capacity = level.points.length; // one action per obstacle — no extras
+  // One action per obstacle, deliberately — no over-planning rabbit holes at this age. The pure
+  // engine can account for redundant tokens, but the UI never lets them exist (see CLAUDE.md).
+  const capacity = level.points.length;
   const expanded = expandPlan(plan); // what the interpreter actually runs
   const atCapacity = !canPlace(plan, capacity);
   // This level teaches iteration, so it offers the REPEAT tool that folds a run into a chip.
   const allowsRepeat = level.mastery.kind === 'bundle-to-goal';
+  // What the REPEAT tool folds — its icon shows this action, and an empty-plan tap seeds it.
+  const repeatAction = repeatFoldAction(level);
 
 
 
@@ -144,7 +148,7 @@ export function Game({
   const addRepeat = () => {
     unlock();
     if (phase === 'running') return;
-    setPlan((p) => bundleTail(p, level.allowedActions[0], capacity));
+    setPlan((p) => bundleTail(p, repeatAction, capacity));
     setOnboarded(true);
     speak(REPEAT_CUE);
     backToBuilding();
@@ -173,10 +177,6 @@ export function Game({
   const goNext = () => {
     setShowWinChoices(false);
     onNext();
-  };
-  const goHome = () => {
-    setShowWinChoices(false);
-    onHome();
   };
 
   const go = () => {
@@ -290,14 +290,7 @@ export function Game({
         reducedMotion={reducedMotion}
         winChoices={
           showWinChoices ? (
-            <WinChoices
-              theme={theme}
-              hasNext={hasNext}
-              onRetry={retryLevel}
-              onNext={goNext}
-              onHome={goHome}
-              reducedMotion={reducedMotion}
-            />
+            <WinChoices theme={theme} onRetry={retryLevel} onNext={goNext} reducedMotion={reducedMotion} />
           ) : null
         }
       />
@@ -319,6 +312,7 @@ export function Game({
           offerAction={offerAction}
           disabled={phase === 'running' || atCapacity}
           allowsRepeat={allowsRepeat}
+          repeatAction={repeatAction}
           offerRepeat={offerRepeat}
           repeatDisabled={phase === 'running'}
           hint={!onboarded}
@@ -328,14 +322,10 @@ export function Game({
         <Controls
           canGo={phase !== 'running' && plan.length > 0 && !celebrate}
           canClear={phase !== 'running' && plan.length > 0 && !celebrate}
-          showReplay={false}
-          showNext={false}
           muted={muted}
           speechSupported={supported}
           onGo={go}
           onClear={clearPlan}
-          onReplay={clearPlan}
-          onNext={onNext}
           onToggleMute={() => setMuted((m) => !m)}
         />
       </div>

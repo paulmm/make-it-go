@@ -75,7 +75,7 @@ export function Track({ theme, level, levelNumber, geo, heroX, heroPose, heroMs,
         style={move}
         onClick={idle ? pet : undefined}
         role={idle ? 'button' : undefined}
-        aria-label={idle ? 'Pet the bunny' : undefined}
+        aria-label={idle ? `Pet the ${theme.nouns.hero}` : undefined}
       >
         <div className={`hero-inner ${heroPose}${petting ? ' petting' : ''}`} key={`${heroPose}-${tick}`}>
           {theme.heroPose(heroPose)}

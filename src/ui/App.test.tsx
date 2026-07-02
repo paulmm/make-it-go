@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { renderToString } from 'react-dom/server';
 import { App } from './App';
+import { Dashboard } from './Dashboard';
 import { Game } from './Game';
-import { MEADOW } from '../themes';
+import { MEADOW, TRUCK } from '../themes';
 import { LEVEL_1 } from '../engine/levels';
 
 describe('renders', () => {
@@ -16,10 +17,22 @@ describe('renders', () => {
 
   it('mounts a level scene without throwing', () => {
     const html = renderToString(
-      <Game theme={MEADOW} level={LEVEL_1} levelNumber={1} conceptsKnown={[]} hasNext={false} onNext={() => {}} onHome={() => {}} />,
+      <Game theme={MEADOW} level={LEVEL_1} levelNumber={1} conceptsKnown={[]} onNext={() => {}} onHome={() => {}} />,
     );
     expect(html).toContain('class="game"');
     expect(html).toContain('Steps you can add');
     expect(html).toContain('aria-label="Go"');
+  });
+
+  it('labels the pettable hero with the theme noun, not always the bunny', () => {
+    const html = renderToString(
+      <Game theme={TRUCK} level={LEVEL_1} levelNumber={1} conceptsKnown={[]} onNext={() => {}} onHome={() => {}} />,
+    );
+    expect(html).toContain('Pet the truck');
+  });
+
+  it('dashboard counts levels solved, not ideas (there are only four ideas)', () => {
+    const html = renderToString(<Dashboard onClose={() => {}} />);
+    expect(html).toContain('levels solved');
   });
 });
