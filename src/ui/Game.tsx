@@ -21,14 +21,15 @@ import { useRunner } from './useRunner';
 import type { RunnerGeometry } from './useRunner';
 import { useNarration } from '../narration/useNarration';
 
+// Placing a token is a proposal — the partner asks "is that your plan?"; pressing GO is the test.
 const WORD_CUE: Record<Action, string> = {
-  JUMP: 'Jump!',
-  DUCK: 'Duck!',
-  CLIMB: 'Climb!',
-  GRAB: 'Grab the key!',
-  OPEN: 'Open the gate!',
+  JUMP: 'Jump?',
+  DUCK: 'Duck?',
+  CLIMB: 'Climb?',
+  GRAB: 'Grab the key?',
+  OPEN: 'Open the gate?',
 };
-const REPEAT_CUE = 'Again and again!';
+const REPEAT_CUE = 'Again and again?';
 
 type Phase = 'building' | 'running' | 'result';
 

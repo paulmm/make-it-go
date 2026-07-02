@@ -23,6 +23,20 @@ const settle = (ms: number) => act(async () => {
   await vi.advanceTimersByTimeAsync(ms);
 });
 
+/** A fetch that records every request and fails like a dead network — the app's offline path. */
+function stubFetchSpy() {
+  const spy = vi.fn(() => Promise.reject(new TypeError('no network in tests')));
+  vi.stubGlobal('fetch', spy);
+  return spy;
+}
+
+/** Every line the voice was asked to speak (the /api/tts request bodies). */
+function spokenTexts(spy: ReturnType<typeof vi.fn>): string[] {
+  return spy.mock.calls
+    .filter(([url]) => url === '/api/tts')
+    .map(([, init]) => JSON.parse((init as RequestInit).body as string).text as string);
+}
+
 describe('Game — plan, go, run, record, way forward', () => {
   beforeEach(() => {
     telemetry.reset();
@@ -63,5 +77,28 @@ describe('Game — plan, go, run, record, way forward', () => {
     // …but the plan is still hers to fix: the chip is removable and GO is live again.
     expect(screen.getByRole('button', { name: /Step 1, climb/ })).toBeTruthy();
     expect((screen.getByRole('button', { name: 'Go' }) as HTMLButtonElement).disabled).toBe(false);
+  });
+});
+
+describe('Game — word cues', () => {
+  beforeEach(() => {
+    telemetry.reset();
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  it('asks a question when she places a step — "Jump?", not "Jump!"', async () => {
+    const spy = stubFetchSpy();
+    mount();
+    await settle(0);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Jump' }));
+    await settle(0);
+
+    expect(spokenTexts(spy)).toContain('Jump?');
   });
 });
