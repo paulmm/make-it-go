@@ -102,3 +102,41 @@ describe('Game — word cues', () => {
     expect(spokenTexts(spy)).toContain('Jump?');
   });
 });
+
+describe('Game — scene toys', () => {
+  beforeEach(() => {
+    telemetry.reset();
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  it('poking an obstacle reacts and speaks its name', async () => {
+    const spy = stubFetchSpy();
+    mount();
+    await settle(0);
+
+    const gap = screen.getByRole('button', { name: 'A gap' });
+    fireEvent.click(gap);
+    await settle(0);
+
+    expect(screen.getByRole('button', { name: 'A gap' }).className).toContain('poke-gap');
+    expect(spokenTexts(spy)).toContain('A gap!');
+  });
+
+  it('obstacles are inert while the hero runs the plan', async () => {
+    const spy = stubFetchSpy();
+    mount();
+    await settle(0);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Jump' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Go' }));
+    fireEvent.click(screen.getByRole('button', { name: 'A gap' })); // mid-run: disabled
+    await settle(0);
+
+    expect(spokenTexts(spy)).not.toContain('A gap!');
+  });
+});

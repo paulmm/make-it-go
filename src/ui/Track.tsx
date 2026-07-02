@@ -1,9 +1,18 @@
 import { useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import type { Level } from '../engine/types';
+import type { EventKind, Level } from '../engine/types';
 import type { HeroPose, ThemePack } from '../themes/types';
 import type { RunnerGeometry } from './useRunner';
 import { LevelBadge } from './LevelBadge';
+
+/** Child-facing obstacle names — poking one is vocabulary practice for reading the path. */
+const OBSTACLE_WORD: Record<EventKind, string> = {
+  GAP: 'gap',
+  BRANCH: 'branch',
+  STEP: 'step',
+  KEY: 'key',
+  GATE: 'gate',
+};
 
 interface TrackProps {
   theme: ThemePack;
@@ -16,16 +25,26 @@ interface TrackProps {
   tick: number;
   celebrate: boolean;
   reducedMotion: boolean;
+  /** False while the hero is executing a plan — every toy goes inert so she watches the run. */
+  interactive: boolean;
+  /** Speak a toy's line (e.g. "A gap!") — Track never talks to the narration system directly. */
+  onPokeWord: (line: string) => void;
   /** Optional overlay rendered on top of the scene (the post-win choices). */
   winChoices?: ReactNode;
 }
 
 /** The scene: a backdrop, the obstacles at their event points, and the hero auto-walking. */
-export function Track({ theme, level, levelNumber, geo, heroX, heroPose, heroMs, tick, celebrate, reducedMotion, winChoices }: TrackProps) {
+export function Track({ theme, level, levelNumber, geo, heroX, heroPose, heroMs, tick, celebrate, reducedMotion, interactive, onPokeWord, winChoices }: TrackProps) {
   const [petKey, setPetKey] = useState(0);
   const [petting, setPetting] = useState(false);
   const [pokeKey, setPokeKey] = useState(0);
+  const [poked, setPoked] = useState<{ index: number; seq: number } | null>(null);
   const petTimer = useRef<number | null>(null);
+
+  const pokeObstacle = (index: number, kind: EventKind) => {
+    setPoked((p) => ({ index, seq: (p?.seq ?? 0) + 1 }));
+    onPokeWord(`A ${OBSTACLE_WORD[kind]}!`);
+  };
 
   const idle = heroPose === 'idle' && !celebrate;
   const pet = () => {
@@ -55,9 +74,18 @@ export function Track({ theme, level, levelNumber, geo, heroX, heroPose, heroMs,
       </button>
 
       {level.points.map((kind, i) => (
-        <div className="obstacle-slot" key={i} style={at(geo.pointX[i])}>
+        <button
+          type="button"
+          // seq in the key remounts the poked slot so the animation replays on every tap
+          key={poked?.index === i ? `ob-${i}-${poked.seq}` : `ob-${i}`}
+          className={`obstacle-slot${poked?.index === i ? ` poke-${kind.toLowerCase()}` : ''}`}
+          style={at(geo.pointX[i])}
+          onClick={() => pokeObstacle(i, kind)}
+          disabled={!interactive}
+          aria-label={`A ${OBSTACLE_WORD[kind]}`}
+        >
           {theme.obstacleArt[kind]()}
-        </div>
+        </button>
       ))}
 
       <div className="goal-slot" style={at(geo.goalX)} aria-hidden="true">

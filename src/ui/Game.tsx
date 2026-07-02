@@ -289,6 +289,11 @@ export function Game({
         tick={runner.tick}
         celebrate={celebrate}
         reducedMotion={reducedMotion}
+        interactive={phase !== 'running'}
+        onPokeWord={(line) => {
+          unlock();
+          speak(line);
+        }}
         winChoices={
           showWinChoices ? (
             <WinChoices theme={theme} onRetry={retryLevel} onNext={goNext} reducedMotion={reducedMotion} />

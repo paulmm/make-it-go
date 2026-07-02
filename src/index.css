@@ -379,6 +379,78 @@ body {
   transform: translateY(-32%);
 }
 
+/* Obstacle slots are tappable toys: poke one and it reacts in kind while the voice names it.
+   Button reset mirrors .sun; animations use rotate/scale/translate so the art's own layout
+   transforms (e.g. the branch's head-height lift) survive untouched. */
+button.obstacle-slot {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+button.obstacle-slot:disabled {
+  cursor: default;
+}
+.obstacle-slot .obstacle {
+  transform-origin: 50% 100%;
+}
+.obstacle-slot.poke-gap .obstacle {
+  animation: pokeRipple 0.5s ease;
+}
+.obstacle-slot.poke-branch .obstacle {
+  animation: pokeShake 0.5s ease;
+}
+.obstacle-slot.poke-step .obstacle {
+  animation: pokeWobble 0.5s ease;
+}
+.obstacle-slot.poke-key .obstacle {
+  animation: pokeJingle 0.55s ease;
+}
+.obstacle-slot.poke-gate .obstacle {
+  animation: pokeRattle 0.4s ease;
+}
+@keyframes pokeRipple {
+  50% {
+    scale: 1.12 0.88;
+  }
+}
+@keyframes pokeShake {
+  25% {
+    rotate: -7deg;
+  }
+  75% {
+    rotate: 7deg;
+  }
+}
+@keyframes pokeWobble {
+  30% {
+    rotate: 5deg;
+  }
+  65% {
+    rotate: -4deg;
+  }
+}
+@keyframes pokeJingle {
+  20%,
+  60% {
+    rotate: 12deg;
+  }
+  40%,
+  80% {
+    rotate: -12deg;
+  }
+}
+@keyframes pokeRattle {
+  20%,
+  60% {
+    translate: -3px 0;
+  }
+  40%,
+  80% {
+    translate: 3px 0;
+  }
+}
+
 .goal-slot {
   position: absolute;
   z-index: 1;
