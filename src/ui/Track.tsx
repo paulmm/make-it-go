@@ -57,6 +57,10 @@ export function Track({ theme, level, levelNumber, geo, heroX, heroPose, heroMs,
   const at = (x: number) => ({ left: `${x * 100}%` });
   const move = { left: `${heroX * 100}%`, transition: `left ${heroMs}ms linear, opacity 0.18s ease` };
 
+  // Repeated kinds get numbered labels so a screen reader can tell four gaps apart.
+  const kindCounts = new Map<EventKind, number>();
+  for (const p of level.points) kindCounts.set(p, (kindCounts.get(p) ?? 0) + 1);
+
   return (
     <div className={`track${reducedMotion ? ' reduced' : ''}${celebrate ? ' won' : ''}`}>
       <div className="scene-backdrop">{theme.backdrop()}</div>
@@ -82,7 +86,11 @@ export function Track({ theme, level, levelNumber, geo, heroX, heroPose, heroMs,
           style={at(geo.pointX[i])}
           onClick={() => pokeObstacle(i, kind)}
           disabled={!interactive}
-          aria-label={`A ${OBSTACLE_WORD[kind]}`}
+          aria-label={
+            (kindCounts.get(kind) ?? 1) > 1
+              ? `A ${OBSTACLE_WORD[kind]}, ${level.points.slice(0, i + 1).filter((p) => p === kind).length} of ${kindCounts.get(kind)}`
+              : `A ${OBSTACLE_WORD[kind]}`
+          }
         >
           {theme.obstacleArt[kind]()}
         </button>

@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { Game } from './Game';
 import { MEADOW } from '../themes';
-import { GAP_LEVEL } from '../engine/levels';
+import { GAP_LEVEL, REPEAT_LEVEL } from '../engine/levels';
 import { telemetry } from '../telemetry/store';
 
 // The whole play loop, driven through the real components: place a token, tap GO, let the
@@ -138,5 +138,16 @@ describe('Game — scene toys', () => {
     await settle(0);
 
     expect(spokenTexts(spy)).not.toContain('A gap!');
+  });
+
+  it('numbers repeated obstacles for screen readers — four gaps are not four identical buttons', async () => {
+    stubFetchSpy();
+    render(
+      <Game theme={MEADOW} level={REPEAT_LEVEL} levelNumber={4} conceptsKnown={[]} onNext={() => {}} onHome={() => {}} />,
+    );
+    await settle(0);
+
+    expect(screen.getByRole('button', { name: 'A gap, 1 of 4' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'A gap, 4 of 4' })).toBeTruthy();
   });
 });
