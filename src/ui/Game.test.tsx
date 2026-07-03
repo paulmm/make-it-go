@@ -161,4 +161,37 @@ describe('Game — scene toys', () => {
 
     expect(screen.getByRole('button', { name: 'The carrot' }).className).toContain('wiggle');
   });
+
+  it('a third quick pet earns a spin and the theme cry', async () => {
+    const spy = stubFetchSpy();
+    mount();
+    await settle(0);
+
+    const hero = () => screen.getByRole('button', { name: 'Pet the bunny' });
+    fireEvent.click(hero());
+    await settle(200);
+    fireEvent.click(hero());
+    await settle(200);
+    fireEvent.click(hero());
+    await settle(0);
+
+    expect(document.querySelector('.hero-inner.spinning')).toBeTruthy();
+    expect(spokenTexts(spy)).toContain(MEADOW.hoverCry);
+  });
+
+  it('slow pets stay plain pets — no spin, no cry', async () => {
+    const spy = stubFetchSpy();
+    mount();
+    await settle(0);
+
+    const hero = () => screen.getByRole('button', { name: 'Pet the bunny' });
+    fireEvent.click(hero());
+    await settle(2000); // past the 1.5s streak window
+    fireEvent.click(hero());
+    await settle(2000);
+    fireEvent.click(hero());
+    await settle(0);
+
+    expect(spokenTexts(spy)).not.toContain(MEADOW.hoverCry);
+  });
 });

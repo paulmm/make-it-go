@@ -294,6 +294,10 @@ export function Game({
           unlock();
           speak(line);
         }}
+        onCry={() => {
+          unlock();
+          speak(theme.hoverCry);
+        }}
         winChoices={
           showWinChoices ? (
             <WinChoices theme={theme} onRetry={retryLevel} onNext={goNext} reducedMotion={reducedMotion} />

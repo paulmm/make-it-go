@@ -577,6 +577,14 @@ button.goal-slot:disabled {
 .hero-inner.petting {
   animation: petSquish 0.5s ease;
 }
+.hero-inner.spinning {
+  animation: heroSpin 0.8s ease;
+}
+@keyframes heroSpin {
+  to {
+    rotate: 360deg;
+  }
+}
 .track.reduced .hero-inner {
   animation: none !important;
 }

@@ -29,18 +29,24 @@ interface TrackProps {
   interactive: boolean;
   /** Speak a toy's line (e.g. "A gap!") — Track never talks to the narration system directly. */
   onPokeWord: (line: string) => void;
+  /** Speak the theme's cry ("Beep beep!") — the pet-streak reward. */
+  onCry: () => void;
   /** Optional overlay rendered on top of the scene (the post-win choices). */
   winChoices?: ReactNode;
 }
 
 /** The scene: a backdrop, the obstacles at their event points, and the hero auto-walking. */
-export function Track({ theme, level, levelNumber, geo, heroX, heroPose, heroMs, tick, celebrate, reducedMotion, interactive, onPokeWord, winChoices }: TrackProps) {
+export function Track({ theme, level, levelNumber, geo, heroX, heroPose, heroMs, tick, celebrate, reducedMotion, interactive, onPokeWord, onCry, winChoices }: TrackProps) {
   const [petKey, setPetKey] = useState(0);
   const [petting, setPetting] = useState(false);
   const [pokeKey, setPokeKey] = useState(0);
   const [poked, setPoked] = useState<{ index: number; seq: number } | null>(null);
   const [goalKey, setGoalKey] = useState(0);
   const petTimer = useRef<number | null>(null);
+  const [spinning, setSpinning] = useState(false);
+  // Three pets, each within 1.5s of the last, earn a spin + the theme's cry. A hidden delight,
+  // not a tracked streak — nothing is counted anywhere but here.
+  const petStreak = useRef({ count: 0, last: 0 });
 
   const pokeObstacle = (index: number, kind: EventKind) => {
     setPoked((p) => ({ index, seq: (p?.seq ?? 0) + 1 }));
@@ -49,10 +55,20 @@ export function Track({ theme, level, levelNumber, geo, heroX, heroPose, heroMs,
 
   const idle = heroPose === 'idle' && !celebrate;
   const pet = () => {
+    const now = Date.now();
+    petStreak.current.count = now - petStreak.current.last <= 1500 ? petStreak.current.count + 1 : 1;
+    petStreak.current.last = now;
     setPetKey((k) => k + 1);
-    setPetting(true);
     if (petTimer.current) window.clearTimeout(petTimer.current);
-    petTimer.current = window.setTimeout(() => setPetting(false), 520);
+    if (petStreak.current.count >= 3) {
+      petStreak.current.count = 0;
+      setSpinning(true);
+      onCry();
+      petTimer.current = window.setTimeout(() => setSpinning(false), 800);
+    } else {
+      setPetting(true);
+      petTimer.current = window.setTimeout(() => setPetting(false), 520);
+    }
   };
 
   const at = (x: number) => ({ left: `${x * 100}%` });
@@ -122,7 +138,7 @@ export function Track({ theme, level, levelNumber, geo, heroX, heroPose, heroMs,
         role={idle ? 'button' : undefined}
         aria-label={idle ? `Pet the ${theme.nouns.hero}` : undefined}
       >
-        <div className={`hero-inner ${heroPose}${petting ? ' petting' : ''}`} key={`${heroPose}-${tick}`}>
+        <div className={`hero-inner ${heroPose}${petting ? ' petting' : ''}${spinning ? ' spinning' : ''}`} key={`${heroPose}-${tick}`}>
           {theme.heroPose(heroPose)}
         </div>
       </div>
