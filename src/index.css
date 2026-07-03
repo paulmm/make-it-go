@@ -451,6 +451,31 @@ button.obstacle-slot:disabled {
   }
 }
 
+/* The goal is a toy too — a happy wiggle, same spirit as the sun's poke. */
+button.goal-slot {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+button.goal-slot:disabled {
+  cursor: default;
+}
+.goal-slot.wiggle > * {
+  animation: goalWiggle 0.5s ease;
+}
+@keyframes goalWiggle {
+  25% {
+    rotate: -8deg;
+  }
+  50% {
+    rotate: 8deg;
+  }
+  75% {
+    rotate: -4deg;
+  }
+}
+
 .goal-slot {
   position: absolute;
   z-index: 1;

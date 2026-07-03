@@ -39,6 +39,7 @@ export function Track({ theme, level, levelNumber, geo, heroX, heroPose, heroMs,
   const [petting, setPetting] = useState(false);
   const [pokeKey, setPokeKey] = useState(0);
   const [poked, setPoked] = useState<{ index: number; seq: number } | null>(null);
+  const [goalKey, setGoalKey] = useState(0);
   const petTimer = useRef<number | null>(null);
 
   const pokeObstacle = (index: number, kind: EventKind) => {
@@ -96,9 +97,17 @@ export function Track({ theme, level, levelNumber, geo, heroX, heroPose, heroMs,
         </button>
       ))}
 
-      <div className="goal-slot" style={at(geo.goalX)} aria-hidden="true">
+      <button
+        type="button"
+        key={`goal-${goalKey}`}
+        className={`goal-slot${goalKey > 0 ? ' wiggle' : ''}`}
+        style={at(geo.goalX)}
+        onClick={() => setGoalKey((k) => k + 1)}
+        disabled={!interactive}
+        aria-label={`The ${theme.nouns.goal}`}
+      >
         {theme.goalIcon()}
-      </div>
+      </button>
 
       {celebrate && !reducedMotion && <div className="win-burst" style={at(geo.goalX)} aria-hidden="true" />}
 

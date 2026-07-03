@@ -150,4 +150,15 @@ describe('Game — scene toys', () => {
     expect(screen.getByRole('button', { name: 'A gap, 1 of 4' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'A gap, 4 of 4' })).toBeTruthy();
   });
+
+  it('the goal does a happy wiggle when tapped', async () => {
+    stubFetchSpy();
+    mount();
+    await settle(0);
+
+    const goal = screen.getByRole('button', { name: 'The carrot' });
+    fireEvent.click(goal);
+
+    expect(screen.getByRole('button', { name: 'The carrot' }).className).toContain('wiggle');
+  });
 });
