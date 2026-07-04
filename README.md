@@ -9,7 +9,7 @@ Tap picture‑tokens to build a plan, press **go**, and the character does *exac
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)
-![tests](https://img.shields.io/badge/tests-128%20passing-3FB950)
+![tests](https://img.shields.io/badge/tests-184%20passing-3FB950)
 ![input](https://img.shields.io/badge/input-taps%20only-FF6B9D)
 ![license](https://img.shields.io/badge/license-MIT-blue)
 
@@ -44,8 +44,9 @@ That's the experiment. The app is the instrument; **the finding is the point.**
 - 🚫 **No reading, no typing, no microphone.** Input is large picture‑tokens they tap. Voice is output only.
 - 🎯 **Literal execution is the lesson.** Their ordered plan runs exactly as written — a wrong action fails *visibly* (a stumble, a splash). The gap between what they meant and what they said *is* the debugging lesson. No autocorrect, ever.
 - 🌱 **Growth over engagement.** No streaks, no timers, no leaderboards. Progress is mastery‑gated — each level unlocks only after the last idea is demonstrated.
-- 🗣️ **A partner inside the play.** It reacts, narrates, and offers the right tool at the right moment — never an interrogation, never shame for a mistake.
-- 📱 **Touch‑first**, runs on tablet and laptop, fully playable with audio off.
+- 🗣️ **A partner inside the play.** It reacts, narrates, and offers the right tool at the right moment — never an interrogation, never shame for a mistake. It knows which ideas they've already mastered and builds on them instead of re‑teaching.
+- 🧸 **The scene is a toybox.** Poke an obstacle and it reacts while the voice names it (*"A gap!"* — sneaky vocabulary for reading the path). The goal wiggles, the sun pokes, and a third quick pet earns the hero a spin and its happy cry. Every toy goes quiet while a plan runs — play never interrupts the lesson.
+- 📱 **Touch‑first**, runs on tablet and laptop, fully playable with audio off. Progress survives — a reload or a theme switch resumes at the furthest rung they've earned.
 
 ## How it plays
 
@@ -96,7 +97,7 @@ Make It Go installs as a **full‑screen app** on Android (a Trusted Web Activit
 
 ## Tech
 
-React 18 · TypeScript · Vite · Vitest. The interpreter is **pure and theme‑agnostic** — fully unit‑tested (128 tests), with no engine logic ever forked per theme.
+React 18 · TypeScript · Vite · Vitest. The interpreter is **pure and theme‑agnostic** — fully tested (184 tests, from the interpreter down to jsdom tests that drive the real play loop), with no engine logic ever forked per theme.
 
 ```
 src/
@@ -124,7 +125,7 @@ npm test             # the engine + partner test suite
 
 ```bash
 # .env.local  (gitignored)
-ANTHROPIC_API_KEY=your_key_here     # the Claude partner (defaults to Sonnet)
+ANTHROPIC_API_KEY=your_key_here     # the Claude partner (defaults to Sonnet 5)
 ELEVENLABS_API_KEY=your_key_here    # the warm voice + karaoke highlighting
 # optional: ANTHROPIC_MODEL, ELEVENLABS_VOICE_ID, ELEVENLABS_MODEL_ID
 ```
@@ -138,10 +139,13 @@ No mic · no reading · no typing · no accounts · no ads · no streaks or time
 Deployed and playable at **[makeitgo.org](https://www.makeitgo.org)** (Vercel: `makeitgo-zoe.vercel.app`) — also installable as a full‑screen Android app. Shipped since the first cut:
 
 - ✅ Six original theme packs (meadow, fox, dino, royal, trucks, space)
-- ✅ Server‑side Claude partner (Sonnet) — warm, honest, readiness‑aware
+- ✅ Server‑side Claude partner (Sonnet 5) — warm, honest, readiness‑aware, and told which ideas they've already mastered
 - ✅ Grown‑ups dashboard + a "ready for ScratchJr" handoff
 - ✅ ElevenLabs voice with karaoke highlighting, cached on‑device (instant replay, no repeat cost)
 - ✅ A nine‑rung ladder → **endless adaptive practice** that aims each generated level at their weakest skill
+- ✅ Progress that sticks — reload or switch characters and they resume at the furthest rung they've earned
+- ✅ A scene full of toys — pokeable obstacles that speak their names, a wiggling goal, a pet streak that earns a spin and the theme's cry, tap‑to‑cheer‑again after a win (placing a token now *asks* — "Jump?" — because pressing go is the test)
+- ✅ Hardened API endpoints (same‑origin gate, size caps, per‑IP rate limits) so strangers can't spend the voice credits
 
 **On the horizon:** Claude as the difficulty *director* (vs. the local one); per‑theme partner flavor; a parent‑facing readiness write‑up; a Play Store listing.
 
