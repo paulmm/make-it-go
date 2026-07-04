@@ -8,8 +8,10 @@ import { requestSpokenLine } from './tts';
 export interface Narration {
   /**
    * Speak a line. `track` marks the partner's line so the bubble highlights each word.
-   * `onDone` fires once when the line finishes being read aloud (or right away when muted),
-   * so the UI can react to "the voice stopped talking" — e.g. revealing the win choices.
+   * `onDone` fires when the line finishes being read aloud (or right away when muted), so the
+   * UI can react to "the voice stopped talking" — e.g. revealing the win choices. It MUST be
+   * idempotent: an autoplay-blocked line replayed by `unlock()` completes once per incarnation
+   * (the flush on replay, then the replay's own end), so it can fire more than once.
    */
   speak: (text: string, opts?: { track?: boolean; onDone?: () => void }) => void;
   /** Warm a line's audio ahead of time (e.g. during the run animation) so it plays with no pause. */
@@ -132,6 +134,8 @@ export function useNarration(): Narration {
       // waiting on it (e.g. the win-choices reveal) must still proceed. Flush its `finish` now,
       // BEFORE bumping seqRef, so that call's own seq check still passes (the `doneFired` guard
       // stops it firing twice if its safety timer or onended still lands later).
+      // (Assumes play() is never re-entered synchronously from an onDone — speak() always defers
+      // here via a microtask — otherwise this clear would clobber the inner line's registration.)
       activeFinishRef.current?.();
       activeFinishRef.current = null;
       const seq = ++seqRef.current;
