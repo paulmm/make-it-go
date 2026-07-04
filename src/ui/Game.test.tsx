@@ -215,4 +215,18 @@ describe('Game — scene toys', () => {
     fireEvent.click(hero()); // a plain pet still squishes
     expect(document.querySelector('.hero-inner.petting')).toBeTruthy();
   });
+
+  it('tapping the celebrating hero replays the burst and pops hearts', async () => {
+    stubFetchSpy();
+    mount();
+    await settle(0);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Jump' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Go' }));
+    await settle(10_000); // win; choices up; hero celebrating
+
+    expect(document.querySelector('.hearts')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Cheer again' }));
+    expect(document.querySelector('.hearts')).toBeTruthy();
+  });
 });

@@ -42,6 +42,7 @@ export function Track({ theme, level, levelNumber, geo, heroX, heroPose, heroMs,
   const [pokeKey, setPokeKey] = useState(0);
   const [poked, setPoked] = useState<{ index: number; seq: number } | null>(null);
   const [goalKey, setGoalKey] = useState(0);
+  const [burstKey, setBurstKey] = useState(0);
   const petTimer = useRef<number | null>(null);
   const [spinning, setSpinning] = useState(false);
   // Three pets, each within 1.5s of the last, earn a spin + the theme's cry. A hidden delight,
@@ -72,6 +73,14 @@ export function Track({ theme, level, levelNumber, geo, heroX, heroPose, heroMs,
       petTimer.current = window.setTimeout(() => setPetting(false), 520);
     }
   };
+
+  // Post-win toy: the level is already won, so this can't distract from planning.
+  const cheerAgain = () => {
+    setBurstKey((k) => k + 1);
+    setPetKey((k) => k + 1); // hearts too — it's her celebration
+  };
+
+  const heroTap = idle ? pet : celebrate ? cheerAgain : undefined;
 
   const at = (x: number) => ({ left: `${x * 100}%` });
   const move = { left: `${heroX * 100}%`, transition: `left ${heroMs}ms linear, opacity 0.18s ease` };
@@ -127,18 +136,18 @@ export function Track({ theme, level, levelNumber, geo, heroX, heroPose, heroMs,
         {theme.goalIcon()}
       </button>
 
-      {celebrate && !reducedMotion && <div className="win-burst" style={at(geo.goalX)} aria-hidden="true" />}
+      {celebrate && !reducedMotion && <div className="win-burst" key={`burst-${burstKey}`} style={at(geo.goalX)} aria-hidden="true" />}
 
       <div className="hero-shadow" style={move}>
         <span className="shadow-ellipse" />
       </div>
 
       <div
-        className={`hero${idle ? ' clickable' : ''}`}
+        className={`hero${heroTap ? ' clickable' : ''}`}
         style={move}
-        onClick={idle ? pet : undefined}
-        role={idle ? 'button' : undefined}
-        aria-label={idle ? `Pet the ${theme.nouns.hero}` : undefined}
+        onClick={heroTap}
+        role={heroTap ? 'button' : undefined}
+        aria-label={idle ? `Pet the ${theme.nouns.hero}` : celebrate ? 'Cheer again' : undefined}
       >
         <div className={`hero-inner ${heroPose}${petting ? ' petting' : ''}${spinning ? ' spinning' : ''}`} key={`${heroPose}-${tick}`}>
           {theme.heroPose(heroPose)}
