@@ -152,14 +152,17 @@ describe('Game — scene toys', () => {
   });
 
   it('the goal does a happy wiggle when tapped', async () => {
-    stubFetchSpy();
+    const spy = stubFetchSpy();
     mount();
     await settle(0);
 
+    const before = spokenTexts(spy).length;
     const goal = screen.getByRole('button', { name: 'The carrot' });
     fireEvent.click(goal);
+    await settle(0);
 
     expect(screen.getByRole('button', { name: 'The carrot' }).className).toContain('wiggle');
+    expect(spokenTexts(spy)).toHaveLength(before); // a decorative wiggle, not a spoken line
   });
 
   it('a third quick pet earns a spin and the theme cry', async () => {
@@ -225,8 +228,59 @@ describe('Game — scene toys', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Go' }));
     await settle(10_000); // win; choices up; hero celebrating
 
+    // The goal is already won — it must not stay tappable (it's invisible but was still enabled).
+    expect((screen.getByRole('button', { name: 'The carrot' }) as HTMLButtonElement).disabled).toBe(true);
+
     expect(document.querySelector('.hearts')).toBeNull();
+    const before = document.querySelector('.win-burst');
     fireEvent.click(screen.getByRole('button', { name: 'Cheer again' }));
     expect(document.querySelector('.hearts')).toBeTruthy();
+    // The name promises the burst replays — a remounted node, not the same one lingering.
+    expect(document.querySelector('.win-burst')).toBeTruthy();
+    expect(document.querySelector('.win-burst')).not.toBe(before);
+  });
+
+  it('a toy poked mid-fetch shares one in-flight TTS request — no duplicate paid calls', async () => {
+    const spy = stubFetchSpy();
+    mount();
+    await settle(0);
+
+    const gap = () => screen.getByRole('button', { name: 'A gap' });
+    fireEvent.click(gap());
+    fireEvent.click(gap()); // rapid second poke before the first fetch has settled
+    await settle(0);
+
+    expect(spokenTexts(spy).filter((t) => t === 'A gap!')).toHaveLength(1);
+  });
+
+  it('a toy poked over the win line still lets the win choices appear', async () => {
+    // jsdom has no speechSynthesis; stub a fake one so the win line stays "speaking" (pending
+    // its safety timer) instead of finishing synchronously, so the poke can supersede it mid-line.
+    vi.stubGlobal(
+      'SpeechSynthesisUtterance',
+      class {
+        text: string;
+        rate = 1;
+        pitch = 1;
+        onboundary: unknown;
+        onend: unknown;
+        constructor(t: string) {
+          this.text = t;
+        }
+      },
+    );
+    vi.stubGlobal('speechSynthesis', { cancel: vi.fn(), speak: vi.fn() });
+    stubFetchSpy();
+    mount();
+    await settle(0);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Jump' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Go' }));
+    await settle(3000); // the run finishes ~2.9s in; the win line is mid-"speech", safety timer pending
+
+    fireEvent.click(screen.getByRole('button', { name: 'A gap' })); // supersedes the win line
+    await settle(20_000);
+
+    expect(screen.getByRole('button', { name: 'Go to the next level' })).toBeTruthy();
   });
 });

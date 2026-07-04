@@ -63,7 +63,11 @@ export function useNarration(): Narration {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const rafRef = useRef<number | null>(null);
   const cacheRef = useRef<Map<string, SpokenLine | null>>(new Map());
+  const inflightRef = useRef<Map<string, Promise<SpokenLine | null>>>(new Map()); // dedupes rapid taps of the same new line
   const seqRef = useRef(0); // bumped per play so stale audio/RAF callbacks bail out
+  // The currently-speaking line's `finish`, so a superseded line can be completed rather than
+  // abandoned — see the supersession contract in `play()` below.
+  const activeFinishRef = useRef<(() => void) | null>(null);
 
   const audioEl = useCallback(() => {
     if (!audioRef.current && supported) audioRef.current = new Audio();
@@ -83,17 +87,30 @@ export function useNarration(): Narration {
   const ensureLine = useCallback(async (text: string): Promise<SpokenLine | null> => {
     const cache = cacheRef.current;
     if (cache.has(text)) return cache.get(text) ?? null;
-    // Persistent per-device cache: a fixed line (every intro) replays instantly and spends no
-    // credits after the first time it is heard on this device.
-    const stored = await getCachedLine(text);
-    if (stored) {
-      cache.set(text, stored);
-      return stored;
+    // N rapid taps of the same new text would otherwise fire N parallel paid /api/tts requests —
+    // share the one lookup already in flight instead of starting another.
+    const inflight = inflightRef.current;
+    const existing = inflight.get(text);
+    if (existing) return existing;
+    const lookup = (async () => {
+      // Persistent per-device cache: a fixed line (every intro) replays instantly and spends no
+      // credits after the first time it is heard on this device.
+      const stored = await getCachedLine(text);
+      if (stored) {
+        cache.set(text, stored);
+        return stored;
+      }
+      const line = await requestSpokenLine(text); // null on failure or timeout -> Web Speech
+      cache.set(text, line);
+      if (line) void putCachedLine(text, line); // only cache successes — never a quota failure
+      return line;
+    })();
+    inflight.set(text, lookup);
+    try {
+      return await lookup;
+    } finally {
+      inflight.delete(text);
     }
-    const line = await requestSpokenLine(text); // null on failure or timeout -> Web Speech
-    cache.set(text, line);
-    if (line) void putCachedLine(text, line); // only cache successes — never a quota failure
-    return line;
   }, []);
 
   const prime = useCallback(
@@ -111,6 +128,12 @@ export function useNarration(): Narration {
         return;
       }
       stopAll();
+      // Supersession counts as the outgoing line finishing — it has stopped talking, so anything
+      // waiting on it (e.g. the win-choices reveal) must still proceed. Flush its `finish` now,
+      // BEFORE bumping seqRef, so that call's own seq check still passes (the `doneFired` guard
+      // stops it firing twice if its safety timer or onended still lands later).
+      activeFinishRef.current?.();
+      activeFinishRef.current = null;
       const seq = ++seqRef.current;
       // Fire onDone exactly once when this line finishes (or a safety timer elapses), unless a
       // newer line has superseded it — so the UI can react to "the voice finished talking".
@@ -118,8 +141,10 @@ export function useNarration(): Narration {
       const finish = () => {
         if (doneFired || seq !== seqRef.current) return;
         doneFired = true;
+        activeFinishRef.current = null; // this line is done — clear before onDone may start a new one
         onDone?.();
       };
+      activeFinishRef.current = finish;
       if (track) {
         setSpokenText(text);
         setActiveWord(null);

@@ -130,7 +130,7 @@ export function Track({ theme, level, levelNumber, geo, heroX, heroPose, heroMs,
         className={`goal-slot${goalKey > 0 ? ' wiggle' : ''}`}
         style={at(geo.goalX)}
         onClick={() => setGoalKey((k) => k + 1)}
-        disabled={!interactive}
+        disabled={!interactive || celebrate}
         aria-label={`The ${theme.nouns.goal}`}
       >
         {theme.goalIcon()}
