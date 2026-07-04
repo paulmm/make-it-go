@@ -194,4 +194,25 @@ describe('Game — scene toys', () => {
 
     expect(spokenTexts(spy)).not.toContain(MEADOW.hoverCry);
   });
+
+  it('keeps the flags fresh after a spin — an excited 4th tap never sticks', async () => {
+    stubFetchSpy();
+    mount();
+    await settle(0);
+
+    const hero = () => screen.getByRole('button', { name: 'Pet the bunny' });
+    fireEvent.click(hero());
+    await settle(200);
+    fireEvent.click(hero());
+    await settle(200);
+    fireEvent.click(hero()); // spin starts
+    fireEvent.click(hero()); // excited 4th tap mid-spin
+    await settle(2000); // every timer runs out
+
+    expect(document.querySelector('.hero-inner.spinning')).toBeNull();
+    expect(document.querySelector('.hero-inner.petting')).toBeNull();
+
+    fireEvent.click(hero()); // a plain pet still squishes
+    expect(document.querySelector('.hero-inner.petting')).toBeTruthy();
+  });
 });

@@ -61,11 +61,13 @@ export function Track({ theme, level, levelNumber, geo, heroX, heroPose, heroMs,
     setPetKey((k) => k + 1);
     if (petTimer.current) window.clearTimeout(petTimer.current);
     if (petStreak.current.count >= 3) {
+      setPetting(false);
       petStreak.current.count = 0;
       setSpinning(true);
       onCry();
       petTimer.current = window.setTimeout(() => setSpinning(false), 800);
     } else {
+      setSpinning(false);
       setPetting(true);
       petTimer.current = window.setTimeout(() => setPetting(false), 520);
     }
