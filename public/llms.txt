@@ -1,0 +1,32 @@
+# Make It Go
+
+> Make It Go is a free, open-source coding game for children ages 3–7 who can't read yet. Kids tap picture-tokens to build an ordered plan, press go, and the character does exactly what they said. A warm AI partner talks them through it by voice. No reading, no typing, no microphone, no accounts, no ads.
+
+Make It Go teaches the foundations of programming through play: sequence, literal execution (debugging), iteration, and decomposition. Each level adds exactly one idea, and the next level unlocks only once the child has shown they understand the last one. Success is measured by capability gained, never time on app; the goal is for kids to outgrow it and move on to ScratchJr.
+
+How it plays: the character walks a path on its own. Each obstacle on the path needs one action (a gap needs a jump, a branch needs a duck, a step needs a climb, later a key needs a grab and a gate needs an open). The child lays out their actions in order and taps go. A right action passes; a wrong one fails visibly right there (a stumble, a splash), and the child revises the plan. The game never autocorrects, and failure is never a dead end.
+
+Key facts:
+
+- Ages 3–7; pre-readers. Input is large picture-tokens tapped on screen. Voice is output only.
+- Nine-level ladder (sequence, a second move, order, iteration with a repeat chip, decomposition, then combinations), followed by endless generated practice aimed at the child's least-developed skill.
+- Six character themes: bunny (meadow), fox, dino, princess (royal), trucks, and space.
+- The AI partner runs server-side on Claude, with ElevenLabs voice and word-by-word highlighting as an early-reading cue. Self-hosted copies without API keys fall back to a local stub and the browser's built-in voice.
+- No streaks, timers, leaderboards, accounts, or ads. Progress is saved on the device.
+- Includes a grown-ups dashboard and a "ready for ScratchJr" handoff.
+- Runs in the browser on tablets and laptops. Installs as a full-screen Android app, or on iPad/iPhone via Safari's Add to Home Screen.
+- Built by Paul Mangiamele, originally for his two kids. A Proprius Labs project. MIT licensed.
+
+## Play
+
+- [Play Make It Go](https://www.makeitgo.org/): The game itself, free in any modern browser
+- [Android app](https://www.makeitgo.org/make-it-go.apk): Direct-install APK (a full-screen wrapper over the live site; not yet on the Play Store)
+
+## Source
+
+- [GitHub repository](https://github.com/paulmm/make-it-go): Source code, MIT license
+- [README](https://raw.githubusercontent.com/paulmm/make-it-go/main/README.md): Full description, the capability ladder, design rules, tech stack, and setup instructions
+
+## Optional
+
+- [Proprius Labs](https://www.propriuslabs.ai/lab): The studio behind Make It Go and its other projects
