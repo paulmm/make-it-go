@@ -1,0 +1,93 @@
+# Make It Go
+
+> Make It Go is a free coding game for children aged 3 to 7 who cannot read yet. The child taps picture tokens to build an ordered plan, presses go, and the character does exactly what the plan says. It teaches sequence, debugging, iteration, and decomposition. It is designed to be outgrown, and it counts success as the child moving on to ScratchJr.
+
+Play it in a browser at https://www.makeitgo.org/. The site is a single-page app with no text pages, so fetching it returns an empty shell. This file and the README linked below are the written description of it. The game and its spoken lines are in English.
+
+Paul Mangiamele, a parent of two young children, built it to answer one question: can an AI partner make a child who cannot read yet more capable, by building on what the child already knows instead of marching them down a fixed path? The code is open source under the MIT license at https://github.com/paulmm/make-it-go.
+
+**How a level plays**
+
+- The child picks one of six characters. That single tap starts the game. Nothing before or after it requires reading, typing, or signing up.
+- The character walks by itself along a path of obstacles. Each obstacle needs one action: a gap needs jump, a branch needs duck, a step needs climb, a key needs grab, and a gate needs open.
+- The child taps picture tokens to lay out one action per obstacle, in order, then presses go. Walking is automatic, so there are no walk or turn tokens.
+- The character carries out the plan literally. A matching action clears the obstacle. A wrong or missing action fails at that obstacle, visibly, with a stumble or a splash. A key is the exception. The character walks past a key it did not grab, and the run then fails at the gate, which stays locked without the key.
+- The plan is finished before the run starts. The child cannot steer the character while it moves, and the game never corrects or reorders a plan. The difference between what the child meant and what the plan said is the debugging lesson.
+- A failed run is never a dead end. The child changes the plan and runs it again.
+- Between runs the scene is a toy. Tapping an obstacle makes it react while the voice names it ("A gap!"), which teaches the words for reading the path. Obstacles do not respond to taps while a plan runs.
+
+**What it teaches**
+
+The partner says each idea in the same words every time, so the phrase sticks:
+
+- "It does exactly what you say." The character runs the plan literally.
+- "Steps happen in order." Sequence.
+- "You can bundle steps and do them again." Iteration, through a repeat token that folds a run of identical actions into one.
+- "When it's wrong, find the wrong step and fix it." Debugging and decomposition.
+
+**The levels**
+
+Nine taught levels each add or deepen one idea. A level opens only after the child masters the one before it. Mastery means a clean solve. Progress is never gated on time or on the number of attempts, and there are no streaks, timers, or leaderboards.
+
+1. One gap. Choose jump.
+2. One branch. Choose duck.
+3. A gap and a step. Two different actions in the right order.
+4. Four gaps in a row. Fold the jumps into one repeat token. Jumping one at a time reaches the goal but does not count as mastery.
+5. A key, then a gate. Grab, then open.
+6. A gap, a branch, and a step. Three actions in the right order.
+7. One gap, then three branches. Jump, then fold the three ducks into a repeat, which is required here too.
+8. A key, then one gap, branch, or step, then a gate. The key has to be carried past it.
+9. A key, then three gaps, branches, or steps in any mix, then a gate. The capstone.
+
+After level 9 the game generates practice levels without end. It checks each generated level against its own rules before showing it, so every level is solvable. Each new practice level targets the skill the child has shown least.
+
+Some levels vary so that the child reads the obstacles instead of memorizing a sequence of taps. Each page load reshuffles the obstacle order in levels 3 and 6 and redraws the obstacles between the key and the gate in levels 8 and 9. Generated levels are new each time. Levels 1, 2, 4, 5, and 7 stay the same.
+
+**The AI partner**
+
+A partner speaks a short line when a level starts and after each run. The opening line of a level is scripted. The line after a run comes from Anthropic's Claude, called from the site's server. The code defaults to Claude Sonnet 5. The partner is prompted to keep to one or two short sentences, to say honestly what happened, to never shame a mistake, and to ask at most one short question. After a wrong action it is meant to wonder aloud what that spot needs first, and to name the action only if the child is still stuck after more tries. If the network or the API fails, a scripted offline partner answers instead and play continues.
+
+The voice is ElevenLabs text-to-speech, with the browser's built-in voice as the fallback. Each word in the speech bubble grows as it is spoken. Every partner line also appears as text, and hints are visual (a glowing step or a pulsing token), so the game is playable with sound off. There is a mute button. Voice is output only. The game does not use the microphone.
+
+**The six characters**
+
+Bunny Meadow (a bunny after a carrot), Forest Fox (a fox after an acorn), Dino Jungle (a dino after a leaf), Royal Castle (a princess after a jewel), Truck Site (a truck after a flag), and Space Trip (an astronaut after a star). The characters are original designs, not licensed ones. All six play the same levels by the same rules. A character changes only the pictures and a few of the partner's words, and progress carries over when the child switches.
+
+**For grown-ups**
+
+Pressing and holding "for grown-ups" on the character screen opens a dashboard. It shows four measures of what the child can do: solving a new idea with no hints, solving on the first try, turning a wrong plan into a win, and needing fewer hints over time. When all four are strong it recommends moving on to ScratchJr (https://www.scratchjr.org/). It never shows time spent in the app. A grown-up can also tick a box when the child explains an idea back in their own words.
+
+**Privacy and data**
+
+- No accounts, no ads, and no microphone. The game never asks for a name, an age, or contact details.
+- Progress and the dashboard's attempt log stay in the browser on that device. The log holds no timestamps or durations. There is one record per device, shared by everyone who plays on it. A reset button in the dashboard clears the progress and the log.
+- After each run the browser sends that level's state to the site's server, which passes it to Anthropic's API to write the partner's line. The state is the character, the level, the plan and its step-by-step result, the ideas the child has already mastered, and the outcomes of earlier tries on that level. It holds no personal details.
+- The first time a device needs a spoken line, the site's server sends the text to ElevenLabs and the browser caches the returned audio. No text is sent for speech while the voice is muted.
+- The server keeps a short-lived, in-memory count of requests per IP address for rate limiting.
+- The site counts page views with Vercel Web Analytics and Google Analytics, with Google's ad features turned off, and loads its font from Google Fonts.
+
+The site's /api/ routes exist only to serve the game. They reject browser requests from other sites and are rate limited, so they are not a public API.
+
+**Installing**
+
+The game needs an internet connection to load. In a browser it needs no install, and it runs on tablets and laptops, touch first with a pointer fallback. On Android, https://www.makeitgo.org/make-it-go.apk is a direct download that runs the live site full screen with its own icon. It is not on the Play Store, so Android asks once for permission to install from this source. On iPhone or iPad, Safari's Share menu has "Add to Home Screen", which gives the same full-screen app.
+
+## Docs
+
+- [README](https://raw.githubusercontent.com/paulmm/make-it-go/main/README.md): Overview, the level ladder, install steps, and local setup.
+
+## Source
+
+- [Interpreter](https://raw.githubusercontent.com/paulmm/make-it-go/main/src/engine/interpreter.ts): The pure function that runs a plan against a level. It has no autocorrect path.
+- [Engine types](https://raw.githubusercontent.com/paulmm/make-it-go/main/src/engine/types.ts): Actions, obstacle kinds, run outcomes, and mastery rules.
+- [Levels](https://raw.githubusercontent.com/paulmm/make-it-go/main/src/engine/levels.ts): The nine taught levels as data.
+- [Level generator](https://raw.githubusercontent.com/paulmm/make-it-go/main/src/engine/generate.ts): Endless practice levels and the rule that picks what to practice next.
+- [Partner prompt](https://raw.githubusercontent.com/paulmm/make-it-go/main/src/partner/promptBuilder.ts): The system prompt and reply schema for the Claude partner.
+- [Partner route](https://raw.githubusercontent.com/paulmm/make-it-go/main/api/partner.ts): The production server function that calls Claude. It carries its own copy of the prompt.
+- [Capability signals](https://raw.githubusercontent.com/paulmm/make-it-go/main/src/telemetry/signals.ts): How the four dashboard measures are computed.
+
+## Optional
+
+- [Theme pack type](https://raw.githubusercontent.com/paulmm/make-it-go/main/src/themes/types.ts): What a character pack defines. Adding a character is adding data, not engine code.
+- [Web app manifest](https://www.makeitgo.org/manifest.webmanifest): Name, icons, and full-screen display settings.
+- [License](https://raw.githubusercontent.com/paulmm/make-it-go/main/LICENSE): MIT.
