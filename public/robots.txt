@@ -1,0 +1,8 @@
+# Make It Go: https://www.makeitgo.org/
+# The whole site is open to crawlers, including AI crawlers.
+# The /api/ routes only serve the running game and have nothing to index.
+# A plain-text description of the site for language models: https://www.makeitgo.org/llms.txt
+
+User-agent: *
+Allow: /
+Disallow: /api/
