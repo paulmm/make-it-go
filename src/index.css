@@ -1218,20 +1218,120 @@ button.goal-slot:disabled {
 }
 
 /* ---- Grown-ups dashboard ---- */
-.grownups-gate {
+/* ---- Bottom strip: credits on the left, the grown-ups gate on the right ----
+   Fixed, so a grown-up can always find it; the picker gets extra bottom padding so the last
+   row of tiles scrolls clear of it. */
+.picker {
+  padding-bottom: calc(clamp(20px, 5vw, 48px) + 72px);
+}
+.picker-foot {
   position: fixed;
-  right: 12px;
-  bottom: 10px;
-  border: none;
-  background: transparent;
-  color: rgba(60, 70, 50, 0.4);
-  font-family: 'Baloo 2', 'Trebuchet MS', system-ui, sans-serif;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(180deg, rgba(234, 246, 255, 0) 0%, rgba(235, 247, 232, 0.94) 40%);
+  pointer-events: none;
+}
+.picker-foot > * {
+  pointer-events: auto;
+}
+.picker-credits {
+  margin: 0 0 6px;
   font-size: 12px;
-  letter-spacing: 0.02em;
-  padding: 6px 8px;
+  line-height: 1.3;
+  color: rgba(60, 70, 50, 0.7);
+}
+.picker-credits a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgba(60, 70, 50, 0.35);
+}
+.grownups {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.grownups-hint {
+  min-height: 15px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b5cff;
+}
+/* The gate: a real pill, held to open. The ring fills while it is held. */
+.grownups-gate {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 6px 16px 6px 8px;
+  border: 2px solid rgba(60, 70, 50, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #3a3340;
+  font-family: 'Baloo 2', 'Trebuchet MS', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap; /* "Grown-ups" must not break at the hyphen on a narrow screen */
   cursor: pointer;
   touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.08);
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+.grownups-gate.holding {
+  background: #fff;
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
+}
+.grownups-gate:focus-visible {
+  outline: 3px solid #6b5cff;
+  outline-offset: 2px;
+}
+.gate-badge {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+}
+.gate-lock {
+  position: relative;
+  width: 16px;
+  height: 16px;
+}
+.gate-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+.gate-ring circle {
+  fill: none;
+  stroke-width: 3;
+}
+.gate-ring-track {
+  stroke: rgba(60, 70, 50, 0.15);
+}
+.gate-ring-fill {
+  stroke: #6b5cff;
+  stroke-linecap: round;
+  stroke-dasharray: 97.4; /* 2 * pi * 15.5 */
+  stroke-dashoffset: 97.4;
+}
+.grownups-gate.holding .gate-ring-fill {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 700ms linear; /* matches HOLD_MS */
 }
 .dash-overlay {
   position: fixed;
@@ -1366,6 +1466,14 @@ button.goal-slot:disabled {
   width: 22px;
   height: 22px;
   accent-color: #5ec27e;
+}
+.dash-credits {
+  margin: 16px 0 0;
+  font-size: 12px;
+  color: #8a8a99;
+}
+.dash-credits a {
+  color: inherit;
 }
 .dash-reset {
   margin-top: 6px;

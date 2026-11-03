@@ -153,6 +153,8 @@ Deployed and playable at **[makeitgo.org](https://www.makeitgo.org)** (Vercel: `
 
 [MIT](LICENSE) © 2026 Paul Mangiamele — a fitting license for a tool meant to be outgrown and shared.
 
+Made by [Proprius Labs](https://www.propriuslabs.ai) · contact@propriuslabs.ai
+
 ---
 
 <div align="center">
