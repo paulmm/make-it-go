@@ -4,7 +4,7 @@
 
 Play it in a browser at https://www.makeitgo.org/. The site is a single-page app with no text pages, so fetching it returns an empty shell. This file and the README linked below are the written description of it. The game and its spoken lines are in English.
 
-Paul Mangiamele, a parent of two young children, built it to answer one question: can an AI partner make a child who cannot read yet more capable, by building on what the child already knows instead of marching them down a fixed path? The code is open source under the MIT license at https://github.com/paulmm/make-it-go.
+Make It Go is made by Proprius Labs (https://www.propriuslabs.ai), contact address contact@propriuslabs.ai. Paul Mangiamele, a parent of two young children, built it to answer one question: can an AI partner make a child who cannot read yet more capable, by building on what the child already knows instead of marching them down a fixed path? The code is open source under the MIT license at https://github.com/paulmm/make-it-go.
 
 **How a level plays**
 

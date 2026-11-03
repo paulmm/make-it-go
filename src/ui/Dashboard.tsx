@@ -93,6 +93,15 @@ export function Dashboard({ onClose }: { onClose: () => void }) {
         >
           Reset data
         </button>
+
+        <p className="dash-credits">
+          Made by{' '}
+          <a href="https://www.propriuslabs.ai" target="_blank" rel="noreferrer">
+            Proprius Labs
+          </a>
+          {' · '}
+          <a href="mailto:contact@propriuslabs.ai">contact@propriuslabs.ai</a>
+        </p>
       </div>
     </div>
   );
