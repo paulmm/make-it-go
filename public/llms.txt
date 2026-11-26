@@ -45,7 +45,7 @@ Some levels vary so that the child reads the obstacles instead of memorizing a s
 
 **The AI partner**
 
-A partner speaks a short line when a level starts and after each run. The opening line of a level is scripted. The line after a run comes from Anthropic's Claude, called from the site's server. The code defaults to Claude Sonnet 5. The partner is prompted to keep to one or two short sentences, to say honestly what happened, to never shame a mistake, and to ask at most one short question. After a wrong action it is meant to wonder aloud what that spot needs first, and to name the action only if the child is still stuck after more tries. If the network or the API fails, a scripted offline partner answers instead and play continues.
+A partner speaks a short line when a level starts and after each run. The opening line of a level is scripted. The line after a run comes from Anthropic's Claude, called from the site's server. The code defaults to Claude Sonnet 5. The partner is prompted to keep to one or two short sentences, to say honestly what happened, to never shame a mistake, and to ask at most one short question. After a wrong action it is meant to wonder aloud what that spot needs first, and to name the action only if the child is still stuck after more tries. If the network or the API fails, or the day's budget for live replies is spent, a scripted offline partner answers instead and play continues.
 
 The voice is ElevenLabs text-to-speech, with the browser's built-in voice as the fallback. Each word in the speech bubble grows as it is spoken. Every partner line also appears as text, and hints are visual (a glowing step or a pulsing token), so the game is playable with sound off. There is a mute button. Voice is output only. The game does not use the microphone.
 
@@ -57,12 +57,15 @@ Bunny Meadow (a bunny after a carrot), Forest Fox (a fox after an acorn), Dino J
 
 Pressing and holding "for grown-ups" on the character screen opens a dashboard. It shows four measures of what the child can do: solving a new idea with no hints, solving on the first try, turning a wrong plan into a win, and needing fewer hints over time. When all four are strong it recommends moving on to ScratchJr (https://www.scratchjr.org/). It never shows time spent in the app. A grown-up can also tick a box when the child explains an idea back in their own words.
 
+Schools can use the whole game for free. A teacher can email contact@propriuslabs.ai for a free classroom code, which switches on the live Claude partner and the ElevenLabs voice for that class within the class's own daily budget. The code arrives in a link (https://www.makeitgo.org/?class=CODE) or is typed into the grown-ups dashboard, and is stored on the device. Without a code every level still plays, with the scripted partner and the browser voice. Details for teachers, in English and Turkish, are at https://www.makeitgo.org/teachers/.
+
 **Privacy and data**
 
 - No accounts, no ads, and no microphone. The game never asks for a name, an age, or contact details.
 - Progress and the dashboard's attempt log stay in the browser on that device. The log holds no timestamps or durations. There is one record per device, shared by everyone who plays on it. A reset button in the dashboard clears the progress and the log.
 - After each run the browser sends that level's state to the site's server, which passes it to Anthropic's API to write the partner's line. The state is the character, the level, the plan and its step-by-step result, the ideas the child has already mastered, and the outcomes of earlier tries on that level. It holds no personal details.
 - The first time a device needs a spoken line, the site's server sends the text to ElevenLabs and the browser caches the returned audio. No text is sent for speech while the voice is muted.
+- If a classroom code is stored on the device, it is sent with those two kinds of request so the server can bill the class's budget. The server also writes one log line per request with the country, level, outcome, token counts and cost, and never the IP address or the spoken text.
 - The server keeps a short-lived, in-memory count of requests per IP address for rate limiting.
 - The site counts page views with Vercel Web Analytics and Google Analytics, with Google's ad features turned off, and loads its font from Google Fonts.
 

@@ -9,7 +9,7 @@ Tap picture‑tokens to build a plan, press **go**, and the character does *exac
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)
-![tests](https://img.shields.io/badge/tests-184%20passing-3FB950)
+![tests](https://img.shields.io/badge/tests-213%20passing-3FB950)
 ![input](https://img.shields.io/badge/input-taps%20only-FF6B9D)
 ![license](https://img.shields.io/badge/license-MIT-blue)
 
@@ -97,7 +97,7 @@ Make It Go installs as a **full‑screen app** on Android (a Trusted Web Activit
 
 ## Tech
 
-React 18 · TypeScript · Vite · Vitest. The interpreter is **pure and theme‑agnostic** — fully tested (184 tests, from the interpreter down to jsdom tests that drive the real play loop), with no engine logic ever forked per theme.
+React 18 · TypeScript · Vite · Vitest. The interpreter is **pure and theme‑agnostic** — fully tested (213 tests, from the interpreter down to jsdom tests that drive the real play loop), with no engine logic ever forked per theme.
 
 ```
 src/
@@ -130,6 +130,20 @@ ELEVENLABS_API_KEY=your_key_here    # the warm voice + karaoke highlighting
 # optional: ANTHROPIC_MODEL, ELEVENLABS_VOICE_ID, ELEVENLABS_MODEL_ID
 ```
 
+**Budgets and classroom codes (production).** Every live reply costs money, so the deployed `/api/partner` and `/api/tts` functions meter it. Anonymous visitors share one small daily budget; a **classroom code** gives a school its own, larger budget and lifts the per‑IP rate limit a computer lab behind one connection would otherwise trip. When a budget is spent the function answers 429 and the app quietly carries on with the scripted partner and the browser voice — every level still plays. Teachers get a code by emailing contact@propriuslabs.ai (see [makeitgo.org/teachers/](https://www.makeitgo.org/teachers/)); the code reaches a device through the shared link `?class=CODE` or the Grown‑ups view.
+
+| Variable | Default | Meaning |
+|---|---:|---|
+| `CLASSROOM_CODES` | *(none)* | Comma‑separated list of valid codes, e.g. `ISTEK-7K2M, PS12-4QZ` |
+| `PARTNER_DAILY_USD_PUBLIC` | `0.30` | Claude spend per UTC day for anonymous visitors |
+| `PARTNER_DAILY_USD_CLASSROOM` | `0.40` | Claude spend per UTC day **per classroom code** |
+| `TTS_DAILY_CHARS_PUBLIC` | `30000` | ElevenLabs characters per day for anonymous visitors |
+| `TTS_DAILY_CHARS_CLASSROOM` | `100000` | ElevenLabs characters per day per classroom code |
+| `ANTHROPIC_USD_PER_MTOK_IN` / `_OUT` | `2` / `10` | Prices used to bill each call (Sonnet 5 list prices) |
+| `KV_REST_API_URL` + `KV_REST_API_TOKEN` | *(none)* | An Upstash Redis from the Vercel Marketplace keeps the counters exact across instances; without one they are best‑effort per serverless instance |
+
+Each call also writes one JSON line to the function log (pool, code, country, level, outcome, tokens, cost) for cost attribution — never the IP or the spoken text.
+
 ## Non‑negotiables
 
 No mic · no reading · no typing · no accounts · no ads · no streaks or timers · no walk token · no real‑time input · no turn/rotate tokens · the interpreter is never autocorrected · progression is never gated on time or attempt count. **Failure is never a dead end** — every wrong plan is a revise, with one good nudge from the partner, never the answer.
@@ -146,6 +160,7 @@ Deployed and playable at **[makeitgo.org](https://www.makeitgo.org)** (Vercel: `
 - ✅ Progress that sticks — reload or switch characters and they resume at the furthest rung they've earned
 - ✅ A scene full of toys — pokeable obstacles that speak their names, a wiggling goal, a pet streak that earns a spin and the theme's cry, tap‑to‑cheer‑again after a win (placing a token now *asks* — "Jump?" — because pressing go is the test)
 - ✅ Hardened API endpoints (same‑origin gate, size caps, per‑IP rate limits) so strangers can't spend the voice credits
+- ✅ Daily spend budgets with graceful fallback, plus classroom codes so a school gets the live partner and voice on its own budget — and a [teacher page](https://www.makeitgo.org/teachers/) in English and Turkish
 
 **On the horizon:** Claude as the difficulty *director* (vs. the local one); per‑theme partner flavor; a parent‑facing readiness write‑up; a Play Store listing.
 

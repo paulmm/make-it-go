@@ -1467,6 +1467,89 @@ button.goal-slot:disabled {
   height: 22px;
   accent-color: #5ec27e;
 }
+/* Classroom code: a teacher's one piece of typing, so it stays plain and roomy. */
+.dash-class {
+  margin: 18px 0 4px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #f3f6ff;
+}
+.dash-class h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+.dash-class p {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: #5d5d6c;
+}
+.dash-class p a {
+  color: #4b3fd6;
+  font-weight: 700;
+}
+.dash-class code {
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: #fff;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #3a3340;
+}
+.dash-class-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+}
+.dash-class-form label {
+  display: grid;
+  gap: 4px;
+  flex: 1 1 160px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #6b6b78;
+}
+.dash-class-form input {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 2px solid #d9dcf0;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #3a3340;
+  background: #fff;
+}
+.dash-class-form input:focus-visible {
+  outline: 3px solid #6b5cff;
+  outline-offset: 1px;
+}
+.dash-class-form button,
+.dash-class-remove {
+  min-height: 44px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 12px;
+  background: #6b5cff;
+  color: #fff;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.dash-class-remove {
+  background: #e9e9f1;
+  color: #4a4a58;
+}
+.dash-class-error {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #c2185b;
+}
 .dash-credits {
   margin: 16px 0 0;
   font-size: 12px;
