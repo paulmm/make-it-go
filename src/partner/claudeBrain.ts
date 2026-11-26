@@ -1,3 +1,4 @@
+import { classroomHeaders } from '../classroom';
 import { localStub } from './localStub';
 import { parseReply } from './promptBuilder';
 import type { PartnerContext, PartnerResponse, PartnerStep } from './types';
@@ -23,7 +24,8 @@ export const claudeBrain: PartnerStep = async (context: PartnerContext): Promise
   try {
     const res = await fetch('/api/partner', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      // A classroom code (if this device has one) picks the call's budget pool server-side.
+      headers: { 'Content-Type': 'application/json', ...classroomHeaders() },
       body: JSON.stringify(context),
       signal: abort.signal,
     });

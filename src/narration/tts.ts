@@ -1,3 +1,4 @@
+import { classroomHeaders } from '../classroom';
 import type { SpokenLine } from './alignment';
 
 // A request that hangs (dead Wi-Fi, stalled serverless) would otherwise silence the partner and
@@ -16,7 +17,8 @@ export async function requestSpokenLine(text: string): Promise<SpokenLine | null
   try {
     const res = await fetch('/api/tts', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      // A classroom code (if this device has one) picks the call's budget pool server-side.
+      headers: { 'Content-Type': 'application/json', ...classroomHeaders() },
       body: JSON.stringify({ text }),
       signal: abort.signal,
     });

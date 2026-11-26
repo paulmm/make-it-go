@@ -74,5 +74,6 @@ describe('ThemePicker — the grown-ups gate', () => {
     mount();
     expect(screen.getByRole('link', { name: 'Proprius Labs' }).getAttribute('href')).toBe('https://www.propriuslabs.ai');
     expect(screen.getByRole('link', { name: 'contact@propriuslabs.ai' }).getAttribute('href')).toBe('mailto:contact@propriuslabs.ai');
+    expect(screen.getByRole('link', { name: 'Teachers' }).getAttribute('href')).toBe('/teachers/');
   });
 });

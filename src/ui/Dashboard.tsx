@@ -1,4 +1,5 @@
-import { useEffect, useReducer } from 'react';
+import { useEffect, useReducer, useState } from 'react';
+import { clearClassroomCode, loadClassroomCode, saveClassroomCode, subscribeClassroom } from '../classroom';
 import { telemetry } from '../telemetry/store';
 import { computeSignals } from '../telemetry/signals';
 import type { Signal } from '../telemetry/signals';
@@ -33,6 +34,74 @@ function Meter({ title, hint, signal }: { title: string; hint: string; signal: S
       </div>
       <p className="signal-hint">{hint}</p>
     </div>
+  );
+}
+
+/**
+ * Classroom codes live here because this is the one screen a grown-up reads. A code (from the
+ * teacher's shared link, or typed here) turns on the live partner and the warm voice for this
+ * device; without one every level still plays. The shape check is local — the server decides
+ * whether a code is real, and an unknown one quietly plays as a public visitor.
+ */
+function ClassroomSection() {
+  const [code, setCode] = useState<string | null>(loadClassroomCode);
+  const [draft, setDraft] = useState('');
+  const [rejected, setRejected] = useState(false);
+  useEffect(() => subscribeClassroom(() => setCode(loadClassroomCode())), []);
+
+  if (code) {
+    return (
+      <section className="dash-class" aria-labelledby="dash-class-title">
+        <h3 id="dash-class-title">Classroom code</h3>
+        <p>
+          <code>{code}</code> is on for this device: the live partner and the storyteller voice, within the class's
+          daily budget.
+        </p>
+        <button type="button" className="dash-class-remove" onClick={() => clearClassroomCode()}>
+          Remove code
+        </button>
+      </section>
+    );
+  }
+
+  return (
+    <section className="dash-class" aria-labelledby="dash-class-title">
+      <h3 id="dash-class-title">Teachers</h3>
+      <p>
+        Every level plays for free. A free classroom code adds the live AI partner and the storyteller voice for your
+        class — <a href="/teachers/">here is how to get one</a>.
+      </p>
+      <form
+        className="dash-class-form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const saved = saveClassroomCode(draft);
+          setRejected(!saved);
+          if (saved) setDraft('');
+        }}
+      >
+        <label>
+          <span>Classroom code</span>
+          <input
+            value={draft}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              setRejected(false);
+            }}
+            autoCapitalize="characters"
+            autoComplete="off"
+            spellCheck={false}
+            placeholder="ABCD-1234"
+          />
+        </label>
+        <button type="submit">Use code</button>
+      </form>
+      {rejected && (
+        <p className="dash-class-error" role="alert">
+          That doesn't look like a code — letters, digits and dashes only.
+        </p>
+      )}
+    </section>
   );
 }
 
@@ -80,6 +149,8 @@ export function Dashboard({ onClose }: { onClose: () => void }) {
           />
           <span>They explained an idea back to me in their own words</span>
         </label>
+
+        <ClassroomSection />
 
         <button
           type="button"

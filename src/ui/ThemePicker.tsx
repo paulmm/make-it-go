@@ -175,6 +175,8 @@ export function ThemePicker({ themes, onPick, onGrownUps }: ThemePickerProps) {
           </a>
           <span aria-hidden="true"> · </span>
           <a href="mailto:contact@propriuslabs.ai">contact@propriuslabs.ai</a>
+          <span aria-hidden="true"> · </span>
+          <a href="/teachers/">Teachers</a>
         </p>
         <GrownUpsGate onOpen={onGrownUps} />
       </footer>

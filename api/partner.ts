@@ -67,25 +67,166 @@ function rateLimited(req: any): boolean {
   return hit.count > RATE_MAX;
 }
 
+// ---- Daily budgets and classroom codes (mirrored in the other api/ function; keep in sync) ----
+// Every live reply costs money, so anonymous visitors share one small daily budget and each
+// classroom code (handed to a teacher by email — see /teachers/) gets its own, larger one and
+// skips the per-IP limit that a school lab behind one connection would otherwise trip. When a
+// budget is spent the handler answers 429 and the client falls back to the scripted partner and
+// the browser voice, so play never stops. Counters live in Upstash Redis when the deployment
+// has one (KV_REST_API_URL + KV_REST_API_TOKEN, as the Vercel Marketplace sets); otherwise in
+// memory, per serverless instance, as a best-effort bound.
+
+type Pool = { name: 'public' } | { name: 'classroom'; code: string };
+
+/** The request's pool: a classroom when it carries one of CLASSROOM_CODES (comma/space separated). */
+function classroomPool(req: any): Pool {
+  const raw = req.headers?.['x-classroom-code'];
+  if (typeof raw !== 'string') return { name: 'public' };
+  const code = raw.trim().toUpperCase();
+  if (!/^[A-Z0-9][A-Z0-9-]{2,31}$/.test(code)) return { name: 'public' };
+  const allowed = String(process.env.CLASSROOM_CODES ?? '')
+    .split(/[\s,]+/)
+    .map((c) => c.trim().toUpperCase())
+    .filter(Boolean);
+  return allowed.includes(code) ? { name: 'classroom', code } : { name: 'public' };
+}
+
+function envNumber(name: string, fallback: number): number {
+  const n = Number(process.env[name]);
+  return process.env[name] !== undefined && Number.isFinite(n) && n >= 0 ? n : fallback;
+}
+
+/** One counter per pool per UTC day. */
+function budgetKey(kind: string, pool: Pool): string {
+  const day = new Date().toISOString().slice(0, 10);
+  const who = pool.name === 'classroom' ? `class:${pool.code}` : 'public';
+  return `budget:${kind}:${who}:${day}`;
+}
+
+const COUNTER_TTL_S = 2 * 24 * 3600;
+const memoryCounters = new Map<string, { value: number; expires: number }>();
+
+function kvConfig(): { url: string; token: string } | null {
+  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+  return url && token ? { url, token } : null;
+}
+
+/** Upstash's REST pipeline: one round trip, one result per command. */
+async function kvPipeline(commands: (string | number)[][]): Promise<unknown[]> {
+  const kv = kvConfig()!;
+  const r = await fetch(`${kv.url}/pipeline`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${kv.token}`, 'content-type': 'application/json' },
+    body: JSON.stringify(commands),
+  });
+  if (!r.ok) throw new Error(`kv ${r.status}`);
+  const rows: any[] = await r.json();
+  return rows.map((row) => row?.result);
+}
+
+/**
+ * How much of a counter is used today. A store failure counts as nothing used — fail open, so a
+ * Redis hiccup never silences the partner; the spend limits at Anthropic and ElevenLabs still
+ * bound the damage.
+ */
+async function counterUsed(key: string): Promise<number> {
+  if (kvConfig()) {
+    try {
+      const [value] = await kvPipeline([['GET', key]]);
+      return Number(value ?? 0) || 0;
+    } catch (e) {
+      console.warn('budget store read failed', String(e));
+      return 0;
+    }
+  }
+  const hit = memoryCounters.get(key);
+  return hit && hit.expires > Date.now() ? hit.value : 0;
+}
+
+async function counterAdd(key: string, amount: number): Promise<void> {
+  const n = Math.round(amount);
+  if (n <= 0) return;
+  if (kvConfig()) {
+    try {
+      await kvPipeline([
+        ['INCRBY', key, n],
+        ['EXPIRE', key, COUNTER_TTL_S],
+      ]);
+    } catch (e) {
+      console.warn('budget store write failed', String(e));
+    }
+    return;
+  }
+  const now = Date.now();
+  const hit = memoryCounters.get(key);
+  memoryCounters.set(key, {
+    value: (hit && hit.expires > now ? hit.value : 0) + n,
+    expires: now + COUNTER_TTL_S * 1000,
+  });
+}
+
+/** Tests share one module instance; this clears the in-memory counters between cases. */
+export function _resetCountersForTests(): void {
+  memoryCounters.clear();
+}
+
+/** One JSON line per call for cost attribution in the Vercel logs. Never the IP, never the text. */
+function logCall(entry: Record<string, unknown>): void {
+  console.log(JSON.stringify({ t: new Date().toISOString(), ...entry }));
+}
+// ---- end budgets ------------------------------------------------------------------------------
+
 export default async function handler(req: any, res: any) {
   const send = (code: number, body: unknown) => {
     res.statusCode = code;
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify(body));
   };
+  const started = Date.now();
+  const pool = classroomPool(req);
+  const country = req.headers?.['x-vercel-ip-country'];
+  let context: any = null;
+  // Every exit goes through here so each call leaves one log line with its pool and cost.
+  const finish = (code: number, body: unknown, extra: Record<string, unknown> = {}) => {
+    logCall({
+      at: 'partner',
+      status: code,
+      ms: Date.now() - started,
+      pool: pool.name,
+      ...(pool.name === 'classroom' ? { code: pool.code } : {}),
+      ...(typeof country === 'string' ? { country } : {}),
+      level: context?.level?.id,
+      outcome: context?.lastOutcome ?? null,
+      theme: context?.themeId,
+      ...extra,
+    });
+    return send(code, body);
+  };
 
   try {
     if (req.method !== 'POST') return send(405, { error: 'method-not-allowed' });
-    if (!sameOrigin(req)) return send(403, { error: 'forbidden' });
-    if (rateLimited(req)) return send(429, { error: 'rate-limited' });
+    if (!sameOrigin(req)) return finish(403, { error: 'forbidden' });
+    // A classroom shares one connection, so its code lifts the per-IP limit; its budget bounds it.
+    if (pool.name === 'public' && rateLimited(req)) return finish(429, { error: 'rate-limited' });
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) return send(503, { error: 'no-key' });
+    if (!apiKey) return finish(503, { error: 'no-key' });
     const model = process.env.ANTHROPIC_MODEL || 'claude-sonnet-5';
 
-    const context = await readBody(req);
-    if (JSON.stringify(context).length > MAX_CONTEXT_CHARS) return send(400, { error: 'too-big' });
-    if (!context?.level) return send(400, { error: 'bad-context' });
+    context = await readBody(req);
+    if (JSON.stringify(context).length > MAX_CONTEXT_CHARS) return finish(400, { error: 'too-big' });
+    if (!context?.level) return finish(400, { error: 'bad-context' });
+
+    // The pool's budget for today, in dollars; the counter holds microdollars.
+    const key = budgetKey('partner', pool);
+    const limitUsd =
+      pool.name === 'classroom'
+        ? envNumber('PARTNER_DAILY_USD_CLASSROOM', 0.4)
+        : envNumber('PARTNER_DAILY_USD_PUBLIC', 0.3);
+    if ((await counterUsed(key)) >= limitUsd * 1e6) {
+      return finish(429, { error: 'budget-exhausted' }, { budget: 'exhausted' });
+    }
 
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -102,14 +243,25 @@ export default async function handler(req: any, res: any) {
         tool_choice: { type: 'tool', name: 'reply' },
       }),
     });
-    if (!r.ok) return send(502, { error: 'partner-failed', status: r.status });
+    if (!r.ok) return finish(502, { error: 'partner-failed', status: r.status }, { upstream: r.status });
     const data: any = await r.json();
+
+    // Bill the call to its pool. Dollars per million tokens is the same number as microdollars
+    // per token, so the counter is a plain integer.
+    const usage = data.usage ?? {};
+    const inTokens = Number(usage.input_tokens) || 0;
+    const outTokens = Number(usage.output_tokens) || 0;
+    const costMicro =
+      inTokens * envNumber('ANTHROPIC_USD_PER_MTOK_IN', 2) + outTokens * envNumber('ANTHROPIC_USD_PER_MTOK_OUT', 10);
+    await counterAdd(key, costMicro);
+    const billed = { in: inTokens, out: outTokens, usd: Number((costMicro / 1e6).toFixed(5)) };
+
     const toolUse = (data.content || []).find((c: any) => c.type === 'tool_use');
     const parsed = parseReply(toolUse?.input);
-    if (!parsed) return send(502, { error: 'bad-reply' });
-    return send(200, parsed);
+    if (!parsed) return finish(502, { error: 'bad-reply' }, billed);
+    return finish(200, parsed, billed);
   } catch (e) {
-    return send(502, { error: 'partner-error', detail: String(e) });
+    return finish(502, { error: 'partner-error', detail: String(e) });
   }
 }
 
